@@ -304,3 +304,12 @@ textarea {
 .prose p {
   @apply mb-4 text-gray-700 dark:text-gray-300;
 }
+
+/* Complete cleanup of code blocks in markdown for both light and dark mode */
+.bg-gradient-to-br {
+  background: linear-gradient(to bottom right, #ffffff, #fee3ec);
+}
+
+.dark .bg-gradient-to-br {
+  background: #000000;
+}
