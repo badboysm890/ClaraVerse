@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Settings, RefreshCw, Wand2, ImagePlus, X, Sparkles, ChevronDown } from 'lucide-react';
 
 // Define missing constant
@@ -52,11 +52,13 @@ interface PromptAreaProps {
   handleGenerate: () => void;
   showSettings: boolean;
   handleImageUpload?: (buffer: ArrayBuffer) => void;
-  onEnhancePrompt?: (prompt: string) => Promise<string>;
+  onEnhancePrompt?: (prompt: string, imageData?: { preview: string; buffer: ArrayBuffer; base64: string }) => Promise<string>;
   isEnhancing?: boolean;
   isLLMConnected?: boolean;
   availableModels?: string[];
   onModelSelect?: (model: string) => void;
+  clearImage?: boolean;
+  onImageClear?: () => void;
 }
 
 const PromptArea: React.FC<PromptAreaProps> = ({
@@ -73,9 +75,12 @@ const PromptArea: React.FC<PromptAreaProps> = ({
   isLLMConnected = false,
   availableModels = [],
   onModelSelect,
+  clearImage = false,
+  onImageClear,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageBuffer, setImageBuffer] = useState<ArrayBuffer | null>(null);
   const [showModelSelection, setShowModelSelection] = useState(false);
   const [enhancementFeedback, setEnhancementFeedback] = useState<string | null>(null);
   
@@ -91,20 +96,31 @@ const PromptArea: React.FC<PromptAreaProps> = ({
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
 
-      // Handle the buffer for generation
-      const buffer = await file.arrayBuffer();
-      console.log('Uploaded image buffer:', buffer);
-      handleImageUpload?.(buffer);
+      // Convert file to base64 using FileReader
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string;
+        const buffer = await file.arrayBuffer();
+        setImageBuffer(buffer);
+        console.log('Uploaded image buffer:', buffer);
+        handleImageUpload?.(buffer);
+      };
+      reader.readAsDataURL(file);
     } catch (err) {
       console.error('Error reading file:', err);
     }
   };
 
   const clearImagePreview = () => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setImagePreview(null);
+    setImageBuffer(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    onImageClear?.();
   };
 
   const handleEnhanceClick = () => {
@@ -114,26 +130,69 @@ const PromptArea: React.FC<PromptAreaProps> = ({
       return;
     }
     
-    if (!prompt.trim()) {
-      setEnhancementFeedback("Please enter a prompt to enhance");
-      setTimeout(() => setEnhancementFeedback(null), 3000);
-      return;
-    }
-    
     const savedModel = localStorage.getItem(LAST_USED_LLM_KEY);
     if (!savedModel) {
       setShowModelSelection(true);
-    } else if (prompt.trim()) {
-      setEnhancementFeedback(`Enhancing prompt with ${savedModel}...`);
-      onEnhancePrompt?.(prompt).then(() => {
-        setEnhancementFeedback("Prompt enhanced successfully!");
-        setTimeout(() => setEnhancementFeedback(null), 3000);
-      }).catch(err => {
-        setEnhancementFeedback(`Enhancement failed: ${err.message}`);
-        setTimeout(() => setEnhancementFeedback(null), 3000);
-      });
+      return;
     }
+    
+    setEnhancementFeedback(`Enhancing with ${savedModel}...`);
+    
+    // Prepare image data if available
+    const prepareImageData = async () => {
+      if (!imagePreview || !imageBuffer) return null;
+      const blob = new Blob([imageBuffer], { type: 'image/png' });
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const base64WithPrefix = event.target?.result as string;
+          resolve(base64WithPrefix.split(',')[1]);
+        };
+        reader.readAsDataURL(blob);
+      });
+      
+      return {
+        preview: imagePreview,
+        buffer: imageBuffer,
+        base64: base64
+      };
+    };
+
+    // Handle the three cases
+    const enhance = async () => {
+      try {
+        const imageData = await prepareImageData();
+        
+        // Case 1: Image only
+        if (imageData && !prompt.trim()) {
+          await onEnhancePrompt?.("", imageData);
+        }
+        // Case 2: Text only
+        else if (!imageData && prompt.trim()) {
+          await onEnhancePrompt?.(prompt);
+        }
+        // Case 3: Both image and text
+        else if (imageData && prompt.trim()) {
+          await onEnhancePrompt?.(prompt, imageData);
+        }
+        
+        setEnhancementFeedback("Prompt enhanced successfully!");
+      } catch (err) {
+        setEnhancementFeedback(`Enhancement failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      } finally {
+        setTimeout(() => setEnhancementFeedback(null), 3000);
+      }
+    };
+
+    enhance();
   };
+
+  // Add effect to clear image when clearImage prop changes
+  useEffect(() => {
+    if (clearImage) {
+      clearImagePreview();
+    }
+  }, [clearImage]);
 
   return (
     <div className="glassmorphic rounded-xl p-6">
@@ -217,7 +276,7 @@ const PromptArea: React.FC<PromptAreaProps> = ({
                 {isLLMConnected && (
                   <button
                     onClick={handleEnhanceClick}
-                    disabled={isEnhancing || !prompt.trim()}
+                    disabled={isEnhancing}
                     className={`p-2 rounded-lg transition-colors group relative ${
                       isEnhancing 
                         ? 'bg-sakura-100 dark:bg-sakura-900/30' 

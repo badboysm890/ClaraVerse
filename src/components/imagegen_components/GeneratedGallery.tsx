@@ -37,9 +37,9 @@ const GeneratedGallery: React.FC<GeneratedGalleryProps> = ({
     <div className="space-y-4">
       <h2 className="text-lg font-medium text-gray-900 dark:text-white">Generated Images</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {generatedImages.map((image, index) => (
+        {[...generatedImages].reverse().map((image, index) => (
           <div key={index} className="glassmorphic rounded-xl overflow-hidden group relative">
-            <img src={image} alt={`Generated ${index + 1}`} className="w-full h-64 object-cover" />
+            <img src={image} alt={`Generated ${generatedImages.length - index}`} className="w-full h-64 object-cover" />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
               <button
                 onClick={() => setViewingImage(image)}
@@ -49,14 +49,14 @@ const GeneratedGallery: React.FC<GeneratedGalleryProps> = ({
                 <Eye className="w-5 h-5" />
               </button>
               <button
-                onClick={() => handleDownload(image, index)}
+                onClick={() => handleDownload(image, generatedImages.length - 1 - index)}
                 className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
                 title="Download"
               >
                 <Download className="w-5 h-5" />
               </button>
               <button
-                onClick={() => handleDelete(index)}
+                onClick={() => handleDelete(generatedImages.length - 1 - index)}
                 className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
                 title="Delete"
               >

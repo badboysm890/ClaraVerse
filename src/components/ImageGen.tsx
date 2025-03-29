@@ -212,6 +212,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
 
   // Add state for storing the uploaded image buffer
   const [imageBuffer, setImageBuffer] = useState<ArrayBuffer | null>(null);
+  const [clearImageFlag, setClearImageFlag] = useState(false);
 
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
@@ -832,9 +833,6 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
 
       setGeneratedImages((prev) => [...prev, ...base64Images]);
       
-      // Clear the image buffer after successful generation
-      setImageBuffer(null);
-
       const currentConfig: ModelConfig = {
         denoise,
         steps,
@@ -963,8 +961,8 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
   }, []);
 
   // Add enhance prompt handler
-  const handleEnhancePrompt = async (currentPrompt: string) => {
-    if (!isLLMConnected || !currentPrompt) return;
+  const handleEnhancePrompt = async (currentPrompt: string, imageData?: { preview: string; buffer: ArrayBuffer; base64: string }) => {
+    if (!isLLMConnected) return;
     
     setIsEnhancing(true);
     try {
@@ -974,29 +972,60 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
       const baseUrl = config?.ollama_base_url || 'localhost:11434';
       const url = baseUrl.startsWith('http') ? baseUrl : `http://${baseUrl}`;
       
-      console.log(`Enhancing prompt with ${enhanceSettings.selectedModel}...`);
+      console.log(`Enhancing with ${enhanceSettings.selectedModel}...`);
+      
+      // Case 1: Image only - Generate a prompt from the image
+      // Case 2: Text only - Enhance the existing prompt
+      // Case 3: Image + Text - Analyze image and incorporate original text
+      const requestBody = {
+        model: enhanceSettings.selectedModel,
+        prompt: imageData 
+          ? currentPrompt
+            ? `Analyze this image and enhance the following prompt by incorporating visual details from the image: "${currentPrompt}". 
+               Include specific details about style, composition, lighting, and important elements from both the image and original prompt.`
+            : "Analyze this image and provide a detailed text-to-image generation prompt that would recreate it. Include style, composition, lighting, and important details."
+          : enhanceSettings.systemPrompt + `\n\n ${currentPrompt}\n\n don't include the text "Original prompt:" or "Enhanced prompt:" in your response`,
+        stream: false,
+        max_tokens: 1000,
+        images: imageData ? [imageData.base64] : undefined
+      };
+
+      console.log('Sending request with body:', {
+        ...requestBody,
+        images: requestBody.images ? ['[base64 data]'] : undefined
+      });
       
       const response = await fetch(`${url}/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: enhanceSettings.selectedModel,
-          prompt: `${enhanceSettings.systemPrompt}\n\nOriginal prompt: ${currentPrompt}\n\nEnhanced prompt:`,
-          stream: false
-        })
+        body: JSON.stringify(requestBody)
       });
 
-      if (!response.ok) throw new Error('Failed to enhance prompt');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to enhance prompt: ${errorText}`);
+      }
       
       const data = await response.json();
       const enhancedPrompt = data.response.trim();
       
-      // If enhanced prompt is the same as original, show appropriate message
-      if (enhancedPrompt === currentPrompt) {
-        setNotificationMessage('No changes needed to your prompt');
-      } else {
+      // Update prompt and notification based on the case
+      if (imageData && currentPrompt) {
+        // Case 3: Image + Text
+        setPrompt(`${currentPrompt}\n\n${enhancedPrompt}`);
+        setNotificationMessage(`Enhanced prompt using image context and original text`);
+      } else if (imageData) {
+        // Case 1: Image only
         setPrompt(enhancedPrompt);
-        setNotificationMessage(`Prompt enhanced with ${enhanceSettings.selectedModel}`);
+        setNotificationMessage(`Generated prompt from image using ${enhanceSettings.selectedModel}`);
+      } else {
+        // Case 2: Text only
+        if (enhancedPrompt === currentPrompt) {
+          setNotificationMessage('No changes needed to your prompt');
+        } else {
+          setPrompt(enhancedPrompt);
+          setNotificationMessage(`Prompt enhanced with ${enhanceSettings.selectedModel}`);
+        }
       }
       
       setShowNotification(true);
@@ -1004,7 +1033,8 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
       return enhancedPrompt;
     } catch (error) {
       console.error('Error enhancing prompt:', error);
-      setNotificationMessage(`Failed to enhance prompt: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setNotificationMessage(`Failed to enhance prompt: ${errorMessage}`);
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
       throw error;
@@ -1056,6 +1086,14 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
     setEnhanceSettings(prev => ({ ...prev, selectedModel: model }));
   };
 
+  // Add a new function to handle explicit image clearing
+  const handleImageClear = () => {
+    setImageBuffer(null);
+    setClearImageFlag(true);
+    // Reset the flag after a short delay to allow for future clears
+    setTimeout(() => setClearImageFlag(false), 100);
+  };
+
   return (
     <div className="flex h-screen">
       {!isInitialSetupComplete && (
@@ -1103,6 +1141,8 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
                 isLLMConnected={isLLMConnected}
                 availableModels={availableLLMModels}
                 onModelSelect={handleLLMModelSelect}
+                clearImage={clearImageFlag}
+                onImageClear={handleImageClear}
               />
               <GeneratedGallery
                 generatedImages={generatedImages}
