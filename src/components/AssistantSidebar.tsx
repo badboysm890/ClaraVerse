@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Archive, Star, Trash2, Settings, ChevronRight, Bot, Plus, Sparkles } from 'lucide-react';
+import { MessageSquare, Archive, Star, Trash2, Settings, ChevronRight, Plus, Sparkles } from 'lucide-react';
 import type { Chat } from '../db';
 import { db } from '../db';
 import logo from '../assets/logo.png';
@@ -50,7 +50,7 @@ const AssistantSidebar = ({
   useEffect(() => {
     // Check if we should show the glow effect
     const lastDismissed = localStorage.getItem('whats_new_dismissed');
-    const releaseDate = new Date('2024-03-19').getTime();
+    // const releaseDate = new Date('2024-03-19').getTime();
     const now = new Date().getTime();
 
     if (lastDismissed) {
@@ -196,7 +196,7 @@ const AssistantSidebar = ({
     <>
       <div
         className={`glassmorphic h-full flex flex-col gap-6 transition-all duration-300 ease-in-out ${
-          isExpanded ? 'w-64' : 'w-20'
+          isExpanded ? 'w-64 sidebar-expanded' : 'w-20'
         }`}
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
@@ -242,14 +242,14 @@ const AssistantSidebar = ({
                   className={`w-full flex items-center gap-2 py-2 rounded-lg transition-colors group relative cursor-pointer ${
                     isExpanded ? 'px-3' : 'justify-center px-0'
                   } ${
-                    activeChat === chat.id
+                    activeChat === chat.id && isExpanded
                       ? 'bg-sakura-100 text-sakura-500 dark:bg-sakura-100/10'
                       : isExpanded 
                         ? 'text-gray-700 dark:text-gray-300 hover:bg-sakura-50 dark:hover:bg-sakura-100/5'
                         : 'text-gray-700 dark:text-gray-300'
                   }`}
                 >
-                  <MessageSquare className="w-5 h-5 flex-shrink-0" />
+                  <MessageSquare className="sidebar-icon flex-shrink-0" />
                   {isExpanded && (
                     <div className="flex-1 text-left overflow-hidden min-w-0">
                       <div className="flex items-center gap-1">

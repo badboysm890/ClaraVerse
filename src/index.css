@@ -313,3 +313,16 @@ textarea {
 .dark .bg-gradient-to-br {
   background: #000000;
 }
+
+/* Sidebar icon transitions */
+.sidebar-icon {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar-expanded .sidebar-icon,
+.glassmorphic:hover .sidebar-icon {
+  opacity: 1;
+}
