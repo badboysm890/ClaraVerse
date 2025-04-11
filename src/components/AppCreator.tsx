@@ -2,6 +2,8 @@ import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import {
   Check,
   X,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import { addEdge, useNodesState, useEdgesState, Node, Connection } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -16,6 +18,9 @@ import { OllamaProvider } from '../context/OllamaContext';
 import { appStore } from '../services/AppStore';
 import SaveAppModal from './appcreator_components/SaveAppModal';
 import DraftRestoreModal from './appcreator_components/DraftRestoreModal';
+import AppRunner from './AppRunner';
+import { ResizableBox } from 'react-resizable';
+import 'react-resizable/css/styles.css';
 
 // Helper to convert a tool ID (e.g., "api_call") to a node type key (e.g., "apiCallNode")
 const convertToolIdToNodeType = (toolId: string): string => {
@@ -55,6 +60,8 @@ const AppCreator: React.FC<AppCreatorProps> = ({ onPageChange, appId }) => {
   const [messageHistory, setMessageHistory] = useState<any[]>([]);
   const [nodeStatuses, setNodeStatuses] = useState<Record<string, 'running' | 'completed' | 'error'>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [previewEnabled, setPreviewEnabled] = useState(false);
+  const [previewWidth, setPreviewWidth] = useState(window.innerWidth * 0.2);
 
   // Sidebar resizing state
   const [sidebarWidth, setSidebarWidth] = useState(300);
@@ -386,6 +393,13 @@ const AppCreator: React.FC<AppCreatorProps> = ({ onPageChange, appId }) => {
   };
 
   const handleTestApp = async () => {
+    // Add check for unsaved app
+    if (!currentAppId) {
+      showNotification('error', 'Save this app to proceed');
+      handleOpenSaveModal();
+      return;
+    }
+
     setIsExecuting(true);
     setNodeStatuses({});  // Reset node statuses
     try {
@@ -649,6 +663,24 @@ const AppCreator: React.FC<AppCreatorProps> = ({ onPageChange, appId }) => {
     };
   }, [hasUnsavedChanges]);
 
+  const handlePreviewResize = (e: any, { size }: { size: { width: number } }) => {
+    setPreviewWidth(size.width);
+  };
+
+  const togglePreview = () => {
+    setPreviewEnabled(prev => !prev);
+    // Reset preview width when showing
+    if (!previewEnabled) {
+      setPreviewWidth(window.innerWidth * 0.2);
+    }
+  };
+
+  // Modified to do nothing since we don't want to auto-save in preview
+  const handlePreviewTest = async () => {
+    // Preview testing without saving
+    return;
+  };
+
   return (
     <OllamaProvider>
       <div className="flex flex-col h-screen">
@@ -664,6 +696,8 @@ const AppCreator: React.FC<AppCreatorProps> = ({ onPageChange, appId }) => {
           onExportApp={handleExportApp}
           onImportApp={handleImportApp}
           hasUnsavedChanges={hasUnsavedChanges}
+          previewEnabled={previewEnabled}
+          onTogglePreview={togglePreview}
         />
         <div className="flex flex-1 overflow-hidden">
           <div
@@ -680,27 +714,55 @@ const AppCreator: React.FC<AppCreatorProps> = ({ onPageChange, appId }) => {
             />
             <div onMouseDown={handleMouseDown} className="absolute right-0 top-0 h-full w-2 cursor-ew-resize z-10" />
           </div>
-          <FlowCanvas
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            setReactFlowInstance={setReactFlowInstance}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            nodeTypes={nodeTypes}
-            flowStyles={flowStyles}
-            isDark={isDark}
-            reactFlowWrapper={reactFlowWrapper}
-            selectedTool={selectedTool}
-            isDragging={isDragging}
-            isValidConnection={isValidConnection}
-            minimapStyle={minimapStyle}
-            minimapNodeColor={minimapNodeColor}
-            nodeStatuses={nodeStatuses}
-          />
+
+          <div className="flex flex-1">
+            <FlowCanvas
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              setReactFlowInstance={setReactFlowInstance}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              nodeTypes={nodeTypes}
+              flowStyles={flowStyles}
+              isDark={isDark}
+              reactFlowWrapper={reactFlowWrapper}
+              selectedTool={selectedTool}
+              isDragging={isDragging}
+              isValidConnection={isValidConnection}
+              minimapStyle={minimapStyle}
+              minimapNodeColor={minimapNodeColor}
+              nodeStatuses={nodeStatuses}
+              style={{ width: previewEnabled ? `calc(100% - ${previewWidth}px)` : '100%' }}
+            />
+
+            {previewEnabled && (
+              <ResizableBox
+                width={previewWidth}
+                height={Infinity}
+                minConstraints={[300, Infinity]}
+                maxConstraints={[800, Infinity]}
+                onResize={handlePreviewResize}
+                handle={<div className="absolute left-0 top-0 h-full w-1 cursor-ew-resize bg-gray-200 dark:bg-gray-700 hover:bg-sakura-500 dark:hover:bg-sakura-400" />}
+                axis="x"
+                resizeHandles={['w']}
+              >
+                <div className="h-full border-l border-gray-200 dark:border-gray-700">
+                  <AppRunner
+                    appId={currentAppId}
+                    onBack={() => {}}
+                    isEmbedded={true}
+                    nodes={nodes}
+                    edges={edges}
+                    onSaveRequest={handlePreviewTest}
+                  />
+                </div>
+              </ResizableBox>
+            )}
+          </div>
         </div>
         {notification.visible && (
           <div
