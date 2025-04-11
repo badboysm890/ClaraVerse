@@ -73,7 +73,13 @@ function App() {
     if (activePage === 'app-runner') {
       const appId = localStorage.getItem('current_app_id');
       if (appId) {
-        return <AppRunner appId={appId} onBack={() => setActivePage('apps')} />;
+        return (
+          <AppRunner 
+            appId={appId} 
+            onBack={() => setActivePage('apps')} 
+            onPageChange={setActivePage}  // Add this line
+          />
+        );
       } else {
         setActivePage('apps');
         return null;

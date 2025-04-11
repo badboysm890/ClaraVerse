@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Save, PlayCircle, Bug, Trash2, Import, Share2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, PlayCircle, Bug, Trash2, Import, Share2, AlertCircle, Maximize, Minimize } from 'lucide-react';
 import { appStore } from '../../services/AppStore';
 
 interface TopBarProps {
@@ -14,6 +14,8 @@ interface TopBarProps {
   isExecuting?: boolean;
   appId?: string;
   hasUnsavedChanges: boolean;
+  previewEnabled: boolean;
+  onTogglePreview: () => void;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ 
@@ -27,7 +29,9 @@ const TopBar: React.FC<TopBarProps> = ({
   setAppName,
   isExecuting = false,
   appId,
-  hasUnsavedChanges
+  hasUnsavedChanges,
+  previewEnabled,
+  onTogglePreview
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(appName);
@@ -120,6 +124,15 @@ const TopBar: React.FC<TopBarProps> = ({
           )}
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={onTogglePreview}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md 
+              text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            title={previewEnabled ? "Hide Preview" : "Show Preview"}
+          >
+            {previewEnabled ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+            {previewEnabled ? "Hide Preview" : "Show Preview"}
+          </button>
           {/* Show delete button only when editing an existing app */}
           {appId && (
             <div className="group relative">
