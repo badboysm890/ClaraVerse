@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import {db} from '../db';
 import {OllamaClient} from '../utils/OllamaClient';
+import { useTheme } from '../hooks/useTheme';
 
 interface OnboardingProps {
     onComplete: () => void;
@@ -50,15 +51,12 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
     // For feature showcase animation
     const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
 
+    const { setThemePreference } = useTheme();
+
     // Apply theme immediately when selected
     useEffect(() => {
-        const htmlElement = document.documentElement;
-        if (formData.theme_preference === 'dark') {
-            htmlElement.classList.add('dark');
-        } else {
-            htmlElement.classList.remove('dark');
-        }
-    }, [formData.theme_preference]);
+        setThemePreference(formData.theme_preference);
+      }, [formData.theme_preference]);
 
     // Auto-rotate features
     useEffect(() => {
