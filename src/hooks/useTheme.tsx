@@ -1,24 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-export const useTheme = () => {
-  const [isDark, setIsDark] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    // Only use dark theme if explicitly set in localStorage
-    return savedTheme === 'dark';
-    // Removed the system preference check to ensure light theme by default
+export type ThemePreference = 'light' | 'dark' | 'system';
+
+export const useTheme = (initialPreference: ThemePreference = 'system') => {
+  const [themePreference, setThemePreference] = useState<ThemePreference>(() => {
+    return (localStorage.getItem('theme') as ThemePreference) || initialPreference;
   });
 
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+    const html = document.documentElement;
+
+    const applyTheme = (mode: 'light' | 'dark') => {
+      html.classList.toggle('dark', mode === 'dark');
+      localStorage.setItem('theme', themePreference);
+      setResolvedTheme(mode);
+    };
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemChange = (e: MediaQueryListEvent) => {
+      if (themePreference === 'system') {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    };
+
+    if (themePreference === 'system') {
+      applyTheme(mediaQuery.matches ? 'dark' : 'light');
+      mediaQuery.addEventListener('change', handleSystemChange);
+      return () => mediaQuery.removeEventListener('change', handleSystemChange);
     }
-  }, [isDark]);
 
-  const toggleTheme = () => setIsDark(!isDark);
+    applyTheme(themePreference);
+  }, [themePreference]);
 
-  return { isDark, toggleTheme };
+  const toggleTheme = () => {
+    setThemePreference((prev) =>
+      prev === 'light' ? 'dark' : prev === 'dark' ? 'light' : 'dark'
+    );
+  };
+
+  return {
+    themePreference,
+    resolvedTheme,
+    isDark: resolvedTheme === 'dark',
+    setThemePreference,
+    toggleTheme,
+  };
 };

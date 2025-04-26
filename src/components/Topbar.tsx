@@ -12,7 +12,7 @@ const Topbar = ({ userName, onPageChange }: TopbarProps) => {
   const { isDark, toggleTheme } = useTheme();
 
   return (
-    <div className="glassmorphic h-16 px-6 flex items-center justify-between">
+    <div className="glassmorphic z-[1] h-16 px-6 flex items-center justify-between">
       <div className="flex-1">
         {/* Search input removed */}
       </div>
