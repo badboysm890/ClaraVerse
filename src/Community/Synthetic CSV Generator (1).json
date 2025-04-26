@@ -1,6 +1,6 @@
 {
   "name": "Sythetic CSV Generator",
-  "description": "It Create CSV for you based on what you ask,\nRequires better llm atleast 8B and Up",
+  "description": "It Create CSV for you based on what you ask,\nRequires better llm at least 8B and Up",
   "icon": "Bot",
   "color": "#EF4444",
   "nodes": [
