@@ -3,9 +3,9 @@ import {
   ArrowLeft, Play, Loader, Check, ImageIcon, Send,
   Activity, FileText, Code, MessageSquare, Database, Globe,
   Sparkles, Zap, User, Settings, BarChart2 as Chart, Search, Bot, Brain,
-  Command, Book, Layout, Compass, Download, RotateCw, AlertCircle
+  Command, Book, Layout, Compass, Download, RotateCw, AlertCircle, Edit
 } from 'lucide-react';
-import { Node } from 'reactflow';
+import { Node, Edge } from 'reactflow';
 import ReactMarkdown from 'react-markdown';
 
 import { appStore } from '../services/AppStore';
@@ -47,9 +47,15 @@ const arrayBufferToDataUrl = (buffer: ArrayBuffer): string => {
   return `data:image/png;base64,${base64}`;
 };
 
+// Update props interface to include onPageChange
 interface AppRunnerProps {
   appId: string;
   onBack: () => void;
+  isEmbedded?: boolean;
+  nodes?: Node[];
+  edges?: Edge[];
+  onPageChange?: (page: string) => void;  // Add this line
+  onSaveRequest?: () => Promise<void>;  // Add this line
 }
 
 interface InputState {
@@ -64,7 +70,6 @@ interface ChatMessage {
   isImage?: boolean;
 }
 
-// Update the NodeData interface
 interface NodeData {
   label?: string;
   config?: {
@@ -88,7 +93,7 @@ interface ChatContext {
   botOutput: string;
 }
 
-const AppRunner: React.FC<AppRunnerProps> = ({ appId, onBack }) => {
+const AppRunner: React.FC<AppRunnerProps> = ({ appId, onBack, isEmbedded = false, nodes: propNodes, edges: propEdges, onPageChange, onSaveRequest }) => {
   const { isDark } = useTheme();
   const [appData, setAppData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -123,40 +128,60 @@ const AppRunner: React.FC<AppRunnerProps> = ({ appId, onBack }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messageHistory]);
 
-  // Load the app data when component mounts
+  // Update useEffect to properly set appData for embedded mode
   useEffect(() => {
-    const loadApp = async () => {
-      try {
-        setIsLoading(true);
-        const app = await appStore.getApp(appId);
-        if (app) {
-          setAppData(app);
+    if (isEmbedded && propNodes && propEdges) {
+      const embeddedAppData = {
+        nodes: propNodes,
+        edges: propEdges,
+        color: '#3B82F6', // Default color
+      };
+      setAppData(embeddedAppData);
+      setIsLoading(false);
 
-          // Initialize input state for text/image input nodes
-          const inputNodes = app.nodes.filter(
-            (node: AppNode) =>
-              node.type === 'textInputNode' || node.type === 'imageInputNode'
-          );
+      // Initialize input states
+      const inputNodes = propNodes.filter(
+        (node: Node) => node.type === 'textInputNode' || node.type === 'imageInputNode'
+      );
+      const initialInputs = inputNodes.reduce((acc: InputState, node: Node) => {
+        acc[node.id] = '';
+        return acc;
+      }, {});
+      setInputState(initialInputs);
+    } else {
+      loadApp(appId);
+    }
+  }, [isEmbedded, propNodes, propEdges, appId]);
 
-          const initialInputs = inputNodes.reduce((acc: InputState, node: AppNode) => {
-            acc[node.id] = '';
-            return acc;
-          }, {});
+  const loadApp = async (appId: string) => {
+    try {
+      setIsLoading(true);
+      const app = await appStore.getApp(appId);
+      if (app) {
+        setAppData(app);
 
-          setInputState(initialInputs);
-        } else {
-          setError('App not found');
-        }
-      } catch (err) {
-        setError('Failed to load app');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
+        // Initialize input state for text/image input nodes
+        const inputNodes = app.nodes.filter(
+          (node: AppNode) =>
+            node.type === 'textInputNode' || node.type === 'imageInputNode'
+        );
+
+        const initialInputs = inputNodes.reduce((acc: InputState, node: AppNode) => {
+          acc[node.id] = '';
+          return acc;
+        }, {});
+
+        setInputState(initialInputs);
+      } else {
+        setError('App not found');
       }
-    };
-
-    loadApp();
-  }, [appId]);
+    } catch (err) {
+      setError('Failed to load app');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Update the type annotations for the node parameters
   const { inputNodes, outputNodes, processingNodes } = useMemo(() => {
@@ -336,6 +361,11 @@ Current request: ${currentInput}`;
     setIsSuccess(false);
 
     try {
+      // If embedded and no appId, try to save first
+      if (isEmbedded && !appId && onSaveRequest) {
+        await onSaveRequest();
+      }
+
       // Gather user inputs
       const userInputs: any[] = [];
 
@@ -1010,6 +1040,24 @@ Current request: ${currentInput}`;
   }
 
   // Main UI
+  if (isEmbedded) {
+    return (
+      <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+        <div className="flex-1 overflow-y-auto px-4 py-4 scroll-smooth">
+          <div className="container mx-auto">
+            {renderOutputs()}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+          <div className="container mx-auto">
+            {renderInputSection()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <OllamaProvider>
       <div className="flex h-screen">
@@ -1040,14 +1088,31 @@ Current request: ${currentInput}`;
                   </p>
                 </div>
               </div>
-              <button
-                onClick={onBack}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-gray-700 dark:text-gray-300
-                  hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back to Apps</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (onPageChange) {
+                      localStorage.setItem('current_app_id', appId);
+                      onPageChange('app-creator');
+                    }
+                  }}
+                  
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-700 dark:text-gray-300
+                    hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700"
+                >
+                  <Edit className="w-5 h-5" />
+                  <span>Edit App</span>
+                </button>
+                
+                <button
+                  onClick={onBack}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-700 dark:text-gray-300
+                    hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span>Back to Apps</span>
+                </button>
+              </div>
             </div>
 
             {/* Main Output Section */}
@@ -1088,14 +1153,13 @@ Current request: ${currentInput}`;
             </div>
 
             {/* Input Section */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/50 backdrop-blur-sm">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"></div>
               <div className="container mx-auto max-w-4xl">
                 {renderInputSection()}
               </div>
             </div>
           </div>
         </div>
-      </div>
     </OllamaProvider>
   );
 };
