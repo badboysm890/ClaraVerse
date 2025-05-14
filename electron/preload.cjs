@@ -26,7 +26,9 @@ const validChannels = [
   'python-status',
   'update-available',
   'update-downloaded',
-  'download-progress',
+  'update-progress',
+  'update-error',
+  'update-not-available',
   'restartInterpreterContainer'
 ];
 
@@ -46,6 +48,9 @@ contextBridge.exposeInMainWorld('electron', {
   getServicePorts: () => ipcRenderer.invoke('get-service-ports'),
   getPythonPort: () => ipcRenderer.invoke('get-python-port'),
   checkPythonBackend: () => ipcRenderer.invoke('check-python-backend'),
+  
+  // Updates
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
 
   // Clipboard
   clipboard: {

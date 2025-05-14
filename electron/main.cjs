@@ -1,9 +1,9 @@
-const { app, BrowserWindow, ipcMain, dialog, systemPreferences } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, systemPreferences, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const log = require('electron-log');
 const DockerSetup = require('./dockerSetup.cjs');
-const { setupAutoUpdater } = require('./updateService.cjs');
+const { setupAutoUpdater, checkForUpdates } = require('./updateService.cjs');
 const SplashScreen = require('./splash.cjs');
 
 // Configure the main process logger
@@ -413,10 +413,7 @@ function createMainWindow() {
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     
-    // Initialize auto-updater when window is ready
-    if (process.env.NODE_ENV !== 'development') {
-      setupAutoUpdater(mainWindow);
-    }
+    // Auto-update initialization removed - updates only triggered manually via menu
   });
 
   mainWindow.on('closed', () => {
@@ -424,8 +421,133 @@ function createMainWindow() {
   });
 }
 
+// Do not remove this code
+// Create application menu
+function createAppMenu() {
+  const isMac = process.platform === 'darwin';
+  
+  const template = [
+    // App menu (macOS only)
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        {
+          label: 'Check for Updates',
+          click: async () => {
+            log.info('Manual update check initiated from menu');
+            try {
+              // Initialize auto-updater before checking
+              setupAutoUpdater(mainWindow);
+              await checkForUpdates();
+            } catch (error) {
+              log.error('Manual update check failed:', error);
+            }
+          }
+        },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    }] : []),
+    
+    // File menu
+    {
+      label: 'File',
+      submenu: [
+        isMac ? { role: 'close' } : { role: 'quit' }
+      ]
+    },
+    
+    // Edit menu
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        ...(isMac ? [
+          { role: 'pasteAndMatchStyle' },
+          { role: 'delete' },
+          { role: 'selectAll' },
+          { type: 'separator' },
+        ] : [
+          { role: 'delete' },
+          { type: 'separator' },
+          { role: 'selectAll' }
+        ])
+      ]
+    },
+    
+    // View menu
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    
+    // Help menu
+    {
+      label: 'Help',
+      submenu: [
+        {
+          label: 'About Clara',
+          click: async () => {
+            dialog.showMessageBox({
+              title: 'About Clara',
+              message: `Clara ${app.getVersion()}`,
+              detail: 'Your AI-powered digital assistant.',
+              buttons: ['OK']
+            });
+          }
+        },
+        // Add Check for Updates here too for non-Mac platforms
+        ...(isMac ? [] : [
+          {
+            label: 'Check for Updates',
+            click: async () => {
+              log.info('Manual update check initiated from menu');
+              try {
+                // Initialize auto-updater before checking
+                setupAutoUpdater(mainWindow);
+                await checkForUpdates();
+              } catch (error) {
+                log.error('Manual update check failed:', error);
+              }
+            }
+          }
+        ])
+      ]
+    }
+  ];
+  
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
 // Initialize app when ready
 app.whenReady().then(initializeApp);
+
+// Also create the application menu when the app is ready
+app.whenReady().then(createAppMenu);
 
 // Register standalone handlers
 app.whenReady().then(() => {
@@ -509,6 +631,25 @@ ipcMain.handle('get-python-port', () => {
     return dockerSetup.ports.python;
   }
   return null;
+});
+
+// IPC handler for manual update checking
+ipcMain.handle('check-for-updates', async () => {
+  log.info('Manual update check initiated from renderer');
+  try {
+    // Initialize auto-updater before checking
+    if (mainWindow) {
+      setupAutoUpdater(mainWindow);
+    } else {
+      log.error('Cannot check for updates: mainWindow is null');
+      return { success: false, error: 'Application window not available' };
+    }
+    await checkForUpdates();
+    return { success: true };
+  } catch (error) {
+    log.error('Manual update check failed:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 // IPC handler to check Python backend status

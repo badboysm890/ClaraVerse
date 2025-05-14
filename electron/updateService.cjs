@@ -5,15 +5,19 @@ const { dialog } = require('electron');
 autoUpdater.logger = require('electron-log');
 autoUpdater.logger.transports.file.level = 'info';
 
+// Explicitly disable all automatic update behaviors
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = false;
+autoUpdater.allowPrerelease = false;
+autoUpdater.allowDowngrade = false;
+autoUpdater.disableWebInstaller = true;
+// Disable checking for updates on startup or in intervals
+// Only manual checks via menu will be performed
+
 // Configure update events
 function setupAutoUpdater(mainWindow) {
-  // Check for updates when the app starts
-  autoUpdater.checkForUpdatesAndNotify();
-
-  // Check for updates every hour
-  setInterval(() => {
-    autoUpdater.checkForUpdatesAndNotify();
-  }, 60 * 60 * 1000);
+  // Disable automatic update checks
+  // Only check when user manually triggers via menu
 
   // Update available
   autoUpdater.on('update-available', (info) => {
@@ -50,7 +54,10 @@ function setupAutoUpdater(mainWindow) {
     // Log more detailed error information
     autoUpdater.logger.error('Update error details:', err);
     
-    dialog.showErrorBox('Update Error', err.message);
+    // Only show errors for manual checks to avoid popups for missing latest.yml
+    if (err.isManualCheck) {
+      dialog.showErrorBox('Update Error', err.message);
+    }
   });
 
   // Progress updates
@@ -72,12 +79,31 @@ function setupAutoUpdater(mainWindow) {
   });
 }
 
-// Manual check for updates
+// Manual check for updates - do not remove this code
+// This function is called when user clicks "Check for Updates" in the menu
 function checkForUpdates() {
-  return autoUpdater.checkForUpdates().then(() => {
-    // Pass true to indicate this is a manual check
-    autoUpdater.emit('update-not-available', null, true);
-  });
+  // Set flag to indicate this is a manual check
+  try {
+    // Set a property on the event to indicate it's a manual check
+    const originalEmit = autoUpdater.emit;
+    autoUpdater.emit = function(name, ...args) {
+      if (name === 'error') {
+        args[0].isManualCheck = true;
+      }
+      return originalEmit.call(this, name, ...args);
+    };
+    
+    return autoUpdater.checkForUpdates().then(() => {
+      // Pass true to indicate this is a manual check
+      autoUpdater.emit('update-not-available', null, true);
+    }).finally(() => {
+      // Restore original emit
+      autoUpdater.emit = originalEmit;
+    });
+  } catch (error) {
+    autoUpdater.logger.error('Manual update check failed:', error);
+    return Promise.reject(error);
+  }
 }
 
 module.exports = { setupAutoUpdater, checkForUpdates };
