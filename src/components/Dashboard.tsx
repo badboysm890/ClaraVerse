@@ -764,7 +764,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
               </h2>
             </div>
 
-            <div className={`flex items-center gap-4 transition-opacity duration-200 ${isRearrangeMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}> 
+            <div className={`flex items-center gap-4 transition-opacity duration-200`}> 
               <button
                 className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors bg-sakura-500 text-white"
                 onClick={toggleRearrangeMode}
