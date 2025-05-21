@@ -356,6 +356,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
       order: widgets.length
     };
     
+
+    // Check for default widgets and set their properties
+    const defaultWidget = DEFAULT_WIDGETS.find(w => w.type === type);
+    if (defaultWidget) {
+      newWidget.w = defaultWidget.w || 4;
+      newWidget.h = defaultWidget.h || 4;
+    }
+    
     console.log('Adding new widget:', newWidget);
     setWidgets(prev => [...prev, newWidget]);
     // Automatically enter rearrange mode after adding widget
