@@ -10,7 +10,7 @@ docker run -d -p 8069:8069 --add-host=host.docker.internal:host-gateway --name c
 ```
 
 Then open http://localhost:8069 in your browser.  
-If the ollama server is running on localhost configure **`http://host.docker.internal:11434`** in Ollama API URL.
+If the Ollama server is running on localhost, configure **`http://host.docker.internal:11434`** as the Ollama API URL.
 
 ## For Developers
 
