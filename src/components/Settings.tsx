@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
-import { Save, User, Globe, Server, Key, Lock, Image, Settings as SettingsIcon, Download, Search, Trash2, HardDrive, Cloud } from 'lucide-react';
-import { db, type PersonalInfo, type APIConfig } from '../db';
+import React, { useEffect, useState, useRef } from 'react';
+import { Save, User, Globe, Server, Key, Lock, Image, Settings as SettingsIcon, Download, Search, Trash2, HardDrive, Cloud, Plus, Check, X, Edit3, Zap, Router, Bot } from 'lucide-react';
+import { db, type PersonalInfo, type APIConfig, type Provider } from '../db';
 import { useTheme, ThemeMode } from '../hooks/useTheme';
+import { useProviders } from '../contexts/ProvidersContext';
 
 // Define types for model management
 interface HuggingFaceModel {
@@ -49,7 +50,7 @@ declare global {
 }
 
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState<'personal' | 'api' | 'preferences' | 'models'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'api' | 'preferences' | 'models'>('api');
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     name: '',
     email: '',
@@ -81,7 +82,22 @@ const Settings = () => {
   const [deleting, setDeleting] = useState<Set<string>>(new Set());
 
   const { setTheme } = useTheme();
+  const { providers, addProvider, updateProvider, deleteProvider, setPrimaryProvider, loading: providersLoading } = useProviders();
   const saveTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Add provider modal state
+  const [showAddProviderModal, setShowAddProviderModal] = useState(false);
+  const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [testingProvider, setTestingProvider] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<{ [key: string]: 'success' | 'error' | null }>({});
+  const [newProviderForm, setNewProviderForm] = useState({
+    name: '',
+    type: 'openai' as Provider['type'],
+    baseUrl: '',
+    apiKey: '',
+    isEnabled: true
+  });
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -356,6 +372,155 @@ const Settings = () => {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  // Provider management functions
+  const handleAddProvider = async () => {
+    try {
+      await addProvider({
+        name: newProviderForm.name,
+        type: newProviderForm.type,
+        baseUrl: newProviderForm.baseUrl,
+        apiKey: newProviderForm.apiKey,
+        isEnabled: newProviderForm.isEnabled,
+        isPrimary: false
+      });
+      
+      setShowAddProviderModal(false);
+      setNewProviderForm({
+        name: '',
+        type: 'openai',
+        baseUrl: '',
+        apiKey: '',
+        isEnabled: true
+      });
+    } catch (error) {
+      console.error('Error adding provider:', error);
+      if (error instanceof Error && error.message.includes("Clara's Pocket provider already exists")) {
+        alert("⚠️ Clara's Pocket provider already exists. Only one instance is allowed.");
+      } else {
+        alert('❌ Failed to add provider. Please try again.');
+      }
+    }
+  };
+
+  const handleEditProvider = (provider: Provider) => {
+    setEditingProvider(provider);
+    setNewProviderForm({
+      name: provider.name,
+      type: provider.type,
+      baseUrl: provider.baseUrl || '',
+      apiKey: provider.apiKey || '',
+      isEnabled: provider.isEnabled
+    });
+    setShowAddProviderModal(true);
+  };
+
+  const handleUpdateProvider = async () => {
+    if (!editingProvider) return;
+    
+    try {
+      await updateProvider(editingProvider.id, {
+        name: newProviderForm.name,
+        type: newProviderForm.type,
+        baseUrl: newProviderForm.baseUrl,
+        apiKey: newProviderForm.apiKey,
+        isEnabled: newProviderForm.isEnabled
+      });
+      
+      setShowAddProviderModal(false);
+      setEditingProvider(null);
+      setNewProviderForm({
+        name: '',
+        type: 'openai',
+        baseUrl: '',
+        apiKey: '',
+        isEnabled: true
+      });
+    } catch (error) {
+      console.error('Error updating provider:', error);
+    }
+  };
+
+  const handleDeleteProvider = async (providerId: string) => {
+    try {
+      await deleteProvider(providerId);
+      setShowDeleteConfirm(null);
+    } catch (error) {
+      console.error('Error deleting provider:', error);
+    }
+  };
+
+  const testOllamaConnection = async (providerId: string, baseUrl: string) => {
+    setTestingProvider(providerId);
+    setTestResults(prev => ({ ...prev, [providerId]: null }));
+    
+    try {
+      // Remove /v1 from baseUrl for the tags endpoint since Ollama's tags endpoint is at /api/tags, not /v1/api/tags
+      const testUrl = baseUrl.replace('/v1', '');
+      const response = await fetch(`${testUrl}/api/tags`);
+      if (response.ok) {
+        setTestResults(prev => ({ ...prev, [providerId]: 'success' }));
+      } else {
+        setTestResults(prev => ({ ...prev, [providerId]: 'error' }));
+      }
+    } catch (error) {
+      setTestResults(prev => ({ ...prev, [providerId]: 'error' }));
+      console.error('Ollama connection test failed:', error);
+    } finally {
+      setTestingProvider(null);
+      
+      // Clear test results after 3 seconds
+      setTimeout(() => {
+        setTestResults(prev => ({ ...prev, [providerId]: null }));
+      }, 3000);
+    }
+  };
+
+  const handleSetPrimary = async (providerId: string, isPrimary: boolean) => {
+    try {
+      if (isPrimary) {
+        await setPrimaryProvider(providerId);
+      } else {
+        // If unchecking primary, we need to ensure at least one provider remains primary
+        const enabledProviders = providers.filter(p => p.isEnabled && p.id !== providerId);
+        if (enabledProviders.length > 0) {
+          await setPrimaryProvider(enabledProviders[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Error setting primary provider:', error);
+    }
+  };
+
+  const getProviderIcon = (type: Provider['type']) => {
+    switch (type) {
+      case 'claras-pocket':
+        return Bot;
+      case 'openai':
+        return Zap;
+      case 'openrouter':
+        return Router;
+      case 'ollama':
+        return Server;
+      default:
+        return Globe;
+    }
+  };
+
+  const getDefaultProviderConfig = (type: Provider['type']) => {
+    switch (type) {
+      case 'openai':
+        return { baseUrl: 'https://api.openai.com/v1', name: 'OpenAI' };
+      case 'openrouter':
+        return { baseUrl: 'https://openrouter.ai/api/v1', name: 'OpenRouter' };
+      case 'ollama':
+        return { baseUrl: 'http://localhost:11434/v1', name: 'Ollama' };
+      case 'claras-pocket':
+        return { baseUrl: 'http://localhost:8091/v1', name: "Clara's Pocket" };
+      default:
+        return { baseUrl: '', name: '' };
+    }
+  };
+
   return (
     <>
       {/* Wallpaper */}
@@ -383,17 +548,17 @@ const Settings = () => {
             </h2>
             
             <TabItem 
-              id="personal" 
-              label="Personal Information" 
-              icon={<User className="w-5 h-5" />} 
-              isActive={activeTab === 'personal'} 
-            />
-            
-            <TabItem 
               id="api" 
               label="API Configuration" 
               icon={<Globe className="w-5 h-5" />} 
               isActive={activeTab === 'api'} 
+            />
+
+            <TabItem 
+              id="models" 
+              label="Model Manager" 
+              icon={<HardDrive className="w-5 h-5" />} 
+              isActive={activeTab === 'models'} 
             />
             
             <TabItem 
@@ -402,13 +567,15 @@ const Settings = () => {
               icon={<SettingsIcon className="w-5 h-5" />} 
               isActive={activeTab === 'preferences'} 
             />
-            
+
             <TabItem 
-              id="models" 
-              label="Model Manager" 
-              icon={<HardDrive className="w-5 h-5" />} 
-              isActive={activeTab === 'models'} 
+              id="personal" 
+              label="Personal Information" 
+              icon={<User className="w-5 h-5" />} 
+              isActive={activeTab === 'personal'} 
             />
+            
+
             
             {/* Save Status - Only visible when saving/saved/error */}
             {(isSaving || saveStatus !== 'idle') && (
@@ -508,93 +675,170 @@ const Settings = () => {
 
           {/* API Configuration Tab */}
           {activeTab === 'api' && (
-            <div className="glassmorphic rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <Globe className="w-6 h-6 text-sakura-500" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  API Configuration
-                </h2>
-              </div>
-
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    API Type
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={() => setApiConfig(prev => ({ ...prev, api_type: 'ollama' }))}
-                      className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
-                        apiConfig.api_type === 'ollama'
-                          ? 'border-sakura-500 bg-sakura-50 dark:bg-sakura-500/10'
-                          : 'border-gray-200 hover:border-sakura-200 dark:border-gray-700'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <h3 className="font-medium text-gray-900 dark:text-white">Ollama</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Local AI models</p>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setApiConfig(prev => ({ ...prev, api_type: 'openai' }))}
-                      className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
-                        apiConfig.api_type === 'openai'
-                          ? 'border-sakura-500 bg-sakura-50 dark:bg-sakura-500/10'
-                          : 'border-gray-200 hover:border-sakura-200 dark:border-gray-700'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <h3 className="font-medium text-gray-900 dark:text-white">OpenAI-like API</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Compatible with OpenAI API format</p>
-                      </div>
-                    </button>
+            <div className="space-y-6">
+              {/* Providers Section */}
+              <div className="glassmorphic rounded-xl p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Bot className="w-6 h-6 text-sakura-500" />
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                        AI Providers
+                      </h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Manage your AI service providers for chat and agents
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => {
+                      setEditingProvider(null);
+                      setNewProviderForm({
+                        name: '',
+                        type: 'openai',
+                        baseUrl: '',
+                        apiKey: '',
+                        isEnabled: true
+                      });
+                      setShowAddProviderModal(true);
+                    }}
+                    className="px-4 py-2 bg-sakura-500 text-white rounded-lg hover:bg-sakura-600 transition-colors flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Provider
+                  </button>
                 </div>
 
-                {apiConfig.api_type === 'ollama' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Ollama Base URL
-                    </label>
-                    <input
-                      type="url"
-                      value={apiConfig.ollama_base_url}
-                      onChange={(e) => setApiConfig(prev => ({ ...prev, ollama_base_url: e.target.value }))}
-                      className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
-                      placeholder="http://localhost:11434"
-                    />
+                {/* Providers List */}
+                {providersLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-sakura-500"></div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {providers.map((provider) => {
+                      const ProviderIcon = getProviderIcon(provider.type);
+                      return (
+                        <div
+                          key={provider.id}
+                          className={`p-4 rounded-lg border transition-all ${
+                            provider.isPrimary 
+                              ? 'border-sakura-300 dark:border-sakura-600 bg-sakura-50/30 dark:bg-sakura-900/10 shadow-sm' 
+                              : 'border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-800/30'
+                          } hover:bg-white/50 dark:hover:bg-gray-800/50`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                                provider.isEnabled 
+                                  ? 'bg-sakura-500' 
+                                  : 'bg-gray-400 dark:bg-gray-600'
+                              }`}>
+                                <ProviderIcon className="w-6 h-6 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-medium text-gray-900 dark:text-white">
+                                    {provider.name}
+                                  </h4>
+                                  {!provider.isEnabled && (
+                                    <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded-full">
+                                      Disabled
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                                  {provider.baseUrl || 'No URL configured'}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-500 capitalize">
+                                  {provider.type.replace('-', ' ')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              {/* Primary Toggle */}
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={provider.isPrimary}
+                                  onChange={(e) => handleSetPrimary(provider.id, e.target.checked)}
+                                  disabled={!provider.isEnabled}
+                                  className="w-4 h-4 text-green-500 rounded border-gray-300 focus:ring-green-500 disabled:opacity-50"
+                                />
+                                <span className="text-sm text-gray-600 dark:text-gray-400">Default</span>
+                              </div>
+                              
+                              {/* Test Button for Ollama */}
+                              {provider.type === 'ollama' && provider.baseUrl && (
+                                <button
+                                  onClick={() => testOllamaConnection(provider.id, provider.baseUrl!)}
+                                  disabled={testingProvider === provider.id}
+                                  className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 flex items-center gap-1 ${
+                                    testResults[provider.id] === 'success' 
+                                      ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-600'
+                                      : testResults[provider.id] === 'error'
+                                      ? 'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-600'
+                                      : 'bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-700'
+                                  }`}
+                                >
+                                  {testingProvider === provider.id ? (
+                                    <>
+                                      <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                      Testing...
+                                    </>
+                                  ) : testResults[provider.id] === 'success' ? (
+                                    <>
+                                      <Check className="w-3 h-3" />
+                                      Connected
+                                    </>
+                                  ) : testResults[provider.id] === 'error' ? (
+                                    <>
+                                      <X className="w-3 h-3" />
+                                      Failed
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Server className="w-3 h-3" />
+                                      Test
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                              
+                              <button
+                                onClick={() => handleEditProvider(provider)}
+                                className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                                title="Edit provider"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              
+                              {provider.type !== 'claras-pocket' && (
+                                <button
+                                  onClick={() => setShowDeleteConfirm(provider.id)}
+                                  className="p-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                                  title="Delete provider"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
+              </div>
 
-                {apiConfig.api_type === 'openai' && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        API Base URL <span className="text-xs text-gray-500 dark:text-gray-400">(Optional - uses OpenAI if blank)</span>
-                      </label>
-                      <input
-                        type="url"
-                        value={apiConfig.openai_base_url}
-                        onChange={(e) => setApiConfig(prev => ({ ...prev, openai_base_url: e.target.value }))}
-                        className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
-                        placeholder="https://api.openai.com/v1 or your custom endpoint"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        API Key <span className="text-xs text-gray-500 dark:text-gray-400">(Optional for some API providers)</span>
-                      </label>
-                      <input
-                        type="password"
-                        value={apiConfig.openai_api_key}
-                        onChange={(e) => setApiConfig(prev => ({ ...prev, openai_api_key: e.target.value }))}
-                        className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
-                        placeholder="sk-..."
-                      />
-                    </div>
-                  </div>
-                )}
-                
+              {/* ComfyUI Configuration */}
+              <div className="glassmorphic rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Image className="w-6 h-6 text-sakura-500" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    ComfyUI Configuration
+                  </h2>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     ComfyUI Base URL
@@ -606,54 +850,63 @@ const Settings = () => {
                     className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
                     placeholder="http://localhost:8188"
                   />
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    URL for your ComfyUI instance for image generation
+                  </p>
                 </div>
+              </div>
 
-                {/* n8n Configuration Section */}
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <Server className="w-5 h-5 text-sakura-500" />
+              {/* n8n Configuration */}
+              <div className="glassmorphic rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Server className="w-6 h-6 text-sakura-500" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     n8n Configuration
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        n8n Base URL
-                      </label>
+                  </h2>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      n8n Base URL
+                    </label>
+                    <input
+                      type="url"
+                      value={apiConfig.n8n_base_url || ''}
+                      onChange={(e) => setApiConfig(prev => ({ ...prev, n8n_base_url: e.target.value }))}
+                      className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
+                      placeholder="http://localhost:5678"
+                    />
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      The URL where your n8n instance is running
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      n8n API Key
+                    </label>
+                    <div className="relative">
                       <input
-                        type="url"
-                        value={apiConfig.n8n_base_url || ''}
-                        onChange={(e) => setApiConfig(prev => ({ ...prev, n8n_base_url: e.target.value }))}
+                        type={showApiKey ? "text" : "password"}
+                        value={apiConfig.n8n_api_key || ''}
+                        onChange={(e) => setApiConfig(prev => ({ ...prev, n8n_api_key: e.target.value }))}
                         className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
-                        placeholder="http://localhost:5678"
+                        placeholder="Your n8n API key"
                       />
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">The URL where your n8n instance is running</p>
+                      <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                      >
+                        {showApiKey ? (
+                          <Lock className="h-4 w-4 text-gray-500" />
+                        ) : (
+                          <Key className="h-4 w-4 text-gray-500" />
+                        )}
+                      </button>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        n8n API Key
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showApiKey ? "text" : "password"}
-                          value={apiConfig.n8n_api_key || ''}
-                          onChange={(e) => setApiConfig(prev => ({ ...prev, n8n_api_key: e.target.value }))}
-                          className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
-                          placeholder="Your n8n API key"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowApiKey(!showApiKey)}
-                          className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                        >
-                          {showApiKey ? (
-                            <Lock className="h-4 w-4 text-gray-500" />
-                          ) : (
-                            <Key className="h-4 w-4 text-gray-500" />
-                          )}
-                        </button>
-                      </div>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">API key for authenticating with your n8n instance</p>
-                    </div>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      API key for authenticating with your n8n instance
+                    </p>
                   </div>
                 </div>
               </div>
@@ -883,6 +1136,171 @@ const Settings = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Delete Provider
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-700 dark:text-gray-300">
+                Are you sure you want to delete this provider? All associated configurations will be permanently removed.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteProvider(showDeleteConfirm)}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Provider
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Provider Modal */}
+      {showAddProviderModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {editingProvider ? 'Edit Provider' : 'Add Provider'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowAddProviderModal(false);
+                  setEditingProvider(null);
+                }}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Provider Type
+                </label>
+                <select
+                  value={newProviderForm.type}
+                  onChange={(e) => {
+                    const type = e.target.value as Provider['type'];
+                    const defaultConfig = getDefaultProviderConfig(type);
+                    setNewProviderForm(prev => ({
+                      ...prev,
+                      type,
+                      name: defaultConfig.name || prev.name,
+                      baseUrl: defaultConfig.baseUrl || prev.baseUrl,
+                      apiKey: type === 'ollama' ? 'ollama' : prev.apiKey
+                    }));
+                  }}
+                  className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="ollama">Ollama</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Provider Name
+                </label>
+                <input
+                  type="text"
+                  value={newProviderForm.name}
+                  onChange={(e) => setNewProviderForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
+                  placeholder="Enter provider name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Base URL
+                </label>
+                <input
+                  type="url"
+                  value={newProviderForm.baseUrl}
+                  onChange={(e) => setNewProviderForm(prev => ({ ...prev, baseUrl: e.target.value }))}
+                  className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
+                  placeholder="https://api.example.com/v1"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  API Key
+                </label>
+                <input
+                  type="password"
+                  value={newProviderForm.apiKey}
+                  onChange={(e) => setNewProviderForm(prev => ({ ...prev, apiKey: e.target.value }))}
+                  className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
+                  placeholder="Enter API key (optional)"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isEnabled"
+                  checked={newProviderForm.isEnabled}
+                  onChange={(e) => setNewProviderForm(prev => ({ ...prev, isEnabled: e.target.checked }))}
+                  className="w-4 h-4 text-sakura-500 rounded border-gray-300 focus:ring-sakura-500"
+                />
+                <label htmlFor="isEnabled" className="text-sm text-gray-700 dark:text-gray-300">
+                  Enable this provider
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowAddProviderModal(false);
+                  setEditingProvider(null);
+                }}
+                className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={editingProvider ? handleUpdateProvider : handleAddProvider}
+                disabled={!newProviderForm.name.trim()}
+                className="flex-1 px-4 py-2 bg-sakura-500 text-white rounded-lg hover:bg-sakura-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                {editingProvider ? 'Update' : 'Add'} Provider
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

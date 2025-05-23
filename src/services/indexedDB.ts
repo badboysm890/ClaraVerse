@@ -1,5 +1,5 @@
 const DB_NAME = 'clara_db';
-const DB_VERSION = 5; // Increment version to trigger upgrade for new stores
+const DB_VERSION = 6; // Increment version to trigger upgrade for new stores
 
 export class IndexedDBService {
   private db: IDBDatabase | null = null;
@@ -86,6 +86,10 @@ export class IndexedDBService {
           versionStore.createIndex('design_id_index', 'designId', { unique: false });
           versionStore.createIndex('version_number_index', 'versionNumber', { unique: false });
           versionStore.createIndex('created_at_index', 'createdAt', { unique: false });
+        }
+        // Add providers store
+        if (!db.objectStoreNames.contains('providers')) {
+          db.createObjectStore('providers', { keyPath: 'id' });
         }
       };
     });

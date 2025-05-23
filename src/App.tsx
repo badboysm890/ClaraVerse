@@ -21,6 +21,7 @@ import NodeRegistryDebug from './debug/NodeRegistryDebug';
 import ToolbarDebug from './debug/ToolbarDebug';
 import { db } from './db';
 import { InterpreterProvider } from './contexts/InterpreterContext';
+import { ProvidersProvider } from './contexts/ProvidersContext';
 
 function App() {
   const [activePage, setActivePage] = useState(() => localStorage.getItem('activePage') || 'dashboard');
@@ -38,6 +39,11 @@ function App() {
       }
     };
     checkUserInfo();
+    
+    // Add db to window for debugging in development
+    if (import.meta.env.DEV) {
+      (window as typeof window & { db: typeof db }).db = db;
+    }
   }, []);
 
   const handleOnboardingComplete = async () => {
@@ -143,15 +149,17 @@ function App() {
   };
 
   return (
-    <InterpreterProvider onPageChange={setActivePage}>
-      <div className="min-h-screen bg-gradient-to-br from-white to-sakura-100 dark:from-gray-900 dark:to-sakura-100">
-        {showOnboarding ? (
-          <Onboarding onComplete={handleOnboardingComplete} />
-        ) : (
-          renderContent()
-        )}
-      </div>
-    </InterpreterProvider>
+    <ProvidersProvider>
+      <InterpreterProvider onPageChange={setActivePage}>
+        <div className="min-h-screen bg-gradient-to-br from-white to-sakura-100 dark:from-gray-900 dark:to-sakura-100">
+          {showOnboarding ? (
+            <Onboarding onComplete={handleOnboardingComplete} />
+          ) : (
+            renderContent()
+          )}
+        </div>
+      </InterpreterProvider>
+    </ProvidersProvider>
   );
 }
 
