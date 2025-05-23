@@ -975,8 +975,14 @@ export class LocalStorageDB {
 
   async getWallpaper(): Promise<string | null> {
     try {
-      const result = await this.getItem<string>('wallpaper');
-      return result;
+      if (this.useIndexedDB) {
+        // Get directly from settings store
+        const settingItem = await indexedDBService.get<{key: string, value: string}>('settings', 'wallpaper');
+        return settingItem ? settingItem.value : null;
+      } else {
+        const result = await this.getItem<string>('wallpaper');
+        return result;
+      }
     } catch (error) {
       console.error('Error getting wallpaper:', error);
       return null;

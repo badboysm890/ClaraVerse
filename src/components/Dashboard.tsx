@@ -731,6 +731,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onPageChange }) => {
         handleContextMenu(e);
       }}
     >
+      {/* Wallpaper */}
+      {wallpaperUrl && (
+        <div 
+          className="fixed top-0 left-0 right-0 bottom-0 z-0"
+          style={{
+            backgroundImage: `url(${wallpaperUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.1,
+            filter: 'blur(1px)',
+            pointerEvents: 'none'
+          }}
+        />
+      )}
+      
       <div className="relative z-10">
         {/* Rearrange Mode Controls */}
         <div id="dashboard-header" className="mb-4 flex justify-between items-center px-4 pt-4 group">

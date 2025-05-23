@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, systemPreferences } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, systemPreferences, Menu, shell, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const log = require('electron-log');
@@ -7,6 +7,7 @@ const { setupAutoUpdater, checkForUpdates } = require('./updateService.cjs');
 const SplashScreen = require('./splash.cjs');
 const { createAppMenu } = require('./menu.cjs');
 const LlamaSwapService = require('./llamaSwapService.cjs');
+const { debugPaths, logDebugInfo } = require('./debug-paths.cjs');
 
 // Configure the main process logger
 log.transports.file.level = 'info';
@@ -269,8 +270,15 @@ function registerLlamaSwapHandlers() {
         llamaSwapService = new LlamaSwapService();
       }
       
-      const success = await llamaSwapService.start();
-      return { success, status: llamaSwapService.getStatus() };
+      const result = await llamaSwapService.start();
+      return { 
+        success: result.success, 
+        message: result.message,
+        error: result.error,
+        warning: result.warning,
+        diagnostics: result.diagnostics,
+        status: llamaSwapService.getStatus() 
+      };
     } catch (error) {
       log.error('Error starting llama-swap service:', error);
       return { success: false, error: error.message };
@@ -297,8 +305,12 @@ function registerLlamaSwapHandlers() {
         llamaSwapService = new LlamaSwapService();
       }
       
-      const success = await llamaSwapService.restart();
-      return { success, status: llamaSwapService.getStatus() };
+      const result = await llamaSwapService.restart();
+      return { 
+        success: result.success || true, // restart returns boolean for now
+        message: result.message || 'Service restarted',
+        status: llamaSwapService.getStatus() 
+      };
     } catch (error) {
       log.error('Error restarting llama-swap service:', error);
       return { success: false, error: error.message };
@@ -360,6 +372,18 @@ function registerLlamaSwapHandlers() {
       return { success: false, error: error.message };
     }
   });
+
+  // Debug binary paths (useful for troubleshooting production builds)
+  ipcMain.handle('debug-binary-paths', async () => {
+    try {
+      const debugInfo = debugPaths();
+      logDebugInfo(); // Also log to electron-log
+      return { success: true, debugInfo };
+    } catch (error) {
+      log.error('Error debugging binary paths:', error);
+      return { success: false, error: error.message };
+    }
+  });
 }
 
 function registerModelManagerHandlers() {
@@ -376,7 +400,7 @@ function registerModelManagerHandlers() {
         fetch = nodeFetch.default || nodeFetch;
       }
       
-      const url = `https://huggingface.co/api/models?search=${encodeURIComponent(query)}&filter=gguf&limit=${limit}&sort=downloads&full=true`;
+      const url = `https://huggingface.co/api/models?search=${encodeURIComponent(query)}&filter=gguf&limit=${limit}&sort=likes&full=true`;
       
       const response = await fetch(url);
       if (!response.ok) {

@@ -3,13 +3,13 @@ import AssistantSidebar from './AssistantSidebar';
 import { AssistantHeader, ChatInput, ChatWindow, } from './assistant_components';
 import InterpreterChat from './assistant_components/InterpreterChat';
 import { useInterpreter } from '../contexts/InterpreterContext';
+import { useProviders } from '../contexts/ProvidersContext';
 
 import ImageWarning from './assistant_components/ImageWarning';
 
 import { db } from '../db';
-import { AssistantOllamaClient, ChatMessage, ChatRole } from '../utils';
-import type { Message, Chat, Tool } from '../db';
-import { v4 as uuidv4 } from 'uuid';
+import { AssistantAPIClient } from '../utils';
+import type { Chat, Tool } from '../db';
 import {
   TemporaryDocument,
   MAX_TEMP_COLLECTIONS,
@@ -17,7 +17,6 @@ import {
   cleanupAllTempCollections
 } from './assistantLibrary/tempDocs';
 import {
-  SearchResponse,
   searchDocuments
 } from './assistantLibrary/ragSearch';
 import {
@@ -35,13 +34,13 @@ import {
 import AssistantModals from './AssistantModals';
 import { useAssistantChat } from './hooks/useAssistantChat';
 
-// Add RequestOptions type definition
-interface RequestOptions {
-  temperature?: number;
-  top_p?: number;
-  stream?: boolean;
-  tools?: Tool[];
-  [key: string]: any;
+// Define model interface based on the API response structure
+interface Model {
+  name: string;
+  id: string;
+  digest?: string;
+  size?: number;
+  modified_at?: string;
 }
 
 interface UploadedImage {
@@ -56,22 +55,19 @@ interface AssistantProps {
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
-
-
 const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
   const { isInterpreterMode } = useInterpreter();
+  const { primaryProvider, loading: providersLoading } = useProviders();
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
-  const [models, setModels] = useState<any[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState(() => {
-    const apiType = localStorage.getItem('api_type') || 'ollama';
-    const storedOllamaModel = localStorage.getItem('selected_ollama_model');
-    const storedOpenAIModel = localStorage.getItem('selected_openai_model');
-    return apiType === 'ollama' ? (storedOllamaModel || '') : (storedOpenAIModel || '');
+    // Get stored model for the primary provider
+    const providerId = localStorage.getItem('primary_provider_id');
+    return providerId ? localStorage.getItem(`selected_model_${providerId}`) || '' : '';
   });
   const [activeAutoModel, setActiveAutoModel] = useState<string>('');
-  const [showModelSelect, setShowModelSelect] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isStreaming, setIsStreaming] = useState(() => {
     const stored = localStorage.getItem('assistant_streaming');
@@ -103,8 +99,8 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
     return !onboardingCompleted;
   });
   const [modelSelectionConfig, setModelSelectionConfig] = useState<ApiModelConfig>(() => {
-    const apiType = localStorage.getItem('api_type') || 'ollama';
-    const storedConfig = localStorage.getItem(`model_selection_config_${apiType}`);
+    const providerId = primaryProvider?.id;
+    const storedConfig = localStorage.getItem(`model_selection_config_${providerId}`);
     
     if (storedConfig) {
       return JSON.parse(storedConfig);
@@ -112,7 +108,7 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
     
     // Default config now sets mode to 'auto'
     return {
-      type: apiType as 'ollama' | 'openai',
+      type: 'openai', // All providers are OpenAI-compatible now
       mode: 'auto',
       visionModel: '',
       toolModel: '',
@@ -201,7 +197,7 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
           base64: base64.split(',')[1], // Remove data URL prefix
           preview: base64
         });
-      } catch (err) {
+      } catch {
         console.error(`Failed to process image ${file.name}`);
       }
     }
@@ -214,8 +210,8 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
     }
   };
 
-  const removeImage = (id: string) => {
-    setImages(prev => prev.filter(img => img.id !== id));
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleTemporaryDocUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -268,7 +264,7 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
     setTemporaryDocs(prev => prev.filter(d => d.id !== docId));
   };
 
-  const [client, setClient] = useState<AssistantOllamaClient | null>(null);
+  const [client, setClient] = useState<AssistantAPIClient | null>(null);
 
   const getAppropriateModelForContent = () => {
     // Determine which auto-selected model to show based on content
@@ -332,7 +328,7 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
   // Modified handleSend to use the appropriate model
   const originalHandleSend = assistantChat.handleSend;
   
-  assistantChat.handleSend = () => {
+  const modifiedHandleSend = async () => {
     if (modelSelectionConfig.mode === 'auto') {
       // Update the active model before sending message
       const appropriateModel = getAppropriateModelForContent();
@@ -342,8 +338,11 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
     }
     
     // Call the original handler
-    originalHandleSend();
+    await originalHandleSend();
   };
+
+  // Override the handleSend function
+  assistantChat.handleSend = modifiedHandleSend;
 
   useEffect(() => {
     return () => {
@@ -436,25 +435,20 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
     loadTools();
   }, []);
 
-  const getMostUsedModel = async (availableModels: any[]): Promise<string | null> => {
+  const getMostUsedModel = async (availableModels: Model[]): Promise<string | null> => {
     try {
       // Get model usage statistics from the database
       const modelUsage = await db.getModelUsage();
-      const apiType = client?.getConfig().type || 'ollama';
 
       if (!modelUsage || Object.keys(modelUsage).length === 0) {
         return null;
       }
 
-      // Filter to only include currently available models and models for current API type
+      // Filter to only include currently available models
       const availableModelNames = availableModels.map(model => model.name);
       const validUsageEntries = Object.entries(modelUsage)
         .filter(([modelName]) => {
-          const isAvailable = availableModelNames.includes(modelName);
-          const isCorrectType = apiType === 'ollama' 
-            ? !modelName.startsWith('gpt-') 
-            : modelName.startsWith('gpt-');
-          return isAvailable && isCorrectType;
+          return availableModelNames.includes(modelName);
         });
 
       if (validUsageEntries.length === 0) {
@@ -474,56 +468,20 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
   };
 
   useEffect(() => {
-    const initializeOllama = async () => {
-      const config = await db.getAPIConfig();
-      if (!config) {
+    const initializeProvider = async () => {
+      if (!primaryProvider || providersLoading) {
         setConnectionStatus('disconnected');
         return;
       }
 
       try {
-        let baseUrl: string;
-        let clientConfig: any = {};
-
-        if (config.api_type === 'ollama') {
-          baseUrl = config.ollama_base_url || 'http://localhost:11434';
-          clientConfig = { type: 'ollama' };
-        } else {
-          baseUrl = config.api_type === 'openai' 
-            ? (config.openai_base_url || 'https://api.openai.com/v1')
-            : config.ollama_base_url || 'http://localhost:11434';
-
-          clientConfig = {
-            type: config.api_type || 'ollama',
-            apiKey: config.openai_api_key || ''
-          };
-        }
-
-        // Check if base URL has changed
-        const prevBaseUrl = localStorage.getItem(`${config.api_type}_base_url`);
-        if (prevBaseUrl && prevBaseUrl !== baseUrl) {
-          // Show model config modal if base URL changed
-          assistantChat.setMessages(prev => [...prev, {
-            id: crypto.randomUUID(),
-            chat_id: activeChat || '',
-            content: `Base URL configuration change detected. Please reconfigure your models.`,
-            role: 'assistant' as ChatRole,
-            timestamp: Date.now(),
-            tokens: 0
-          }]);
-          setShowModelConfig(true);
-          // Update stored base URL
-          localStorage.setItem(`${config.api_type}_base_url`, baseUrl);
-        } else if (!prevBaseUrl) {
-          // Store initial base URL
-          localStorage.setItem(`${config.api_type}_base_url`, baseUrl);
-        }
-
-        const newClient = new AssistantOllamaClient(baseUrl, clientConfig);
+        const newClient = new AssistantAPIClient(primaryProvider.baseUrl || '', {
+          apiKey: primaryProvider.apiKey || ''
+        });
         setClient(newClient);
 
-        // Load saved model selection config for current API type
-        const savedModelSelectionConfig = localStorage.getItem(`model_selection_config_${config.api_type}`);
+        // Load saved model selection config for current provider
+        const savedModelSelectionConfig = localStorage.getItem(`model_selection_config_${primaryProvider.id}`);
         if (savedModelSelectionConfig) {
           const parsedConfig = JSON.parse(savedModelSelectionConfig);
           setModelSelectionConfig(parsedConfig);
@@ -537,16 +495,16 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
             newClient.setModelConfig(modelConfig);
           }
         } else {
-          // If no config exists for this API type, create default and show config modal
+          // If no config exists for this provider, create default
           const defaultConfig: ApiModelConfig = {
-            type: config.api_type as 'ollama' | 'openai',
+            type: 'openai',
             mode: 'manual',
             visionModel: '',
             toolModel: '',
             ragModel: ''
           };
           setModelSelectionConfig(defaultConfig);
-          localStorage.setItem(`model_selection_config_${config.api_type}`, JSON.stringify(defaultConfig));
+          localStorage.setItem(`model_selection_config_${primaryProvider.id}`, JSON.stringify(defaultConfig));
           setShowModelConfig(true);
         }
 
@@ -554,14 +512,9 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
         const modelList = await newClient.listModels();
         setModels(modelList);
 
-        // Show model pull modal if we're connected to Ollama but have no models
-        if (config.api_type === 'ollama' && modelList.length === 0) {
-          setShowPullModal(true);
-        }
-
         // If no model is selected, try to select one automatically
         if (!selectedModel) {
-          // First try to get the most used model for the current API type
+          // First try to get the most used model for the current provider
           const mostUsed = await getMostUsedModel(modelList);
           if (mostUsed) {
             handleModelSelect(mostUsed);
@@ -574,13 +527,11 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
           }
         }
 
-        // Update selected model based on API type
-        const storedOllamaModel = localStorage.getItem('selected_ollama_model');
-        const storedOpenAIModel = localStorage.getItem('selected_openai_model');
-        const currentModel = config.api_type === 'ollama' ? storedOllamaModel : storedOpenAIModel;
+        // Update selected model based on provider
+        const storedModel = localStorage.getItem(`selected_model_${primaryProvider.id}`);
         
-        if (currentModel && modelList.some(m => m.name === currentModel)) {
-          setSelectedModel(currentModel);
+        if (storedModel && modelList.some(m => m.name === storedModel)) {
+          setSelectedModel(storedModel);
         } else if (modelList.length > 0) {
           // If stored model not found in current list, select first available
           handleModelSelect(modelList[0].name);
@@ -588,23 +539,32 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
 
         setConnectionStatus('connected');
       } catch (err) {
-        console.error('Failed to connect to API:', err);
+        console.error('Failed to connect to provider:', err);
         setConnectionStatus('disconnected');
       }
     };
 
-    initializeOllama();
-  }, []);
+    initializeProvider();
+  }, [primaryProvider, providersLoading]);
+
+  const handleModelSelect = (modelName: string) => {
+    setSelectedModel(modelName);
+    // Store model selection based on provider ID
+    if (primaryProvider?.id) {
+      localStorage.setItem(`selected_model_${primaryProvider.id}`, modelName);
+    }
+  };
 
   const handleModelConfigSave = (config: ModelSelectionConfig) => {
-    const apiType = client?.getConfig().type || 'ollama';
+    if (!primaryProvider?.id) return;
+    
     const fullConfig: ApiModelConfig = {
       ...config,
-      type: apiType as 'ollama' | 'openai'
+      type: 'openai' // All providers are OpenAI-compatible
     };
 
     setModelSelectionConfig(fullConfig);
-    localStorage.setItem(`model_selection_config_${apiType}`, JSON.stringify(fullConfig));
+    localStorage.setItem(`model_selection_config_${primaryProvider.id}`, JSON.stringify(fullConfig));
     
     // Mark onboarding as completed
     localStorage.setItem('onboarding_completed', 'true');
@@ -673,102 +633,6 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
     }
   };
 
-  const handleModelSelect = (modelName: string) => {
-    setSelectedModel(modelName);
-    // Store model selection based on API type
-    const apiType = client?.getConfig().type || 'ollama';
-    if (apiType === 'ollama') {
-      localStorage.setItem('selected_ollama_model', modelName);
-    } else {
-      localStorage.setItem('selected_openai_model', modelName);
-    }
-  };
-
-  const handlePullModel = async function* (modelName: string): AsyncGenerator<any, void, unknown> {
-    if (!client) throw new Error('Client not initialized');
-
-    try {
-      // Forward all progress events from the client's pullModel
-      for await (const progress of client.pullModel(modelName)) {
-        yield progress;
-      }
-
-      // Refresh model list and update selected model
-      const modelList = await client.listModels();
-      setModels(modelList);
-      handleModelSelect(modelName);
-      
-      // Force close model selector dropdown
-      setShowModelSelect(false);
-      
-      // Show success message
-      const message: Message = {
-        id: uuidv4(),
-        chat_id: activeChat || '',
-        content: `Model "${modelName}" has been successfully installed and selected. You can now start using it for your conversations.`,
-        role: 'assistant' as ChatRole,
-        timestamp: Date.now(),
-        tokens: 0
-      };
-
-      // Add message to database and state
-      if (activeChat) {
-        await db.addMessage(
-          activeChat,
-          message.content,
-          message.role,
-          message.tokens || 0
-        );
-      }
-      assistantChat.setMessages(prev => [...prev, message]);
-
-      // Force a re-render of the header by updating the models list again
-      setTimeout(() => {
-        setModels([...modelList]);
-      }, 100);
-    } catch (error) {
-      console.error('Error pulling model:', error);
-      throw error;
-    }
-  };
-
-  const handleModeChange = (mode: 'auto' | 'manual' | 'smart') => {
-    const apiType = client?.getConfig().type || 'ollama';
-    
-    // If switching to auto mode, check if models are configured
-    if (mode === 'auto') {
-      const currentConfig = modelSelectionConfig;
-      const hasValidConfig = currentConfig.visionModel || currentConfig.toolModel || currentConfig.ragModel;
-      
-      if (!hasValidConfig) {
-        // Show ModelConfigModal if no models are configured
-        setShowModelConfig(true);
-        return;
-      }
-    }
-
-    const newConfig: ApiModelConfig = {
-      ...modelSelectionConfig,
-      mode,
-      type: apiType as 'ollama' | 'openai'
-    };
-
-    setModelSelectionConfig(newConfig);
-    localStorage.setItem(`model_selection_config_${apiType}`, JSON.stringify(newConfig));
-
-    // If switching to auto mode, set the model config for the client
-    if (mode === 'auto' && client) {
-      const modelConfig: ModelConfig = {
-        visionModel: newConfig.visionModel,
-        toolModel: newConfig.toolModel,
-        ragModel: newConfig.ragModel
-      };
-      client.setModelConfig(modelConfig);
-    }
-  };
-
-  const [showModelConfig, setShowModelConfig] = useState(false);
-
   const handleToggleStructuredToolCalling = () => {
     const newValue = !useStructuredToolCalling;
     setUseStructuredToolCalling(newValue);
@@ -790,6 +654,8 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
     };
     loadWallpaper();
   }, []);
+
+  const [showModelConfig, setShowModelConfig] = useState(false);
 
   return (
     <div className="relative flex h-screen bg-gradient-to-br from-white to-sakura-100 dark:from-gray-900 dark:to-sakura-100/10">
@@ -897,7 +763,6 @@ const Assistant: React.FC<AssistantProps> = ({ onPageChange }) => {
           setIsStreaming={setIsStreaming}
           showPullModal={showPullModal}
           setShowPullModal={setShowPullModal}
-          handlePullModel={handlePullModel}
           showKnowledgeBase={showKnowledgeBase}
           setShowKnowledgeBase={setShowKnowledgeBase}
           showToolModal={showToolModal}

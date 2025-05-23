@@ -140,8 +140,8 @@ Ensure you have sufficient disk space before downloading.
 
 ## Future Enhancements
 
+- [x] Multiple downloads
 - [ ] Model quantization options
-- [ ] Batch downloads
 - [ ] Model update notifications
 - [ ] Custom repository support
 - [ ] Model performance benchmarks

@@ -161,6 +161,15 @@
           "!**/__pycache__/**",
           "!**/*.pyc"
         ]
+      },
+      {
+        "from": "electron/llamacpp-binaries",
+        "to": "electron/llamacpp-binaries",
+        "filter": [
+          "**/*",
+          "!*.log",
+          "!config.yaml"
+        ]
       }
     ],
     "directories": {
@@ -186,12 +195,12 @@
         {
           "target": "default",
           "arch": [
-            "universal"
+            "arm64"
           ]
         }
       ],
       "darkModeSupport": true,
-      "artifactName": "${productName}-${version}-universal.${ext}",
+      "artifactName": "${productName}-${version}-arm64.${ext}",
       "type": "distribution",
       "files": [
         "!clara_interpreter/**/*",

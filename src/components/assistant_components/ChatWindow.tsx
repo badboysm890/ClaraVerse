@@ -1,10 +1,10 @@
 import React from 'react';
 import { Bot, ArrowDown, Loader2 } from 'lucide-react';
 import ChatMessage from './ChatMessage';
-import type { Message } from '../../db';
+import type { ChatMessage as ChatMessageType } from '../../db';
 
 interface ChatWindowProps {
-  messages: Message[];
+  messages: ChatMessageType[];
   showScrollButton: boolean;
   scrollToBottom: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;

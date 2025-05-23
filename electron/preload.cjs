@@ -119,7 +119,8 @@ contextBridge.exposeInMainWorld('llamaSwap', {
   getStatus: () => ipcRenderer.invoke('get-llama-swap-status'),
   getModels: () => ipcRenderer.invoke('get-llama-swap-models'),
   getApiUrl: () => ipcRenderer.invoke('get-llama-swap-api-url'),
-  regenerateConfig: () => ipcRenderer.invoke('regenerate-llama-swap-config')
+  regenerateConfig: () => ipcRenderer.invoke('regenerate-llama-swap-config'),
+  debugBinaryPaths: () => ipcRenderer.invoke('debug-binary-paths')
 });
 
 // Add model management API
