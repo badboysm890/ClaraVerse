@@ -1,0 +1,47 @@
+# Auto-generated llama-swap configuration
+# Models directory: /Users/temme/.clara/llama-models
+healthCheckTimeout: 30
+logLevel: info
+
+models:
+  "llama3.:21binstruct":
+    proxy: "http://127.0.0.1:9999"
+    cmd: |
+      "/Users/temme/Documents/ClaraVerse/electron/llamacpp-binaries/llama-server"
+      -m "/Users/temme/.clara/llama-models/Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+      --port 9999
+    ttl: 300
+
+  "gemma:31bit.":
+    proxy: "http://127.0.0.1:9999"
+    cmd: |
+      "/Users/temme/Documents/ClaraVerse/electron/llamacpp-binaries/llama-server"
+      -m "/Users/temme/.clara/llama-models/gemma-3-1b-it.Q4_K_M.gguf"
+      --port 9999
+    ttl: 300
+
+  "gemma:34bit":
+    proxy: "http://127.0.0.1:9999"
+    cmd: |
+      "/Users/temme/Documents/ClaraVerse/electron/llamacpp-binaries/llama-server"
+      -m "/Users/temme/Documents/ClaraVerse/electron/llamacpp-binaries/models/gemma-3-4b-it-Q4_K_M.gguf"
+      --port 9999
+    ttl: 300
+
+  "mmprojmodel":
+    proxy: "http://127.0.0.1:9999"
+    cmd: |
+      "/Users/temme/Documents/ClaraVerse/electron/llamacpp-binaries/llama-server"
+      -m "/Users/temme/Documents/ClaraVerse/electron/llamacpp-binaries/models/mmproj-model-f16.gguf"
+      --port 9999
+    ttl: 300
+
+groups:
+  "default_group":
+    swap: true
+    exclusive: true
+    members:
+      - "llama3.:21binstruct"
+      - "gemma:31bit."
+      - "gemma:34bit"
+      - "mmprojmodel"

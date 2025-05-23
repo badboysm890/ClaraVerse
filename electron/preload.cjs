@@ -111,6 +111,33 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('get-container-logs', containerId)
 });
 
+// Add llama-swap service API
+contextBridge.exposeInMainWorld('llamaSwap', {
+  start: () => ipcRenderer.invoke('start-llama-swap'),
+  stop: () => ipcRenderer.invoke('stop-llama-swap'),
+  restart: () => ipcRenderer.invoke('restart-llama-swap'),
+  getStatus: () => ipcRenderer.invoke('get-llama-swap-status'),
+  getModels: () => ipcRenderer.invoke('get-llama-swap-models'),
+  getApiUrl: () => ipcRenderer.invoke('get-llama-swap-api-url'),
+  regenerateConfig: () => ipcRenderer.invoke('regenerate-llama-swap-config')
+});
+
+// Add model management API
+contextBridge.exposeInMainWorld('modelManager', {
+  searchHuggingFaceModels: (query, limit) => ipcRenderer.invoke('search-huggingface-models', { query, limit }),
+  downloadModel: (modelId, fileName) => ipcRenderer.invoke('download-huggingface-model', { modelId, fileName }),
+  getLocalModels: () => ipcRenderer.invoke('get-local-models'),
+  deleteLocalModel: (filePath) => ipcRenderer.invoke('delete-local-model', { filePath }),
+  stopDownload: (fileName) => ipcRenderer.invoke('stop-download', { fileName }),
+  
+  // Listen for download progress updates
+  onDownloadProgress: (callback) => {
+    const subscription = (event, data) => callback(data);
+    ipcRenderer.on('download-progress', subscription);
+    return () => ipcRenderer.removeListener('download-progress', subscription);
+  }
+});
+
 // Notify main process when preload script has loaded
 window.addEventListener('DOMContentLoaded', () => {
   ipcRenderer.send('app-ready', 'Preload script has loaded');

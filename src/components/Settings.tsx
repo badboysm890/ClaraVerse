@@ -1,10 +1,55 @@
 import { useEffect, useState, useRef } from 'react';
-import { Save, User, Globe, Server, Key, Lock, Image, Settings as SettingsIcon } from 'lucide-react';
+import { Save, User, Globe, Server, Key, Lock, Image, Settings as SettingsIcon, Download, Search, Trash2, HardDrive, Cloud } from 'lucide-react';
 import { db, type PersonalInfo, type APIConfig } from '../db';
 import { useTheme, ThemeMode } from '../hooks/useTheme';
 
+// Define types for model management
+interface HuggingFaceModel {
+  id: string;
+  name: string;
+  downloads: number;
+  likes: number;
+  tags: string[];
+  description: string;
+  author: string;
+  files: Array<{ rfilename: string; size?: number }>;
+}
+
+interface LocalModel {
+  name: string;
+  file: string;
+  path: string;
+  size: number;
+  source: string;
+  lastModified: Date;
+}
+
+interface DownloadProgress {
+  fileName: string;
+  progress: number;
+  downloadedSize: number;
+  totalSize: number;
+}
+
+// Define the interface for the window object
+declare global {
+  interface Window {
+    modelManager?: {
+      searchHuggingFaceModels: (query: string, limit?: number) => Promise<{ success: boolean; models: HuggingFaceModel[]; error?: string }>;
+      downloadModel: (modelId: string, fileName: string) => Promise<{ success: boolean; filePath?: string; error?: string }>;
+      getLocalModels: () => Promise<{ success: boolean; models: LocalModel[]; error?: string }>;
+      deleteLocalModel: (filePath: string) => Promise<{ success: boolean; error?: string }>;
+      onDownloadProgress: (callback: (data: DownloadProgress) => void) => () => void;
+      stopDownload: (fileName: string) => Promise<{ success: boolean; error?: string }>;
+    };
+    llamaSwap?: {
+      regenerateConfig: () => Promise<{ success: boolean; models: number; error?: string }>;
+    };
+  }
+}
+
 const Settings = () => {
-  const [activeTab, setActiveTab] = useState<'personal' | 'api' | 'preferences'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'api' | 'preferences' | 'models'>('personal');
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     name: '',
     email: '',
@@ -25,6 +70,15 @@ const Settings = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showApiKey, setShowApiKey] = useState(false);
   const [wallpaperUrl, setWallpaperUrl] = useState<string | null>(null);
+
+  // Model manager state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<HuggingFaceModel[]>([]);
+  const [localModels, setLocalModels] = useState<LocalModel[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<{ [fileName: string]: DownloadProgress }>({});
+  const [downloading, setDownloading] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState<Set<string>>(new Set());
 
   const { setTheme } = useTheme();
   const saveTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -66,6 +120,41 @@ const Settings = () => {
     loadWallpaper();
   }, []);
 
+  // Load local models on mount and set up download progress listener
+  useEffect(() => {
+    const loadLocalModels = async () => {
+      if (window.modelManager?.getLocalModels) {
+        try {
+          const result = await window.modelManager.getLocalModels();
+          if (result.success) {
+            setLocalModels(result.models);
+          }
+        } catch (error) {
+          console.error('Error loading local models:', error);
+        }
+      }
+    };
+
+    loadLocalModels();
+
+    // Set up download progress listener
+    let unsubscribe: (() => void) | undefined;
+    if (window.modelManager?.onDownloadProgress) {
+      unsubscribe = window.modelManager.onDownloadProgress((data: DownloadProgress) => {
+        setDownloadProgress(prev => ({
+          ...prev,
+          [data.fileName]: data
+        }));
+      });
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
+
   // Auto-save effect for personalInfo and apiConfig
   useEffect(() => {
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
@@ -81,7 +170,7 @@ const Settings = () => {
           setSaveStatus('idle');
           setIsSaving(false);
         }, 2000);
-      } catch (error) {
+      } catch {
         setSaveStatus('error');
         // Hide error message after 3 seconds
         setTimeout(() => {
@@ -142,7 +231,7 @@ const Settings = () => {
   // Timezone options helper
   let timezoneOptions: string[] = [];
   try {
-    // @ts-ignore
+    // @ts-expect-error - Intl.supportedValuesOf may not be available in all environments
     timezoneOptions = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
   } catch {
     timezoneOptions = [];
@@ -168,6 +257,104 @@ const Settings = () => {
       <span className="font-medium">{label}</span>
     </button>
   );
+
+  // Model management functions
+  const searchModels = async () => {
+    if (!searchQuery.trim() || !window.modelManager?.searchHuggingFaceModels) return;
+    
+    setIsSearching(true);
+    try {
+      const result = await window.modelManager.searchHuggingFaceModels(searchQuery, 20);
+      if (result.success) {
+        setSearchResults(result.models);
+      } else {
+        console.error('Search failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Error searching models:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const downloadModel = async (modelId: string, fileName: string) => {
+    if (!window.modelManager?.downloadModel) return;
+    
+    setDownloading(prev => new Set([...prev, fileName]));
+    try {
+      const result = await window.modelManager.downloadModel(modelId, fileName);
+      if (result.success) {
+        // Refresh local models
+        const localResult = await window.modelManager.getLocalModels();
+        if (localResult.success) {
+          setLocalModels(localResult.models);
+        }
+        
+        // Regenerate llama-swap config
+        if (window.llamaSwap?.regenerateConfig) {
+          await window.llamaSwap.regenerateConfig();
+        }
+      } else {
+        console.error('Download failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Error downloading model:', error);
+    } finally {
+      setDownloading(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileName);
+        return newSet;
+      });
+      
+      // Clean up progress
+      setDownloadProgress(prev => {
+        const newProgress = { ...prev };
+        delete newProgress[fileName];
+        return newProgress;
+      });
+    }
+  };
+
+  const deleteLocalModel = async (filePath: string) => {
+    if (!window.modelManager?.deleteLocalModel) return;
+    
+    try {
+      // Add to deleting set
+      setDeleting(prev => new Set([...prev, filePath]));
+      
+      const result = await window.modelManager.deleteLocalModel(filePath);
+      if (result.success) {
+        // Refresh local models
+        const localResult = await window.modelManager.getLocalModels();
+        if (localResult.success) {
+          setLocalModels(localResult.models);
+        }
+        
+        // Regenerate llama-swap config
+        if (window.llamaSwap?.regenerateConfig) {
+          await window.llamaSwap.regenerateConfig();
+        }
+      } else {
+        console.error('Delete failed:', result.error);
+      }
+    } catch (error) {
+      console.error('Error deleting model:', error);
+    } finally {
+      // Remove from deleting set
+      setDeleting(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(filePath);
+        return newSet;
+      });
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    if (bytes === 0) return '0 Bytes';
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  };
 
   return (
     <>
@@ -214,6 +401,13 @@ const Settings = () => {
               label="Preferences" 
               icon={<SettingsIcon className="w-5 h-5" />} 
               isActive={activeTab === 'preferences'} 
+            />
+            
+            <TabItem 
+              id="models" 
+              label="Model Manager" 
+              icon={<HardDrive className="w-5 h-5" />} 
+              isActive={activeTab === 'models'} 
             />
             
             {/* Save Status - Only visible when saving/saved/error */}
@@ -506,6 +700,184 @@ const Settings = () => {
                     ))}
                   </select>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Model Manager Tab */}
+          {activeTab === 'models' && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="glassmorphic rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <HardDrive className="w-6 h-6 text-sakura-500" />
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    Model Manager
+                  </h2>
+                </div>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Download and manage GGUF models from Hugging Face for local AI inference.
+                </p>
+              </div>
+
+              {/* Search Section */}
+              <div className="glassmorphic rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Search className="w-5 h-5 text-sakura-500" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Search Hugging Face Models
+                  </h3>
+                </div>
+                
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && searchModels()}
+                    placeholder="Search for GGUF models (e.g., 'llama', 'mistral', 'qwen')"
+                    className="flex-1 px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
+                  />
+                  <button
+                    onClick={searchModels}
+                    disabled={isSearching || !searchQuery.trim()}
+                    className="px-6 py-2 bg-sakura-500 text-white rounded-lg hover:bg-sakura-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  >
+                    <Search className="w-4 h-4" />
+                    {isSearching ? 'Searching...' : 'Search'}
+                  </button>
+                </div>
+
+                {/* Search Results */}
+                {searchResults.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-900 dark:text-white">Search Results</h4>
+                    <div className="grid gap-3 max-h-96 overflow-y-auto">
+                      {searchResults.map((model) => (
+                        <div key={model.id} className="bg-white/30 dark:bg-gray-800/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <h5 className="font-medium text-gray-900 dark:text-white">{model.name}</h5>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">by {model.author}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{model.description}</p>
+                            </div>
+                            <div className="text-right ml-4">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                <div>↓ {model.downloads.toLocaleString()}</div>
+                                <div>♥ {model.likes.toLocaleString()}</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Available Files */}
+                          {model.files.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              <h6 className="text-sm font-medium text-gray-800 dark:text-gray-200">Available Files:</h6>
+                              <div className="space-y-1">
+                                {model.files.map((file) => (
+                                  <div key={file.rfilename} className="flex justify-between items-center bg-gray-50 dark:bg-gray-700/50 rounded p-2">
+                                    <span className="text-sm font-mono text-gray-700 dark:text-gray-300">{file.rfilename}</span>
+                                    <div className="flex items-center gap-2">
+                                      {file.size && (
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                          {formatFileSize(file.size)}
+                                        </span>
+                                      )}
+                                      {downloading.has(file.rfilename) ? (
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-4 h-4 border-2 border-sakura-500 border-t-transparent rounded-full animate-spin"></div>
+                                          {downloadProgress[file.rfilename] && (
+                                            <span className="text-xs text-sakura-600 dark:text-sakura-400">
+                                              {downloadProgress[file.rfilename].progress}%
+                                            </span>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={() => downloadModel(model.id, file.rfilename)}
+                                          className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors flex items-center gap-1"
+                                        >
+                                          <Download className="w-3 h-3" />
+                                          Download
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Tags */}
+                          {model.tags.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-1">
+                              {model.tags.slice(0, 5).map((tag) => (
+                                <span key={tag} className="px-2 py-1 bg-sakura-100 dark:bg-sakura-800 text-sakura-700 dark:text-sakura-300 text-xs rounded">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Local Models Section */}
+              <div className="glassmorphic rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <HardDrive className="w-5 h-5 text-sakura-500" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Local Models
+                  </h3>
+                </div>
+                
+                {localModels.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="grid gap-3">
+                      {localModels.map((model) => (
+                        <div key={model.path} className="bg-white/30 dark:bg-gray-800/30 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h5 className="font-medium text-gray-900 dark:text-white">{model.name}</h5>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 font-mono">{model.file}</p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                <span>Size: {formatFileSize(model.size)}</span>
+                                <span>Source: {model.source}</span>
+                                <span>Modified: {new Date(model.lastModified).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            {deleting.has(model.path) ? (
+                              <div className="flex items-center gap-2 px-3 py-1 bg-red-500 text-white text-xs rounded opacity-50 cursor-not-allowed">
+                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Deleting...
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => deleteLocalModel(model.path)}
+                                disabled={deleting.has(model.path)}
+                                className="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Cloud className="w-12 h-12 text-gray-400 dark:text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-500 dark:text-gray-400 mb-2">No local models found</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">
+                      Search and download models from Hugging Face above
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

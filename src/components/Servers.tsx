@@ -25,6 +25,15 @@ declare global {
       getContainerStats: (containerId: string) => Promise<{ cpu: string; memory: string; network: string }>;
       getContainerLogs: (containerId: string) => Promise<string>;
     };
+    llamaSwap?: {
+      start: () => Promise<{ success: boolean; status: any; error?: string }>;
+      stop: () => Promise<{ success: boolean; error?: string }>;
+      restart: () => Promise<{ success: boolean; status: any; error?: string }>;
+      getStatus: () => Promise<{ isRunning: boolean; port: number; pid?: number; apiUrl: string }>;
+      getModels: () => Promise<any[]>;
+      getApiUrl: () => Promise<string | null>;
+      regenerateConfig: () => Promise<{ success: boolean; models: number; error?: string }>;
+    };
   }
 }
 
@@ -114,7 +123,7 @@ const Servers: React.FC<ServerProps> = ({ onPageChange }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedContainer, setSelectedContainer] = useState<string | null>(null);
-  const [view, setView] = useState<'list' | 'stats' | 'logs' | 'create'>('list');
+  const [view, setView] = useState<'list' | 'stats' | 'logs' | 'create' | 'llama-swap'>('list');
   const [apiAvailable, setApiAvailable] = useState(true);
   const [debugInfo, setDebugInfo] = useState<string>('');
   const [wallpaperUrl, setWallpaperUrl] = useState<string | null>(null);
@@ -135,6 +144,20 @@ const Servers: React.FC<ServerProps> = ({ onPageChange }) => {
     customContainerPort: ''
   });
   const [createMode, setCreateMode] = useState<'quick' | 'advanced'>('quick');
+
+  // Llama-swap state
+  const [llamaSwapStatus, setLlamaSwapStatus] = useState<{
+    isRunning: boolean;
+    port: number | null;
+    pid?: number;
+    apiUrl: string | null;
+  }>({
+    isRunning: false,
+    port: null,
+    apiUrl: null
+  });
+  const [llamaSwapModels, setLlamaSwapModels] = useState<any[]>([]);
+  const [llamaSwapLoading, setLlamaSwapLoading] = useState(false);
 
   // Debug function to check what APIs are available
   const checkApiAvailability = () => {
@@ -187,6 +210,9 @@ const Servers: React.FC<ServerProps> = ({ onPageChange }) => {
       }
     };
     loadWallpaper();
+    
+    // Fetch llama-swap status
+    fetchLlamaSwapStatus();
   }, []);
 
   const fetchContainers = async () => {
@@ -415,6 +441,12 @@ const Servers: React.FC<ServerProps> = ({ onPageChange }) => {
         <div className="flex justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Containers</h2>
           <div className="flex gap-2">
+            <button 
+              onClick={() => setView('llama-swap')} 
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+            >
+              <Activity className="w-4 h-4" /> LLM Service
+            </button>
             <button 
               onClick={() => setView('create')} 
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sakura-500 text-white hover:bg-sakura-600 transition-colors"
@@ -941,6 +973,185 @@ const Servers: React.FC<ServerProps> = ({ onPageChange }) => {
     );
   };
 
+  const renderLlamaSwap = () => {
+    return (
+      <div className="mt-6">
+        <div className="flex justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">LLM Service (Llama-swap)</h2>
+          <button 
+            onClick={() => setView('list')} 
+            className="flex items-center gap-2 px-4 py-2 rounded-lg glassmorphic text-gray-700 hover:bg-sakura-50 dark:text-gray-200 dark:hover:bg-sakura-100/10 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to containers
+          </button>
+        </div>
+
+        {/* Service Status */}
+        <div className="glassmorphic p-6 rounded-lg mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Service Status</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleLlamaSwapAction('start')}
+                disabled={llamaSwapStatus.isRunning || llamaSwapLoading}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Play className="w-4 h-4" /> Start
+              </button>
+              <button
+                onClick={() => handleLlamaSwapAction('stop')}
+                disabled={!llamaSwapStatus.isRunning || llamaSwapLoading}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Square className="w-4 h-4" /> Stop
+              </button>
+              <button
+                onClick={() => handleLlamaSwapAction('restart')}
+                disabled={llamaSwapLoading}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" /> Restart
+              </button>
+              <button
+                onClick={regenerateLlamaSwapConfig}
+                disabled={llamaSwapLoading}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" /> Regenerate Config
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <h4 className="text-sakura-500 dark:text-sakura-400 mb-2">Status</h4>
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${llamaSwapStatus.isRunning ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-gray-800 dark:text-gray-100">
+                  {llamaSwapStatus.isRunning ? 'Running' : 'Stopped'}
+                </span>
+              </div>
+            </div>
+            <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <h4 className="text-sakura-500 dark:text-sakura-400 mb-2">Port</h4>
+              <p className="text-gray-800 dark:text-gray-100">{llamaSwapStatus.port || 'N/A'}</p>
+            </div>
+            <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
+              <h4 className="text-sakura-500 dark:text-sakura-400 mb-2">API URL</h4>
+              <p className="text-gray-800 dark:text-gray-100 font-mono text-sm">
+                {llamaSwapStatus.apiUrl || 'N/A'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Available Models */}
+        <div className="glassmorphic p-6 rounded-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Available Models</h3>
+            <button
+              onClick={fetchLlamaSwapStatus}
+              disabled={llamaSwapLoading}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sakura-500 text-white hover:bg-sakura-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" /> Refresh
+            </button>
+          </div>
+
+          {llamaSwapModels.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-sakura-50 dark:bg-gray-800/80">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-sakura-700 dark:text-sakura-300 uppercase tracking-wider">Model ID</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-sakura-700 dark:text-sakura-300 uppercase tracking-wider">Object</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-sakura-700 dark:text-sakura-300 uppercase tracking-wider">Created</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-sakura-100 dark:divide-sakura-800/30">
+                  {llamaSwapModels.map((model, index) => (
+                    <tr key={index} className="hover:bg-sakura-50 dark:hover:bg-gray-700/60 transition-colors">
+                      <td className="px-4 py-2 text-gray-800 dark:text-gray-200 font-mono text-sm">{model.id}</td>
+                      <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{model.object}</td>
+                      <td className="px-4 py-2 text-gray-700 dark:text-gray-300">
+                        {model.created ? new Date(model.created * 1000).toLocaleString() : 'N/A'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400">
+                {llamaSwapStatus.isRunning ? 'No models available' : 'Service not running'}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Llama-swap service management functions
+  const fetchLlamaSwapStatus = async () => {
+    try {
+      if (window.llamaSwap?.getStatus) {
+        const status = await window.llamaSwap.getStatus();
+        setLlamaSwapStatus(status);
+        
+        // If running, fetch models
+        if (status.isRunning && window.llamaSwap?.getModels) {
+          const models = await window.llamaSwap.getModels();
+          setLlamaSwapModels(models);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching llama-swap status:', error);
+    }
+  };
+
+  const handleLlamaSwapAction = async (action: 'start' | 'stop' | 'restart') => {
+    setLlamaSwapLoading(true);
+    try {
+      let result;
+      if (action === 'start' && window.llamaSwap?.start) {
+        result = await window.llamaSwap.start();
+      } else if (action === 'stop' && window.llamaSwap?.stop) {
+        result = await window.llamaSwap.stop();
+      } else if (action === 'restart' && window.llamaSwap?.restart) {
+        result = await window.llamaSwap.restart();
+      }
+      
+      if (result?.success) {
+        await fetchLlamaSwapStatus();
+      } else {
+        console.error('Llama-swap action failed:', result?.error);
+      }
+    } catch (error) {
+      console.error('Error performing llama-swap action:', error);
+    } finally {
+      setLlamaSwapLoading(false);
+    }
+  };
+
+  const regenerateLlamaSwapConfig = async () => {
+    setLlamaSwapLoading(true);
+    try {
+      if (window.llamaSwap?.regenerateConfig) {
+        const result = await window.llamaSwap.regenerateConfig();
+        if (result.success) {
+          console.log(`Config regenerated with ${result.models} models`);
+          await fetchLlamaSwapStatus();
+        }
+      }
+    } catch (error) {
+      console.error('Error regenerating llama-swap config:', error);
+    } finally {
+      setLlamaSwapLoading(false);
+    }
+  };
+
   return (
     <>
       {/* Wallpaper */}
@@ -965,12 +1176,12 @@ const Servers: React.FC<ServerProps> = ({ onPageChange }) => {
           
           <main className="flex-1 p-6 overflow-auto">
             <header className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Docker Container Management</h1>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Container & LLM Service Management</h1>
               <div className="flex justify-between items-center">
                 <p className="text-gray-600 dark:text-gray-300">
                   {!apiAvailable 
                     ? "Docker API is unavailable. This feature requires Docker and proper API configuration." 
-                    : "Manage your Docker containers from one place"}
+                    : "Manage your Docker containers and LLM services from one place"}
                 </p>
                 <button
                   onClick={checkApiAvailability}
@@ -1010,6 +1221,7 @@ const Servers: React.FC<ServerProps> = ({ onPageChange }) => {
             {view === 'list' && renderContainerList()}
             {view === 'stats' && renderContainerStats()}
             {view === 'create' && renderCreateContainer()}
+            {view === 'llama-swap' && renderLlamaSwap()}
           </main>
         </div>
       </div>

@@ -6,6 +6,7 @@ const DockerSetup = require('./dockerSetup.cjs');
 const { setupAutoUpdater, checkForUpdates } = require('./updateService.cjs');
 const SplashScreen = require('./splash.cjs');
 const { createAppMenu } = require('./menu.cjs');
+const LlamaSwapService = require('./llamaSwapService.cjs');
 
 // Configure the main process logger
 log.transports.file.level = 'info';
@@ -15,6 +16,10 @@ log.info('Application starting...');
 let mainWindow;
 let splash;
 let dockerSetup;
+let llamaSwapService;
+
+// Track active downloads for stop functionality
+const activeDownloads = new Map();
 
 // Helper function to format bytes
 function formatBytes(bytes, decimals = 2) {
@@ -255,17 +260,487 @@ function registerDockerContainerHandlers() {
   });
 }
 
+// Register llama-swap service IPC handlers
+function registerLlamaSwapHandlers() {
+  // Start llama-swap service
+  ipcMain.handle('start-llama-swap', async () => {
+    try {
+      if (!llamaSwapService) {
+        llamaSwapService = new LlamaSwapService();
+      }
+      
+      const success = await llamaSwapService.start();
+      return { success, status: llamaSwapService.getStatus() };
+    } catch (error) {
+      log.error('Error starting llama-swap service:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Stop llama-swap service
+  ipcMain.handle('stop-llama-swap', async () => {
+    try {
+      if (llamaSwapService) {
+        await llamaSwapService.stop();
+      }
+      return { success: true };
+    } catch (error) {
+      log.error('Error stopping llama-swap service:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Restart llama-swap service
+  ipcMain.handle('restart-llama-swap', async () => {
+    try {
+      if (!llamaSwapService) {
+        llamaSwapService = new LlamaSwapService();
+      }
+      
+      const success = await llamaSwapService.restart();
+      return { success, status: llamaSwapService.getStatus() };
+    } catch (error) {
+      log.error('Error restarting llama-swap service:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Get llama-swap service status
+  ipcMain.handle('get-llama-swap-status', async () => {
+    try {
+      if (!llamaSwapService) {
+        return { isRunning: false, port: null, apiUrl: null };
+      }
+      
+      return llamaSwapService.getStatus();
+    } catch (error) {
+      log.error('Error getting llama-swap status:', error);
+      return { isRunning: false, port: null, apiUrl: null, error: error.message };
+    }
+  });
+
+  // Get available models from llama-swap
+  ipcMain.handle('get-llama-swap-models', async () => {
+    try {
+      if (!llamaSwapService) {
+        return [];
+      }
+      
+      return await llamaSwapService.getModels();
+    } catch (error) {
+      log.error('Error getting llama-swap models:', error);
+      return [];
+    }
+  });
+
+  // Get llama-swap API URL
+  ipcMain.handle('get-llama-swap-api-url', async () => {
+    try {
+      if (llamaSwapService && llamaSwapService.isRunning) {
+        return llamaSwapService.getApiUrl();
+      }
+      return null;
+    } catch (error) {
+      log.error('Error getting llama-swap API URL:', error);
+      return null;
+    }
+  });
+
+  // Regenerate config (useful when new models are added)
+  ipcMain.handle('regenerate-llama-swap-config', async () => {
+    try {
+      if (!llamaSwapService) {
+        llamaSwapService = new LlamaSwapService();
+      }
+      
+      const result = await llamaSwapService.generateConfig();
+      return { success: true, ...result };
+    } catch (error) {
+      log.error('Error regenerating llama-swap config:', error);
+      return { success: false, error: error.message };
+    }
+  });
+}
+
+function registerModelManagerHandlers() {
+  // Search models from Hugging Face
+  ipcMain.handle('search-huggingface-models', async (_event, { query, limit = 20 }) => {
+    try {
+      // Use Node.js built-in fetch if available (Node 18+), otherwise try node-fetch
+      let fetch;
+      try {
+        fetch = global.fetch || (await import('node-fetch')).default;
+      } catch (importError) {
+        // Fallback for older Node versions or import issues
+        const nodeFetch = require('node-fetch');
+        fetch = nodeFetch.default || nodeFetch;
+      }
+      
+      const url = `https://huggingface.co/api/models?search=${encodeURIComponent(query)}&filter=gguf&limit=${limit}&sort=downloads&full=true`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HuggingFace API error: ${response.status}`);
+      }
+      
+      const models = await response.json();
+      
+      // Filter and format models for GGUF files
+      const ggufModels = models.filter(model => 
+        model.tags && model.tags.includes('gguf') || 
+        model.modelId.toLowerCase().includes('gguf') ||
+        (model.siblings && model.siblings.some(file => file.rfilename.endsWith('.gguf')))
+      ).map(model => ({
+        id: model.modelId || model.id,
+        name: model.modelId || model.id,
+        downloads: model.downloads || 0,
+        likes: model.likes || 0,
+        tags: model.tags || [],
+        description: model.description || '',
+        author: model.author || model.modelId?.split('/')[0] || '',
+        files: model.siblings ? model.siblings.filter(file => file.rfilename.endsWith('.gguf')) : []
+      }));
+      
+      return { success: true, models: ggufModels };
+    } catch (error) {
+      log.error('Error searching HuggingFace models:', error);
+      return { success: false, error: error.message, models: [] };
+    }
+  });
+
+  // Download model from Hugging Face
+  ipcMain.handle('download-huggingface-model', async (_event, { modelId, fileName }) => {
+    try {
+      const fs = require('fs');
+      const https = require('https');
+      const http = require('http');
+      const path = require('path');
+      const os = require('os');
+      
+      // Ensure models directory exists
+      const modelsDir = path.join(os.homedir(), '.clara', 'llama-models');
+      if (!fs.existsSync(modelsDir)) {
+        fs.mkdirSync(modelsDir, { recursive: true });
+      }
+      
+      const downloadUrl = `https://huggingface.co/${modelId}/resolve/main/${fileName}`;
+      const filePath = path.join(modelsDir, fileName);
+      
+      // Check if file already exists
+      if (fs.existsSync(filePath)) {
+        return { success: false, error: 'File already exists' };
+      }
+      
+      log.info(`Starting download: ${downloadUrl} -> ${filePath}`);
+      
+      return new Promise((resolve) => {
+        const protocol = downloadUrl.startsWith('https:') ? https : http;
+        const file = fs.createWriteStream(filePath);
+        let request;
+        let stopped = false;
+        
+        // Store download info for stop functionality
+        const downloadInfo = {
+          request: null,
+          file,
+          filePath,
+          stopped: false
+        };
+        activeDownloads.set(fileName, downloadInfo);
+        
+        const cleanup = () => {
+          activeDownloads.delete(fileName);
+          if (file && !file.destroyed) {
+            file.close();
+          }
+          if (fs.existsSync(filePath)) {
+            try {
+              fs.unlinkSync(filePath);
+            } catch (cleanupError) {
+              log.warn('Error cleaning up file:', cleanupError);
+            }
+          }
+        };
+        
+        request = protocol.get(downloadUrl, (response) => {
+          downloadInfo.request = request;
+          
+          if (downloadInfo.stopped) {
+            cleanup();
+            resolve({ success: false, error: 'Download stopped by user' });
+            return;
+          }
+          
+          if (response.statusCode === 302 || response.statusCode === 301) {
+            // Handle redirect
+            const redirectUrl = response.headers.location;
+            if (redirectUrl) {
+              const redirectProtocol = redirectUrl.startsWith('https:') ? https : http;
+              const redirectRequest = redirectProtocol.get(redirectUrl, (redirectResponse) => {
+                downloadInfo.request = redirectRequest;
+                
+                if (downloadInfo.stopped) {
+                  cleanup();
+                  resolve({ success: false, error: 'Download stopped by user' });
+                  return;
+                }
+                
+                if (redirectResponse.statusCode !== 200) {
+                  cleanup();
+                  resolve({ success: false, error: `HTTP ${redirectResponse.statusCode}` });
+                  return;
+                }
+                
+                const totalSize = parseInt(redirectResponse.headers['content-length'] || '0');
+                let downloadedSize = 0;
+                
+                redirectResponse.pipe(file);
+                
+                redirectResponse.on('data', (chunk) => {
+                  if (downloadInfo.stopped) {
+                    redirectResponse.destroy();
+                    cleanup();
+                    resolve({ success: false, error: 'Download stopped by user' });
+                    return;
+                  }
+                  
+                  downloadedSize += chunk.length;
+                  const progress = totalSize > 0 ? (downloadedSize / totalSize) * 100 : 0;
+                  
+                  // Send progress update to renderer
+                  if (mainWindow) {
+                    mainWindow.webContents.send('download-progress', {
+                      fileName,
+                      progress: Math.round(progress),
+                      downloadedSize,
+                      totalSize
+                    });
+                  }
+                });
+                
+                file.on('finish', () => {
+                  if (downloadInfo.stopped) {
+                    cleanup();
+                    resolve({ success: false, error: 'Download stopped by user' });
+                    return;
+                  }
+                  
+                  file.close(async () => {
+                    activeDownloads.delete(fileName);
+                    log.info(`Download completed: ${filePath}`);
+                    
+                    // Restart llama-swap service to load new models
+                    try {
+                      if (llamaSwapService && llamaSwapService.getStatus().isRunning) {
+                        log.info('Restarting llama-swap service to load new models...');
+                        await llamaSwapService.restart();
+                        log.info('llama-swap service restarted successfully');
+                      }
+                    } catch (restartError) {
+                      log.warn('Failed to restart llama-swap service after download:', restartError);
+                    }
+                    
+                    resolve({ success: true, filePath });
+                  });
+                });
+              });
+              
+              redirectRequest.on('error', (error) => {
+                cleanup();
+                resolve({ success: false, error: error.message });
+              });
+            } else {
+              cleanup();
+              resolve({ success: false, error: 'Redirect without location header' });
+            }
+          } else if (response.statusCode !== 200) {
+            cleanup();
+            resolve({ success: false, error: `HTTP ${response.statusCode}` });
+          } else {
+            const totalSize = parseInt(response.headers['content-length'] || '0');
+            let downloadedSize = 0;
+            
+            response.pipe(file);
+            
+            response.on('data', (chunk) => {
+              if (downloadInfo.stopped) {
+                response.destroy();
+                cleanup();
+                resolve({ success: false, error: 'Download stopped by user' });
+                return;
+              }
+              
+              downloadedSize += chunk.length;
+              const progress = totalSize > 0 ? (downloadedSize / totalSize) * 100 : 0;
+              
+              // Send progress update to renderer
+              if (mainWindow) {
+                mainWindow.webContents.send('download-progress', {
+                  fileName,
+                  progress: Math.round(progress),
+                  downloadedSize,
+                  totalSize
+                });
+              }
+            });
+            
+            file.on('finish', () => {
+              if (downloadInfo.stopped) {
+                cleanup();
+                resolve({ success: false, error: 'Download stopped by user' });
+                return;
+              }
+              
+              file.close(async () => {
+                activeDownloads.delete(fileName);
+                log.info(`Download completed: ${filePath}`);
+                
+                // Restart llama-swap service to load new models
+                try {
+                  if (llamaSwapService && llamaSwapService.getStatus().isRunning) {
+                    log.info('Restarting llama-swap service to load new models...');
+                    await llamaSwapService.restart();
+                    log.info('llama-swap service restarted successfully');
+                  }
+                } catch (restartError) {
+                  log.warn('Failed to restart llama-swap service after download:', restartError);
+                }
+                
+                resolve({ success: true, filePath });
+              });
+            });
+          }
+        });
+        
+        downloadInfo.request = request;
+        
+        request.on('error', (error) => {
+          cleanup();
+          resolve({ success: false, error: error.message });
+        });
+      });
+    } catch (error) {
+      log.error('Error downloading model:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Stop download
+  ipcMain.handle('stop-download', async (_event, { fileName }) => {
+    try {
+      const downloadInfo = activeDownloads.get(fileName);
+      
+      if (!downloadInfo) {
+        return { success: false, error: 'Download not found or already completed' };
+      }
+      
+      downloadInfo.stopped = true;
+      
+      // Destroy the request if it exists
+      if (downloadInfo.request) {
+        downloadInfo.request.destroy();
+      }
+      
+      // Close and cleanup the file
+      if (downloadInfo.file && !downloadInfo.file.destroyed) {
+        downloadInfo.file.close();
+      }
+      
+      // Remove partial file
+      if (downloadInfo.filePath && require('fs').existsSync(downloadInfo.filePath)) {
+        try {
+          require('fs').unlinkSync(downloadInfo.filePath);
+          log.info(`Removed partial download: ${downloadInfo.filePath}`);
+        } catch (cleanupError) {
+          log.warn('Error removing partial download:', cleanupError);
+        }
+      }
+      
+      activeDownloads.delete(fileName);
+      log.info(`Download stopped: ${fileName}`);
+      
+      return { success: true };
+    } catch (error) {
+      log.error('Error stopping download:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Get local models
+  ipcMain.handle('get-local-models', async () => {
+    try {
+      if (!llamaSwapService) {
+        llamaSwapService = new LlamaSwapService();
+      }
+      
+      const models = await llamaSwapService.scanModels();
+      return { success: true, models };
+    } catch (error) {
+      log.error('Error getting local models:', error);
+      return { success: false, error: error.message, models: [] };
+    }
+  });
+
+  // Delete local model
+  ipcMain.handle('delete-local-model', async (_event, { filePath }) => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const os = require('os');
+      
+      // Security check - ensure file is in the correct directory
+      const modelsDir = path.join(os.homedir(), '.clara', 'llama-models');
+      const normalizedPath = path.resolve(filePath);
+      const normalizedModelsDir = path.resolve(modelsDir);
+      
+      if (!normalizedPath.startsWith(normalizedModelsDir)) {
+        throw new Error('Invalid file path - security violation');
+      }
+      
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        log.info(`Deleted model: ${filePath}`);
+        
+        // Restart llama-swap service to reload models after deletion
+        try {
+          if (llamaSwapService && llamaSwapService.getStatus().isRunning) {
+            log.info('Restarting llama-swap service to reload models after deletion...');
+            await llamaSwapService.restart();
+            log.info('llama-swap service restarted successfully after model deletion');
+          }
+        } catch (restartError) {
+          log.warn('Failed to restart llama-swap service after model deletion:', restartError);
+        }
+        
+        return { success: true };
+      } else {
+        return { success: false, error: 'File not found' };
+      }
+    } catch (error) {
+      log.error('Error deleting model:', error);
+      return { success: false, error: error.message };
+    }
+  });
+}
+
+// Register handlers for various app functions
+function registerHandlers() {
+  registerLlamaSwapHandlers();
+  registerDockerContainerHandlers();
+  registerModelManagerHandlers();
+}
+
 async function initializeApp() {
   try {
     // Show splash screen
     splash = new SplashScreen();
     splash.setStatus('Starting Clara...', 'info');
     
+    // Register handlers for various app functions
+    registerHandlers();
+    
     // Initialize Docker setup
     dockerSetup = new DockerSetup();
-    
-    // Register Docker container management IPC handlers
-    registerDockerContainerHandlers();
     
     // Setup Docker environment
     splash.setStatus('Setting up Docker environment...', 'info');
@@ -287,6 +762,24 @@ async function initializeApp() {
       });
       app.quit();
       return;
+    }
+
+    // Initialize llama-swap service
+    splash.setStatus('Initializing LLM service...', 'info');
+    try {
+      llamaSwapService = new LlamaSwapService();
+      // Start llama-swap service
+      const llamaSwapSuccess = await llamaSwapService.start();
+      if (llamaSwapSuccess) {
+        splash.setStatus('LLM service started successfully', 'success');
+        log.info('Llama-swap service started successfully');
+      } else {
+        splash.setStatus('LLM service failed to start (will be available for manual start)', 'warning');
+        log.warn('Llama-swap service failed to start during initialization');
+      }
+    } catch (llamaSwapError) {
+      splash.setStatus('LLM service initialization failed (will be available for manual start)', 'warning');
+      log.error('Error initializing llama-swap service:', llamaSwapError);
     }
 
     // Docker setup successful, create the main window immediately
@@ -431,43 +924,18 @@ function createMainWindow() {
 // Initialize app when ready
 app.whenReady().then(initializeApp);
 
-// Register standalone handlers
-app.whenReady().then(() => {
-  // Add explicit restart handler outside the Docker container handlers function
-  ipcMain.handle('restartInterpreterContainer', async () => {
-    try {
-      if (!dockerSetup || !dockerSetup.docker) {
-        throw new Error('Docker setup not initialized');
-      }
-      
-      log.info('Restarting interpreter container (standalone handler)...');
-      
-      try {
-        // Stop and remove the interpreter container
-        const container = await dockerSetup.docker.getContainer('clara_interpreter');
-        log.info('Stopping interpreter container...');
-        await container.stop();
-        log.info('Removing interpreter container...');
-        await container.remove();
-      } catch (containerError) {
-        log.error('Error handling existing container:', containerError);
-        // Continue even if container doesn't exist or can't be stopped/removed
-      }
-      
-      // Start a new container
-      log.info('Starting new interpreter container...');
-      await dockerSetup.startContainer(dockerSetup.containers.interpreter);
-      log.info('Interpreter container restarted successfully');
-      return { success: true };
-    } catch (error) {
-      log.error('Error restarting interpreter container:', error);
-      return { success: false, error: error.message };
-    }
-  });
-});
-
 // Quit when all windows are closed
 app.on('window-all-closed', async () => {
+  // Stop llama-swap service
+  if (llamaSwapService) {
+    try {
+      log.info('Stopping llama-swap service...');
+      await llamaSwapService.stop();
+    } catch (error) {
+      log.error('Error stopping llama-swap service:', error);
+    }
+  }
+  
   // Stop Docker containers
   if (dockerSetup) {
     await dockerSetup.stop();
