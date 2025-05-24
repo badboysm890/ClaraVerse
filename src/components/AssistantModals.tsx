@@ -21,7 +21,7 @@ interface AssistantModalsProps {
   setIsStreaming: (value: boolean) => void;
   showPullModal: boolean;
   setShowPullModal: (open: boolean) => void;
-  handlePullModel: (modelName: string) => AsyncGenerator<any, void, unknown>;
+  handlePullModel?: (modelName: string) => AsyncGenerator<any, void, unknown>;
   showKnowledgeBase: boolean;
   setShowKnowledgeBase: (open: boolean) => void;
   showToolModal: boolean;
@@ -67,11 +67,13 @@ const AssistantModals: React.FC<AssistantModalsProps> = ({
       setIsStreaming={setIsStreaming}
       onOpenTools={() => setShowToolModal(true)}
     />
-    <ModelPullModal
-      isOpen={showPullModal}
-      onClose={() => setShowPullModal(false)}
-      onPullModel={handlePullModel}
-    />
+    {handlePullModel && (
+      <ModelPullModal
+        isOpen={showPullModal}
+        onClose={() => setShowPullModal(false)}
+        onPullModel={handlePullModel}
+      />
+    )}
     <KnowledgeBaseModal
       isOpen={showKnowledgeBase}
       onClose={() => setShowKnowledgeBase(false)}

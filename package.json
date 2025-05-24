@@ -21,6 +21,8 @@
     "test:ci": "npx vitest run --coverage --reporter=json --outputFile=./test-results.json",
     "electron:dev": "cross-env NODE_ENV=development electron .",
     "electron:dev:hot": "cross-env NODE_ENV=development ELECTRON_HOT_RELOAD=true concurrently \"npm run dev\" \"electron .\"",
+    "test:llama-swap": "node test-llama-swap.js",
+    "test:model-manager": "node test-model-manager.js",
     "electron:build-all": "npm run build && electron-builder --mac --win --linux",
     "electron:build": "npm run build && electron-builder",
     "electron:preview": "npm run build && electron .",
@@ -157,6 +159,15 @@
           "!**/__pycache__/**",
           "!**/*.pyc"
         ]
+      },
+      {
+        "from": "electron/llamacpp-binaries",
+        "to": "electron/llamacpp-binaries",
+        "filter": [
+          "**/*",
+          "!*.log",
+          "!config.yaml"
+        ]
       }
     ],
     "directories": {
@@ -182,12 +193,12 @@
         {
           "target": "default",
           "arch": [
-            "universal"
+            "arm64"
           ]
         }
       ],
       "darkModeSupport": true,
-      "artifactName": "${productName}-${version}-universal.${ext}",
+      "artifactName": "${productName}-${version}-arm64.${ext}",
       "type": "distribution",
       "files": [
         "!clara_interpreter/**/*",

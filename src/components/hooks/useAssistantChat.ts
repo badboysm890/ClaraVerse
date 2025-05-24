@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import type { Message, Tool } from '../../db';
+import type { ChatMessage, Tool } from '../../db';
 import type { ChatRole } from '../../utils';
 import { StructuredToolService } from '../assistantLibrary/structuredToolService';
 
@@ -14,8 +14,8 @@ interface UseAssistantChatProps {
   tools: Tool[];
   useAllTools: boolean;
   selectedTool: Tool | null;
-  images: any[];
-  setImages: (imgs: any[]) => void;
+  images: Array<{ preview: string; base64: string; id: string }>;
+  setImages: React.Dispatch<React.SetStateAction<Array<{ preview: string; base64: string; id: string }>>>;
   ragEnabled: boolean;
   temporaryDocs: any[];
   pythonPort: number | null;
@@ -61,24 +61,45 @@ export function useAssistantChat({
   useStructuredToolCalling = false,
   isStreaming,
 }: UseAssistantChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const getContextMessages = (messages: Message[], useTool: boolean = false): Message[] => {
+  const getContextMessages = (messages: ChatMessage[], useTool: boolean = false): ChatMessage[] => {
     if (useTool) {
       return messages.slice(-1);
     }
     return messages.slice(-20); // MAX_CONTEXT_MESSAGES
   };
 
-  const formatMessagesForModel = async (messages: Message[]): Promise<{ role: string; content: string }[]> => {
+  const formatMessagesForModel = async (
+    messages: ChatMessage[], 
+    userQuery?: string
+  ): Promise<{ role: string; content: string }[]> => {
+    // Get system prompt first
     const systemPrompt = await db.getSystemPrompt();
+    let combinedSystemPrompt = systemPrompt || '';
+    
+    // Add RAG context to system prompt if available
+    if (userQuery && (temporaryDocs.length > 0 || ragEnabled) && pythonPort) {
+      const results = await searchDocuments(userQuery, pythonPort, temporaryDocs, ragEnabled);
+      if (results && results.results && results.results.length > 0) {
+        const contextFromSearch = results.results.map((r: any) => r.content).join('\n\n');
+        const ragContext = `Context from knowledge base:\n${contextFromSearch}\n\nUse this context to inform your responses when relevant, but do not explicitly mention that you're using this context unless asked.`;
+        
+        if (combinedSystemPrompt) {
+          combinedSystemPrompt = `${ragContext}\n\n${combinedSystemPrompt}`;
+        } else {
+          combinedSystemPrompt = ragContext;
+        }
+      }
+    }
+    
     const formattedMessages = [];
-    if (systemPrompt) {
+    if (combinedSystemPrompt) {
       formattedMessages.push({
         role: 'system',
-        content: systemPrompt
+        content: combinedSystemPrompt
       });
     }
     formattedMessages.push(
@@ -122,7 +143,7 @@ export function useAssistantChat({
         setChats(updatedChats);
       }
     }
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: uuidv4(),
       chat_id: currentChatId || '',
       content: input,
@@ -141,7 +162,7 @@ export function useAssistantChat({
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setImages([]);
-    const assistantMessage: Message = {
+    const assistantMessage: ChatMessage = {
       id: uuidv4(),
       chat_id: currentChatId || '',
       content: '',
@@ -157,41 +178,24 @@ export function useAssistantChat({
         temperature: 0.7,
         top_p: 0.9
       };
-      if (selectedTool || useAllTools) {
-        chatOptions.tools = useAllTools ? tools.filter((tool) => tool !== null) : selectedTool ? [selectedTool] : [];
-      }
-      // Enable streaming for Ollama (normal chat and RAG only)
-      if (client.getConfig().type === 'ollama' && !(selectedTool || useAllTools)) {
-        chatOptions.stream = true;
-      }
+
       if (images.length > 0) {
         try {
           if (isStreaming) {
-            let responseContent = '';
-            let responseTokens = 0;
-            for await (const chunk of client.streamGenerateWithImages(
+            const response = await client.generateWithImages(
               actualModelToUse,
               input,
               images.map((img: any) => img.base64),
               chatOptions
-            )) {
-              if (chunk.response) {
-                responseContent += chunk.response;
-                responseTokens = chunk.eval_count || responseTokens;
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMessage.id ? { ...msg, content: responseContent, tokens: responseTokens } : msg
-                  )
-                );
-                scrollToBottom();
-              }
-            }
+            );
+            const content = response.response || '';
+            const tokens = response.eval_count || 0;
             setMessages((prev) =>
               prev.map((msg) =>
-                msg.id === assistantMessage.id ? { ...msg, content: responseContent, tokens: responseTokens } : msg
+                msg.id === assistantMessage.id ? { ...msg, content, tokens } : msg
               )
             );
-            await db.addMessage(currentChatId, responseContent, 'assistant', responseTokens);
+            await db.addMessage(currentChatId, content, 'assistant', tokens);
           } else {
             const response = await client.generateWithImages(
               actualModelToUse,
@@ -219,28 +223,36 @@ export function useAssistantChat({
           throw error;
         }
       }
+
       const contextMessages = getContextMessages([...messages, userMessage], !!selectedTool);
       let userContentWithContext = userMessage.content;
       const formattedMessages: any[] = [];
+      
+      // Get system prompt first
+      const systemPrompt = await db.getSystemPrompt();
+      let combinedSystemPrompt = systemPrompt || '';
+      
+      // Add RAG context to system prompt if available
       if ((temporaryDocs.length > 0 || ragEnabled) && pythonPort) {
         const results = await searchDocuments(input, pythonPort, temporaryDocs, ragEnabled);
         if (results && results.results && results.results.length > 0) {
           const contextFromSearch = results.results.map((r: any) => r.content).join('\n\n');
-          if (client?.getConfig().type === 'openai') {
-            formattedMessages.unshift({
-              role: 'system',
-              content: `Context from knowledge base:\n${contextFromSearch}\n\nUse this context to inform your responses when relevant, but do not explicitly mention that you're using this context unless asked.`
-            });
+          const ragContext = `Context from knowledge base:\n${contextFromSearch}\n\nUse this context to inform your responses when relevant, but do not explicitly mention that you're using this context unless asked.`;
+          
+          if (combinedSystemPrompt) {
+            combinedSystemPrompt = `${ragContext}\n\n${combinedSystemPrompt}`;
           } else {
-            userContentWithContext = `Context From the Doc:\n"${contextFromSearch}"\n\nUser's Query: ${userMessage.content}\n\nPlease use the above context to inform your response when relevant, but do not explicitly mention the provided context unless specifically asked.`;
+            combinedSystemPrompt = ragContext;
           }
         }
       }
-      const systemPrompt = await db.getSystemPrompt();
-      if (systemPrompt) {
-        formattedMessages.push({ role: 'system' as ChatRole, content: systemPrompt });
+
+      // Add the combined system prompt as a single system message
+      if (combinedSystemPrompt) {
+        formattedMessages.push({ role: 'system' as ChatRole, content: combinedSystemPrompt });
       }
-      contextMessages.forEach((msg: Message, index: number) => {
+
+      contextMessages.forEach((msg: ChatMessage, index: number) => {
         if (index === contextMessages.length - 1 && msg.role === 'user') {
           formattedMessages.push({
             role: 'user' as ChatRole,
@@ -253,190 +265,111 @@ export function useAssistantChat({
           });
         }
       });
-      if (selectedTool) {
-        const formattedTool = client.getConfig().type === 'openai' ? formatToolForOpenAI(selectedTool) : selectedTool;
-        chatOptions.tools = [formattedTool];
-      }
-      try {
-        // Use different tool calling approach based on feature flag
-        if (client.getConfig().type === 'ollama' && useStructuredToolCalling && (selectedTool || useAllTools)) {
-          // Use structured tool calling for Ollama
-          console.log("Using structured tool calling for Ollama");
-          
-          const availableTools = useAllTools ? tools : selectedTool ? [selectedTool] : [];
-          const structuredToolService = new StructuredToolService({
-            client,
-            tools: availableTools,
-            model: actualModelToUse,
-            executeToolImplementation
-          });
-          
-          // Process with structured tool calling
-          const result = await structuredToolService.processWithStructuredTools(
-            formattedMessages,
-            chatOptions
-          );
-          
-          // Add all generated messages to the chat
-          for (const msg of result.messages) {
-            const dbMessage: Message = {
-              id: uuidv4(),
-              chat_id: currentChatId as string,
-              content: msg.content,
-              role: msg.role,
-              timestamp: Date.now(),
-              tokens: 0
-            };
-            
-            // Only update UI for the first and last messages
-            if (msg === result.messages[0] || msg === result.messages[result.messages.length - 1]) {
-              setMessages(prev => [...prev.slice(0, prev.length - 1), dbMessage]);
+
+      if (selectedTool || useAllTools) {
+        const toolsToUse = useAllTools ? tools : selectedTool ? [selectedTool] : [];
+
+        const response = await client.sendChat(
+          actualModelToUse,
+          formattedMessages,
+          chatOptions,
+          toolsToUse
+        );
+
+        if (response.message?.tool_calls && response.message.tool_calls.length > 0) {
+          const toolResults = [];
+          for (const toolCall of response.message.tool_calls) {
+            const toolArgs = typeof toolCall.function.arguments === 'string' 
+              ? JSON.parse(toolCall.function.arguments) 
+              : toolCall.function.arguments;
+            const selectedTool = tools.find((t: any) => t.name === toolCall.function.name);
+            if (!selectedTool) {
+              console.error(`Tool ${toolCall.function.name} not found`);
+              continue;
             }
-            
-            // Save all messages to the database
-            await db.addMessage(
-              currentChatId,
-              dbMessage.content,
-              dbMessage.role,
-              0,
-              undefined
-            );
-          }
-          
-          // Update final message with content and tokens
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === assistantMessage.id ? { ...msg, content: result.content, tokens: result.tokens } : msg
-            )
-          );
-          
-        } else if (client.getConfig().type === 'openai') {
-          const response = await client.sendChatWithToolsPreserveFormat(
-            actualModelToUse,
-            formattedMessages,
-            chatOptions,
-            chatOptions.tools
-          );
-          if (response.choices && response.choices.length > 0) {
-            const message = response.choices[0].message;
-            if (message.tool_calls && message.tool_calls.length > 0) {
-              const toolResults = [];
-              for (const toolCall of message.tool_calls) {
-                const toolArgs = JSON.parse(toolCall.function.arguments);
-                const selectedTool = tools.find((t: any) => t.name === toolCall.function.name);
-                if (!selectedTool) {
-                  console.error(`Tool ${toolCall.function.name} not found`);
-                  continue;
-                }
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMessage.id ? { ...msg, content: `Clara is using tool - ${selectedTool.name}...` } : msg
-                  )
-                );
-                let toolResult: any = await executeToolImplementation(selectedTool, toolArgs);
-                toolResults.push({
-                  tool_call_id: toolCall.id,
-                  name: toolCall.function.name,
-                  content: JSON.stringify(toolResult)
-                });
-              }
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === assistantMessage.id ? { ...msg, content: `Clara is working on summarizing the results...` } : msg
-                )
-              );
-              const messagesWithToolResults = [
-                ...formattedMessages,
-                {
-                  role: 'assistant' as ChatRole,
-                  content: '',
-                  tool_calls: message.tool_calls
-                },
-                ...toolResults.map((result) => ({
-                  role: 'tool' as ChatRole,
-                  content: result.content,
-                  tool_call_id: result.tool_call_id,
-                  name: result.name
-                }))
-              ];
-              const finalResponse = await client.sendChatWithToolsPreserveFormat(
-                actualModelToUse,
-                messagesWithToolResults,
-                { temperature: 0.7, top_p: 0.9 }
-              );
-              const content = finalResponse.choices?.[0]?.message?.content || 'Error: No content received after tool execution';
-              const tokens = finalResponse.usage?.total_tokens || 0;
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === assistantMessage.id ? { ...msg, content, tokens } : msg
-                )
-              );
-              await db.addMessage(currentChatId, content, 'assistant', tokens);
-            } else {
-              const content = message.content || 'No response content';
-              const tokens = response.usage?.total_tokens || 0;
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === assistantMessage.id ? { ...msg, content, tokens } : msg
-                )
-              );
-              await db.addMessage(currentChatId, content, 'assistant', tokens);
-            }
-          }
-        } else {
-          // Original Ollama implementation
-          let responseContent = '';
-          let responseTokens = 0;
-          if (isStreaming) {
-            for await (const chunk of client.streamChat(actualModelToUse, formattedMessages, chatOptions)) {
-              // Debug: log each chunk
-              console.log('Ollama streaming chunk:', chunk);
-              if (chunk.message?.content) {
-                responseContent += chunk.message.content;
-                responseTokens = chunk.eval_count || responseTokens;
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMessage.id ? { ...msg, content: responseContent, tokens: responseTokens } : msg
-                  )
-                );
-                scrollToBottom();
-              }
-            }
-          } else {
-            const response = await client.sendChat(actualModelToUse, formattedMessages, chatOptions);
-            responseContent = response.message?.content || '';
-            responseTokens = response.eval_count || 0;
             setMessages((prev) =>
               prev.map((msg) =>
-                msg.id === assistantMessage.id ? { ...msg, content: responseContent, tokens: responseTokens } : msg
+                msg.id === assistantMessage.id ? { ...msg, content: `Clara is using tool - ${selectedTool.name}...` } : msg
               )
             );
+            let toolResult: any = await executeToolImplementation(selectedTool, toolArgs);
+            toolResults.push({
+              role: 'tool' as ChatRole,
+              content: JSON.stringify(toolResult),
+              name: toolCall.function.name
+            });
           }
-          await db.addMessage(currentChatId, responseContent, 'assistant', responseTokens);
+
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessage.id ? { ...msg, content: `Clara is working on summarizing the results...` } : msg
+            )
+          );
+
+          const messagesWithToolResults = [
+            ...formattedMessages,
+            {
+              role: 'assistant' as ChatRole,
+              content: response.message.content || '',
+              tool_calls: response.message.tool_calls
+            },
+            ...toolResults
+          ];
+
+          const finalResponse = await client.sendChat(
+            actualModelToUse,
+            messagesWithToolResults,
+            { temperature: 0.7, top_p: 0.9 }
+          );
+
+          const content = finalResponse.message?.content || 'Error: No content received after tool execution';
+          const tokens = finalResponse.usage?.total_tokens || 0;
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessage.id ? { ...msg, content, tokens } : msg
+            )
+          );
+          await db.addMessage(currentChatId, content, 'assistant', tokens);
+        } else {
+          const content = response.message?.content || 'No response content';
+          const tokens = response.usage?.total_tokens || 0;
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessage.id ? { ...msg, content, tokens } : msg
+            )
+          );
+          await db.addMessage(currentChatId, content, 'assistant', tokens);
         }
-      } catch (error) {
-        let errorContent;
-        try {
-          if (typeof error === 'object' && error !== null && 'message' in error) {
-            try {
-              const parsedError = JSON.parse((error as Error).message);
-              errorContent = `Error Response:\n\`\`\`json\n${JSON.stringify(parsedError, null, 2)}\n\`\`\``;
-            } catch (e) {
-              errorContent = `Error: ${(error as Error).message}`;
+      } else {
+        let responseContent = '';
+        let responseTokens = 0;
+        
+        if (isStreaming) {
+          for await (const chunk of client.streamChat(actualModelToUse, formattedMessages, chatOptions)) {
+            if (chunk.message?.content) {
+              responseContent += chunk.message.content;
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessage.id ? { ...msg, content: responseContent } : msg
+                )
+              );
+              scrollToBottom();
             }
-          } else {
-            errorContent = `Error: ${String(error)}`;
           }
-        } catch (e) {
-          errorContent = `Error: ${String(error)}`;
+          responseTokens = 0;
+        } else {
+          const response = await client.sendChat(actualModelToUse, formattedMessages, chatOptions);
+          responseContent = response.message?.content || '';
+          responseTokens = response.usage?.total_tokens || 0;
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessage.id ? { ...msg, content: responseContent, tokens: responseTokens } : msg
+            )
+          );
         }
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessage.id ? { ...msg, content: errorContent } : msg
-          )
-        );
-        await db.addMessage(currentChatId, errorContent, 'assistant', 0);
+        await db.addMessage(currentChatId, responseContent, 'assistant', responseTokens);
       }
+      
       const endTime = performance.now();
       const duration = endTime - startTime;
       await db.updateModelUsage(actualModelToUse, duration);
@@ -449,13 +382,13 @@ export function useAssistantChat({
           try {
             const parsedError = JSON.parse((error as Error).message);
             errorContent = `Error Response:\n\`\`\`json\n${JSON.stringify(parsedError, null, 2)}\n\`\`\``;
-          } catch (e) {
+          } catch {
             errorContent = `Error: ${(error as Error).message}`;
           }
         } else {
           errorContent = `Error: ${String(error)}`;
         }
-      } catch (e) {
+      } catch {
         errorContent = `Error: ${String(error)}`;
       }
       setMessages((prev) =>
@@ -466,7 +399,6 @@ export function useAssistantChat({
       await db.addMessage(currentChatId, errorContent, 'assistant', 0);
     } finally {
       setIsProcessing(false);
-      // setSelectedTool(null); // Reset selected tool after use (if needed)
     }
   };
 
@@ -485,14 +417,14 @@ export function useAssistantChat({
       setIsProcessing(true);
       const startTime = performance.now();
       const contextMessages = getContextMessages([...messages.slice(0, messageIndex), updatedMessage]);
-      const formattedMessages = await formatMessagesForModel(contextMessages);
+      const formattedMessages = await formatMessagesForModel(contextMessages, updatedMessage.content);
       const context = {
         hasImages: contextMessages.some((msg) => msg.images && msg.images.length > 0),
         hasTool: false,
         hasRag: ragEnabled || temporaryDocs.length > 0
       };
       const modelToUse = getAppropriateModel(modelSelectionConfig, selectedModel, context);
-      const assistantMessage: Message = {
+      const assistantMessage: ChatMessage = {
         id: uuidv4(),
         chat_id: activeChat!,
         content: '',
@@ -519,7 +451,7 @@ export function useAssistantChat({
       } else {
         const response = await client.sendChat(modelToUse, formattedMessages);
         responseContent = response.message?.content || '';
-        responseTokens = response.eval_count || 0;
+        responseTokens = response.usage?.total_tokens || 0;
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessage.id ? { ...msg, content: responseContent, tokens: responseTokens } : msg
@@ -568,7 +500,7 @@ export function useAssistantChat({
           updatedMessage.images
         );
       } catch (dbError) {}
-      const assistantMessage: Message = {
+      const assistantMessage: ChatMessage = {
         id: uuidv4(),
         chat_id: activeChat,
         content: '',
@@ -578,7 +510,7 @@ export function useAssistantChat({
       };
       setMessages((prev) => [...prev, assistantMessage]);
       const contextMessages = getContextMessages([...messages.slice(0, messageIndex), updatedMessage]);
-      const formattedMessages = await formatMessagesForModel(contextMessages);
+      const formattedMessages = await formatMessagesForModel(contextMessages, updatedMessage.content);
       const context = {
         hasImages: contextMessages.some((msg) => msg.images && msg.images.length > 0),
         hasTool: false,
@@ -603,7 +535,7 @@ export function useAssistantChat({
       } else {
         const response = await client.sendChat(modelToUse, formattedMessages);
         responseContent = response.message?.content || '';
-        responseTokens = response.eval_count || 0;
+        responseTokens = response.usage?.total_tokens || 0;
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessage.id ? { ...msg, content: responseContent, tokens: responseTokens } : msg
@@ -617,16 +549,11 @@ export function useAssistantChat({
       await db.updateUsage('response_time', duration);
     } catch (error: any) {
       const errorContent = error.message || 'An unexpected error occurred';
-      const errorMessage: Message = {
-        id: uuidv4(),
-        chat_id: activeChat,
-        content: `Error: ${errorContent}`,
-        role: 'assistant',
-        timestamp: Date.now(),
-        tokens: 0
-      };
-      setMessages((prev) => [...prev.slice(0, messageIndex + 1), errorMessage]);
-      await db.addMessage(activeChat, `Error: ${errorContent}`, 'assistant', 0);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.role === 'assistant' ? { ...msg, content: `Error: ${errorContent}` } : msg
+        )
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -634,27 +561,30 @@ export function useAssistantChat({
 
   const handleRetryMessage = async (messageId: string) => {
     const messageIndex = messages.findIndex((m) => m.id === messageId);
-    if (messageIndex < 1 || !client || !selectedModel) return;
+    if (messageIndex < 0 || !client || !selectedModel || !activeChat) return;
+    const messagesToKeep = messages.slice(0, messageIndex);
+    setMessages(messagesToKeep);
     try {
       setIsProcessing(true);
       const startTime = performance.now();
-      const assistantMessage: Message = {
-        id: messageId,
-        chat_id: activeChat!,
-        content: '',
-        role: 'assistant',
-        timestamp: Date.now(),
-        tokens: 0
-      };
-      setMessages((prev) => prev.map((msg) => (msg.id === messageId ? assistantMessage : msg)));
-      const contextMessages = getContextMessages([...messages.slice(0, messageIndex)]);
-      const formattedMessages = await formatMessagesForModel(contextMessages);
+      const contextMessages = getContextMessages(messagesToKeep);
+      const lastUserMessage = contextMessages.slice().reverse().find(msg => msg.role === 'user');
+      const formattedMessages = await formatMessagesForModel(contextMessages, lastUserMessage?.content);
       const context = {
         hasImages: contextMessages.some((msg) => msg.images && msg.images.length > 0),
         hasTool: false,
         hasRag: ragEnabled || temporaryDocs.length > 0
       };
       const modelToUse = getAppropriateModel(modelSelectionConfig, selectedModel, context);
+      const assistantMessage: ChatMessage = {
+        id: uuidv4(),
+        chat_id: activeChat,
+        content: '',
+        role: 'assistant',
+        timestamp: Date.now(),
+        tokens: 0
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
       let responseContent = '';
       let responseTokens = 0;
       if (isStreaming) {
@@ -664,7 +594,7 @@ export function useAssistantChat({
             responseTokens = chunk.eval_count || responseTokens;
             setMessages((prev) =>
               prev.map((msg) =>
-                msg.id === messageId ? { ...msg, content: responseContent, tokens: responseTokens } : msg
+                msg.id === assistantMessage.id ? { ...msg, content: responseContent, tokens: responseTokens } : msg
               )
             );
             scrollToBottom();
@@ -673,20 +603,14 @@ export function useAssistantChat({
       } else {
         const response = await client.sendChat(modelToUse, formattedMessages);
         responseContent = response.message?.content || '';
-        responseTokens = response.eval_count || 0;
+        responseTokens = response.usage?.total_tokens || 0;
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === messageId ? { ...msg, content: responseContent, tokens: responseTokens } : msg
+            msg.id === assistantMessage.id ? { ...msg, content: responseContent, tokens: responseTokens } : msg
           )
         );
       }
-      try {
-        await db.updateMessage(messageId, {
-          content: responseContent,
-          tokens: responseTokens,
-          timestamp: Date.now()
-        });
-      } catch (dbError) {}
+      await db.addMessage(activeChat, responseContent, 'assistant', responseTokens);
       const endTime = performance.now();
       const duration = endTime - startTime;
       await db.updateModelUsage(modelToUse, duration);
@@ -695,16 +619,9 @@ export function useAssistantChat({
       const errorContent = error.message || 'An unexpected error occurred';
       setMessages((prev) =>
         prev.map((msg) =>
-          msg.id === messageId ? { ...msg, content: `Error: ${errorContent}` } : msg
+          msg.role === 'assistant' ? { ...msg, content: `Error: ${errorContent}` } : msg
         )
       );
-      try {
-        await db.updateMessage(messageId, {
-          content: `Error: ${errorContent}`,
-          tokens: 0,
-          timestamp: Date.now()
-        });
-      } catch (dbError) {}
     } finally {
       setIsProcessing(false);
     }
@@ -717,9 +634,9 @@ export function useAssistantChat({
     setInput,
     isProcessing,
     handleSend,
-    handleRetryMessage,
     handleEditMessage,
     handleSendEdit,
+    handleRetryMessage,
     getContextMessages,
     formatMessagesForModel,
   };

@@ -60,15 +60,32 @@ export interface PersonalInfo {
   theme_preference: 'light' | 'dark' | 'system';
 }
 
+export interface Provider {
+  id: string;
+  name: string;
+  type: 'claras-pocket' | 'openai' | 'openrouter' | 'ollama' | 'custom';
+  baseUrl?: string;
+  apiKey?: string;
+  isEnabled: boolean;
+  isPrimary: boolean;
+  config?: {
+    [key: string]: string | number | boolean;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface APIConfig {
-  ollama_base_url: string;
   comfyui_base_url: string;
+  n8n_base_url?: string;  // URL of the n8n instance
+  n8n_api_key?: string;   // API Key for n8n
+  
+  // Legacy fields (kept for backwards compatibility)
+  ollama_base_url?: string;
   openai_api_key ?: string;
   openai_base_url ?: string;
   openrouter_api_key ?: string;
   api_type ?: string;
-  n8n_base_url?: string;  // URL of the n8n instance
-  n8n_api_key?: string;   // API Key for n8n
 }
 
 export interface ModelUsage {
@@ -957,11 +974,246 @@ export class LocalStorageDB {
   }
 
   async getWallpaper(): Promise<string | null> {
-    if (this.useIndexedDB) {
-      const record = await indexedDBService.get<{key: string, value: string}>('settings', 'wallpaper');
-      return record ? record.value : null;
-    } else {
-      return await this.getItem<string>('wallpaper');
+    try {
+      if (this.useIndexedDB) {
+        // Get directly from settings store
+        const settingItem = await indexedDBService.get<{key: string, value: string}>('settings', 'wallpaper');
+        return settingItem ? settingItem.value : null;
+      } else {
+        const result = await this.getItem<string>('wallpaper');
+        return result;
+      }
+    } catch (error) {
+      console.error('Error getting wallpaper:', error);
+      return null;
+    }
+  }
+
+  // Provider management methods
+  async getAllProviders(): Promise<Provider[]> {
+    try {
+      if (this.useIndexedDB) {
+        return await indexedDBService.getAll('providers') || [];
+      } else {
+        return this.getItemFromLocalStorage<Provider[]>('providers') || [];
+      }
+    } catch (error) {
+      console.error('Error getting providers:', error);
+      return [];
+    }
+  }
+
+  async getProvider(id: string): Promise<Provider | null> {
+    try {
+      const providers = await this.getAllProviders();
+      return providers.find(p => p.id === id) || null;
+    } catch (error) {
+      console.error('Error getting provider:', error);
+      return null;
+    }
+  }
+
+  async getPrimaryProvider(): Promise<Provider | null> {
+    try {
+      const providers = await this.getAllProviders();
+      return providers.find(p => p.isPrimary && p.isEnabled) || null;
+    } catch (error) {
+      console.error('Error getting primary provider:', error);
+      return null;
+    }
+  }
+
+  async addProvider(provider: Omit<Provider, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    try {
+      // Prevent multiple Clara's Pocket providers
+      if (provider.type === 'claras-pocket') {
+        const providers = await this.getAllProviders();
+        const existingClarasPocket = providers.find(p => p.type === 'claras-pocket');
+        if (existingClarasPocket) {
+          throw new Error("Clara's Pocket provider already exists. Only one instance is allowed.");
+        }
+      }
+
+      const id = this.generateId();
+      const now = new Date().toISOString();
+      
+      const newProvider: Provider = {
+        ...provider,
+        id,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      // If this is being set as primary, unset other primary providers
+      if (provider.isPrimary) {
+        await this.setPrimaryProvider(id);
+      }
+
+      if (this.useIndexedDB) {
+        await indexedDBService.put('providers', newProvider);
+      } else {
+        const providers = await this.getAllProviders();
+        providers.push(newProvider);
+        this.setItemToLocalStorage('providers', providers);
+      }
+
+      return id;
+    } catch (error) {
+      console.error('Error adding provider:', error);
+      throw error;
+    }
+  }
+
+  async updateProvider(id: string, updates: Partial<Provider>): Promise<void> {
+    try {
+      const providers = await this.getAllProviders();
+      const index = providers.findIndex(p => p.id === id);
+      
+      if (index === -1) {
+        throw new Error('Provider not found');
+      }
+
+      const updatedProvider = {
+        ...providers[index],
+        ...updates,
+        updatedAt: new Date().toISOString()
+      };
+
+      // If this is being set as primary, unset other primary providers
+      if (updates.isPrimary) {
+        providers.forEach(p => {
+          if (p.id !== id) p.isPrimary = false;
+        });
+      }
+
+      providers[index] = updatedProvider;
+
+      if (this.useIndexedDB) {
+        await indexedDBService.put('providers', updatedProvider);
+        // Update other providers if needed
+        if (updates.isPrimary) {
+          for (const provider of providers) {
+            if (provider.id !== id && provider.isPrimary) {
+              await indexedDBService.put('providers', { ...provider, isPrimary: false });
+            }
+          }
+        }
+      } else {
+        this.setItemToLocalStorage('providers', providers);
+      }
+    } catch (error) {
+      console.error('Error updating provider:', error);
+      throw error;
+    }
+  }
+
+  async deleteProvider(id: string): Promise<void> {
+    try {
+      const providers = await this.getAllProviders();
+      const filteredProviders = providers.filter(p => p.id !== id);
+
+      if (this.useIndexedDB) {
+        await indexedDBService.delete('providers', id);
+      } else {
+        this.setItemToLocalStorage('providers', filteredProviders);
+      }
+    } catch (error) {
+      console.error('Error deleting provider:', error);
+      throw error;
+    }
+  }
+
+  async setPrimaryProvider(id: string): Promise<void> {
+    try {
+      const providers = await this.getAllProviders();
+      
+      // Unset all primary providers
+      providers.forEach(p => p.isPrimary = false);
+      
+      // Set the specified provider as primary
+      const targetProvider = providers.find(p => p.id === id);
+      if (targetProvider) {
+        targetProvider.isPrimary = true;
+        targetProvider.isEnabled = true; // Ensure primary provider is enabled
+      }
+
+      if (this.useIndexedDB) {
+        // Update all providers in IndexedDB
+        for (const provider of providers) {
+          await indexedDBService.put('providers', provider);
+        }
+      } else {
+        this.setItemToLocalStorage('providers', providers);
+      }
+    } catch (error) {
+      console.error('Error setting primary provider:', error);
+      throw error;
+    }
+  }
+
+  async initializeDefaultProviders(): Promise<void> {
+    try {
+      const providers = await this.getAllProviders();
+      
+      // Clean up any duplicate Clara's Pocket providers (keep only the first one)
+      const clarasPocketProviders = providers.filter(p => p.type === 'claras-pocket');
+      if (clarasPocketProviders.length > 1) {
+        console.log('Cleaning up duplicate Clara\'s Pocket providers...');
+        // Keep the first one, delete the rest
+        for (let i = 1; i < clarasPocketProviders.length; i++) {
+          await this.deleteProvider(clarasPocketProviders[i].id);
+        }
+        // Refresh providers list after cleanup
+        const updatedProviders = await this.getAllProviders();
+        providers.length = 0;
+        providers.push(...updatedProviders);
+      }
+      
+      // Check if Clara's Pocket exists
+      const clarasPocketExists = providers.some(p => p.type === 'claras-pocket');
+      // Check if Ollama exists  
+      const ollamaExists = providers.some(p => p.type === 'ollama' && p.name === 'Ollama');
+      
+      // Create Clara's Pocket if it doesn't exist
+      if (!clarasPocketExists) {
+        await this.addProvider({
+          name: "Clara's Pocket",
+          type: 'claras-pocket',
+          baseUrl: 'http://localhost:8091/v1',
+          isEnabled: true,
+          isPrimary: true,
+          config: {
+            description: 'Local LLM service powered by llama.cpp'
+          }
+        });
+      }
+
+      // Create Ollama if it doesn't exist
+      if (!ollamaExists) {
+        await this.addProvider({
+          name: 'Ollama',
+          type: 'ollama',
+          baseUrl: 'http://localhost:11434/v1',
+          apiKey: 'ollama',
+          isEnabled: true,
+          isPrimary: false,
+          config: {
+            description: 'Local Ollama service'
+          }
+        });
+      }
+      
+      // Ensure at least one provider is primary
+      const updatedProviders = await this.getAllProviders();
+      const primaryProvider = updatedProviders.find(p => p.isPrimary);
+      if (!primaryProvider) {
+        const enabledProvider = updatedProviders.find(p => p.isEnabled);
+        if (enabledProvider) {
+          await this.setPrimaryProvider(enabledProvider.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing default providers:', error);
     }
   }
 }

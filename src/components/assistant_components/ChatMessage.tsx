@@ -15,8 +15,19 @@ import {
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { Message } from '../../db';
+import type { ChatMessage } from '../../db';
 import { db } from '../../db';
+
+interface ChatMessageProps {
+  message: ChatMessage;
+  showTokens: boolean;
+  onRetry?: (messageId: string) => void;
+  onEdit?: (messageId: string, content: string) => void;
+  onSendEdit?: (messageId: string, content: string) => void;
+  canEdit?: boolean;
+  canRetry?: boolean;
+  isStreaming?: boolean;
+}
 
 // Custom hook to get the window width
 const useWindowWidth = () => {

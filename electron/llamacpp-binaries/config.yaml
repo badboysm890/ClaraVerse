@@ -1,0 +1,30 @@
+# Auto-generated llama-swap configuration
+# Models directory: /Users/temme/.clara/llama-models
+healthCheckTimeout: 30
+logLevel: info
+
+models:
+  "llama32:1b":
+    proxy: "http://127.0.0.1:9999"
+    cmd: |
+      "/Users/temme/Documents/ClaraVerse/electron/llamacpp-binaries/darwin-arm64/llama-server"
+      -m "/Users/temme/.clara/llama-models/Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+      --port 9999 --jinja
+    ttl: 300
+
+  "qwen25:3b":
+    proxy: "http://127.0.0.1:9999"
+    cmd: |
+      "/Users/temme/Documents/ClaraVerse/electron/llamacpp-binaries/darwin-arm64/llama-server"
+      -m "/Users/temme/.clara/llama-models/Qwen2.5-VL-3B-Instruct-q4_k_m.gguf"
+      --port 9999 --jinja
+      --mmproj "/Users/temme/.clara/llama-models/Qwen2.5-VL-3B-Instruct-mmproj-f16.gguf"
+    ttl: 300
+
+groups:
+  "default_group":
+    swap: true
+    exclusive: true
+    members:
+      - "llama32:1b"
+      - "qwen25:3b"

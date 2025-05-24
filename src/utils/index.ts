@@ -1,10 +1,9 @@
-export * from './OllamaClient';
-export * from './AssistantOllamaClient';
-export * from './types';
+// Export the new API clients
+export { APIClient } from './APIClient';
+export { AssistantAPIClient } from './AssistantAPIClient';
+export type { ChatMessage, ChatRole, RequestOptions } from './APIClient';
 
-export type ChatRole = 'system' | 'user' | 'assistant';
-
-export interface ChatMessage {
-  role: ChatRole;
-  content: string;
-}
+// Keep legacy exports for backwards compatibility
+export { OllamaClient } from './OllamaClient';
+export { AssistantOllamaClient } from './AssistantOllamaClient';
+export type { Tool } from '../db';
