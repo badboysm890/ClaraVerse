@@ -6,12 +6,12 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8068:8068"
+      - "8069:8069"
     volumes:
       - ./ClaraVerse:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
-    stdin_open: true
-    tty: true
-    command: npm run dev
+    networks:
+      - traefik_default
+networks:
+  traefik_default:
+    external: true
+    
