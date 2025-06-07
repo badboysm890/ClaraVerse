@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  claraverse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8068:8068"
+    volumes:
+      - ./ClaraVerse:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true
+    command: npm run dev
