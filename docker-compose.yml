@@ -8,10 +8,11 @@ services:
     ports:
       - "8069:8069"
     volumes:
-      - ./ClaraVerse:/app
+      - clara-verse:/app
     networks:
       - traefik_default
 networks:
   traefik_default:
     external: true
-    
+volumes:
+  clara-verse:
