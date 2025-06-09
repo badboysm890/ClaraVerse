@@ -11,6 +11,10 @@ services:
       - clara-verse:/app
     networks:
       - traefik_default
+    environments:
+      - CLARA_N8N_EXTERNAL_URL=${CLARA_N8N_EXTERNAL_URL}
+      - CLARA_N8N_USE_EXTERNAL=${CLARA_N8N_USE_EXTERNAL}
+      - SKIP_DOCKER_SETUP=${SKIP_DOCKER_SETUP}
 networks:
   traefik_default:
     external: true
