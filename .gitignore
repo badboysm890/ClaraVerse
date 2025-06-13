@@ -91,3 +91,7 @@ landing/*
 issues.md
 # Local Netlify folder
 .netlify
+
+# CUDA DLL files (too large for GitHub)
+electron/llamacpp-binaries/**/ggml-cuda.dll
+**/ggml-cuda.dll
