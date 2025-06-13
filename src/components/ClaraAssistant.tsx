@@ -57,11 +57,14 @@ const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9
 /**
  * Get default system prompt for a provider
  */
-const getDefaultSystemPrompt = (provider: ClaraProvider): string => {
+const getDefaultSystemPrompt = (provider: ClaraProvider, artifactConfig?: any): string => {
   const providerName = provider?.name || 'AI Assistant';
   
+  // Check if artifact generation is enabled
+  const artifactsEnabled = artifactConfig?.autoDetectArtifacts ?? true;
+  
   // Comprehensive artifact generation guidance that applies to all providers
-  const artifactGuidance = `
+  const artifactGuidance = artifactsEnabled ? `
 
 ## 🎨 COMPREHENSIVE ARTIFACT CREATION SYSTEM
 
@@ -756,7 +759,7 @@ Before sending any response, ask yourself:
 - [ ] Does this response contain structured data? → Create JSON artifact
 - [ ] Could this be made interactive? → Add interactive elements
 
-ALWAYS err on the side of creating MORE artifacts rather than fewer. Users love interactive, visual content!`;
+ALWAYS err on the side of creating MORE artifacts rather than fewer. Users love interactive, visual content!` : '';
 
   switch (provider?.type) {
     case 'ollama':
@@ -1380,7 +1383,18 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
 
             const defaultConfig = {
               provider: primaryProvider.id,
-              systemPrompt: getDefaultSystemPrompt(primaryProvider),
+              systemPrompt: getDefaultSystemPrompt(primaryProvider, {
+                enableCodeArtifacts: true,
+                enableChartArtifacts: true,
+                enableTableArtifacts: true,
+                enableMermaidArtifacts: true,
+                enableHtmlArtifacts: true,
+                enableMarkdownArtifacts: true,
+                enableJsonArtifacts: true,
+                enableDiagramArtifacts: true,
+                autoDetectArtifacts: true,
+                maxArtifactsPerMessage: 10
+              }),
               models: {
                 text: textModel?.id || '',
                 vision: visionModel?.id || '',
@@ -1402,7 +1416,7 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
               },
               artifacts: {
                 enableCodeArtifacts: true,
-                enableChartArtifacts: true,     // **ENABLED BY DEFAULT** as requested
+                enableChartArtifacts: true,
                 enableTableArtifacts: true,
                 enableMermaidArtifacts: true,
                 enableHtmlArtifacts: true,
@@ -1683,7 +1697,7 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
       // Get system prompt (provider-specific or fallback to default)
       const currentProvider = providers.find(p => p.id === enforcedConfig.provider);
       const systemPrompt = enforcedConfig.systemPrompt || 
-                          (currentProvider ? getDefaultSystemPrompt(currentProvider) : 'You are Clara, a helpful AI assistant.');
+                          (currentProvider ? getDefaultSystemPrompt(currentProvider, enforcedConfig.artifacts) : 'You are Clara, a helpful AI assistant.');
       
       // Create enhanced streaming callback that updates both message content and status panel
       const enhancedStreamingCallback = (chunk: string) => {
@@ -2354,7 +2368,18 @@ Would you like me to help with text-only responses for now?`,
         
         const defaultConfig = {
           provider: providerId,
-          systemPrompt: getDefaultSystemPrompt(provider),
+          systemPrompt: getDefaultSystemPrompt(provider, {
+            enableCodeArtifacts: true,
+            enableChartArtifacts: true,
+            enableTableArtifacts: true,
+            enableMermaidArtifacts: true,
+            enableHtmlArtifacts: true,
+            enableMarkdownArtifacts: true,
+            enableJsonArtifacts: true,
+            enableDiagramArtifacts: true,
+            autoDetectArtifacts: true,
+            maxArtifactsPerMessage: 10
+          }),
           models: {
             text: textModel?.id || '',
             vision: visionModel?.id || '',

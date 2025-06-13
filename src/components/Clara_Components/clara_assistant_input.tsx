@@ -594,12 +594,15 @@ const AdvancedOptions: React.FC<{
     });
   };
 
-  const getDefaultSystemPrompt = (providerId: string): string => {
+  const getDefaultSystemPrompt = (providerId: string, artifactConfig?: any): string => {
     const provider = providers.find(p => p.id === providerId);
     const providerName = provider?.name || 'AI Assistant';
     
+    // Check if artifact generation is enabled
+    const artifactsEnabled = artifactConfig?.autoDetectArtifacts ?? true;
+    
     // Comprehensive artifact generation guidance that applies to all providers
-    const artifactGuidance = `
+    const artifactGuidance = artifactsEnabled ? `
 
 ## 🎨 COMPREHENSIVE ARTIFACT CREATION SYSTEM
 
@@ -817,7 +820,7 @@ Before sending any response, ask yourself:
 - [ ] Does this response contain HTML/web content? → Create HTML artifact
 - [ ] Could this be made interactive? → Add interactive elements
 
-ALWAYS err on the side of creating MORE artifacts rather than fewer. Users love interactive, visual content!`;
+ALWAYS err on the side of creating MORE artifacts rather than fewer. Users love interactive, visual content!` : '';
 
     switch (provider?.type) {
       case 'ollama':

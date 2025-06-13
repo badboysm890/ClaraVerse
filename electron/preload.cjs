@@ -35,7 +35,8 @@ const validChannels = [
   'watchdog-service-restored',
   'watchdog-service-failed',
   'watchdog-service-restarted',
-  'docker-update-progress'
+  'docker-update-progress',
+  'set-startup-settings'
 ];
 
 // Add explicit logging for debugging
@@ -86,17 +87,14 @@ contextBridge.exposeInMainWorld('electron', {
   sendReactReady: () => {
     ipcRenderer.send('react-app-ready');
   },
-  receive: (channel, func) => {
+  receive: (channel, callback) => {
     if (validChannels.includes(channel)) {
-      const subscription = (event, ...args) => func(...args);
-      ipcRenderer.on(channel, subscription);
-      return () => ipcRenderer.removeListener(channel, subscription);
+      ipcRenderer.on(channel, (event, ...args) => callback(...args));
     }
-    return () => {};
   },
-  removeListener: (channel, func) => {
+  removeListener: (channel, callback) => {
     if (validChannels.includes(channel)) {
-      ipcRenderer.removeListener(channel, func);
+      ipcRenderer.removeListener(channel, callback);
     }
   },
   removeAllListeners: (channel) => {
@@ -104,7 +102,7 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.removeAllListeners(channel);
     }
   },
-  getWorkflowsPath: () => ipcRenderer.invoke('getWorkflowsPath'),
+  getWorkflowsPath: () => ipcRenderer.invoke('get-workflows-path'),
   dialog: {
     showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options)
   }
@@ -206,6 +204,12 @@ contextBridge.exposeInMainWorld('windowManager', {
   setFullscreenStartupPreference: (enabled) => ipcRenderer.invoke('set-fullscreen-startup-preference', enabled),
   toggleFullscreen: () => ipcRenderer.invoke('toggle-fullscreen'),
   getFullscreenStatus: () => ipcRenderer.invoke('get-fullscreen-status')
+});
+
+// Add startup settings API
+contextBridge.exposeInMainWorld('startupSettings', {
+  setStartupSettings: (settings) => ipcRenderer.send('set-startup-settings', settings),
+  getStartupSettings: () => ipcRenderer.invoke('get-startup-settings')
 });
 
 // Notify main process when preload script has loaded

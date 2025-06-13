@@ -192,6 +192,9 @@ const ArtifactModal: React.FC<ArtifactModalProps> = ({ isOpen, onClose, artifact
 
   const IconComponent = getArtifactIcon(artifact.type);
 
+  // Check if this is a Mermaid diagram for true full-screen treatment
+  const isMermaidArtifact = artifact.type === 'mermaid' || artifact.type === 'diagram';
+
   // Render modal using portal to document.body to escape chat bubble constraints
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -201,10 +204,18 @@ const ArtifactModal: React.FC<ArtifactModalProps> = ({ isOpen, onClose, artifact
         onClick={onClose}
       />
       
-      {/* Modal */}
-      <div className="relative w-full h-full max-w-7xl max-h-[95vh] m-4 bg-white dark:bg-gray-900 rounded-xl shadow-2xl overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      {/* Modal - Full screen for Mermaid, constrained for others */}
+      <div className={`relative bg-white dark:bg-gray-900 shadow-2xl overflow-hidden flex flex-col ${
+        isMermaidArtifact 
+          ? 'w-full h-full' // True full screen for Mermaid
+          : 'w-full h-full max-w-7xl max-h-[95vh] m-4 rounded-xl' // Constrained for others
+      }`}>
+        {/* Header - Floating for Mermaid, normal for others */}
+        <div className={`flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 ${
+          isMermaidArtifact 
+            ? 'absolute top-0 left-0 right-0 z-10 bg-gray-50/90 dark:bg-gray-800/90 backdrop-blur-sm p-3' // Floating header for Mermaid
+            : 'p-4' // Normal header for others
+        }`}>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
               <IconComponent className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -260,9 +271,17 @@ const ArtifactModal: React.FC<ArtifactModalProps> = ({ isOpen, onClose, artifact
           </div>
         </div>
         
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          <div className="h-full">
+        {/* Content - No padding for Mermaid, padding for others */}
+        <div className={`flex-1 overflow-hidden ${
+          isMermaidArtifact 
+            ? '' // No padding for Mermaid to use full screen
+            : 'overflow-auto p-6' // Normal padding for others
+        }`}>
+          <div className={`h-full ${
+            isMermaidArtifact 
+              ? 'pt-20' // Add top padding to account for floating header
+              : ''
+          }`}>
             {children}
           </div>
         </div>
@@ -1868,12 +1887,13 @@ const FullScreenMermaidRenderer: React.FC<{ content: string }> = ({ content }) =
   const [isLoading, setIsLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
   
-  // Zoom and pan state
-  const [zoom, setZoom] = useState(1);
+  // Zoom and pan state - Start with 1.8x zoom for better initial view
+  const [zoom, setZoom] = useState(1.8);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [hasAutoFitted, setHasAutoFitted] = useState(false);
 
   // Theme detection
   useEffect(() => {
@@ -1905,31 +1925,31 @@ const FullScreenMermaidRenderer: React.FC<{ content: string }> = ({ content }) =
       // Dynamic import of mermaid
       const mermaid = await import('mermaid');
       
-      // Configure mermaid for full-screen display
+      // Configure mermaid for full-screen display with vertical optimization
       mermaid.default.initialize({
         startOnLoad: false,
         theme: isDark ? 'dark' : 'default',
         securityLevel: 'loose',
         fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
-        fontSize: 16,
-        // Full-screen optimized settings
+        fontSize: 18, // Increased for better readability at zoom
+        // Full-screen optimized settings with vertical preference
         flowchart: {
-          useMaxWidth: true,
+          useMaxWidth: false, // Allow scaling for better zoom
           htmlLabels: true,
           curve: 'basis'
         },
         sequence: {
-          useMaxWidth: true,
+          useMaxWidth: false,
           wrap: true
         },
         gantt: {
-          useMaxWidth: true
+          useMaxWidth: false
         },
         journey: {
-          useMaxWidth: true
+          useMaxWidth: false
         },
         timeline: {
-          useMaxWidth: true
+          useMaxWidth: false
         }
       });
 
@@ -1950,6 +1970,13 @@ const FullScreenMermaidRenderer: React.FC<{ content: string }> = ({ content }) =
       
       setRenderedSvg(optimizedSvg);
       setError(null);
+      
+      // Auto-fit to screen with better zoom after rendering
+      setTimeout(() => {
+        if (!hasAutoFitted) {
+          fitToScreen();
+        }
+      }, 100);
       
     } catch (err) {
       console.error('Full-screen Mermaid rendering error:', err);
@@ -2068,58 +2095,55 @@ const FullScreenMermaidRenderer: React.FC<{ content: string }> = ({ content }) =
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Zoom Controls */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Zoom: {Math.round(zoom * 100)}%
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {isDragging ? <Move className="w-4 h-4 inline" /> : 'Scroll to zoom, drag to pan'}
-          </span>
-        </div>
+      {/* Floating Zoom Controls for True Full-Screen */}
+      <div className="absolute top-4 right-4 z-20 flex items-center space-x-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-2">
+          {Math.round(zoom * 100)}%
+        </span>
         
-        <div className="flex items-center space-x-1">
-          <button
-            onClick={zoomOut}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Zoom Out"
-          >
-            <ZoomOut className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={resetZoom}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Reset Zoom"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={zoomIn}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Zoom In"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </button>
-          
-          <button
-            onClick={fitToScreen}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Fit to Screen"
-          >
-            <Maximize className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          onClick={zoomOut}
+          className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+          title="Zoom Out"
+        >
+          <ZoomOut className="w-4 h-4" />
+        </button>
+        
+        <button
+          onClick={resetZoom}
+          className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+          title="Reset Zoom"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+        
+        <button
+          onClick={zoomIn}
+          className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+          title="Zoom In"
+        >
+          <ZoomIn className="w-4 h-4" />
+        </button>
+        
+        <button
+          onClick={fitToScreen}
+          className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+          title="Fit to Screen"
+        >
+          <Maximize className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* Interactive Diagram Container */}
+      {/* Instructions for True Full-Screen */}
+      <div className="absolute bottom-4 left-4 z-20 bg-black/75 text-white px-3 py-2 rounded-lg text-sm">
+        {isDragging ? <Move className="w-4 h-4 inline mr-1" /> : 'Scroll to zoom, drag to pan'}
+      </div>
+
+      {/* Interactive Diagram Container - Full Screen */}
       <div 
         ref={containerRef}
-        className="flex-1 overflow-hidden relative bg-white dark:bg-gray-900"
+        className="w-full h-full overflow-hidden relative bg-white dark:bg-gray-900"
         style={{ 
-          minHeight: '400px',
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
         onWheel={handleWheel}
@@ -2408,10 +2432,8 @@ const ClaraArtifactRenderer: React.FC<ClaraArtifactRendererProps> = ({
       case 'mermaid':
       case 'diagram':
         return (
-          <div className="h-full flex items-center justify-center p-4">
-            <div className="w-full h-full max-w-full max-h-full overflow-auto bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <FullScreenMermaidRenderer content={artifact.content} />
-            </div>
+          <div className="w-full h-full">
+            <FullScreenMermaidRenderer content={artifact.content} />
           </div>
         );
       

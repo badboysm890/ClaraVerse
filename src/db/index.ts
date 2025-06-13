@@ -55,10 +55,16 @@ export interface Usage {
 export interface PersonalInfo {
   name: string;
   email: string;
-  avatar_url?: string;
+  avatar_url: string;
   timezone: string;
   theme_preference: 'light' | 'dark' | 'system';
-  fullscreen_startup?: boolean;
+  startup_settings: {
+    autoStart: boolean;
+    startMinimized: boolean;
+    startFullscreen: boolean;
+    checkForUpdates: boolean;
+    restoreLastSession: boolean;
+  };
 }
 
 export interface Provider {

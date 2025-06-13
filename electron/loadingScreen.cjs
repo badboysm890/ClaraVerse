@@ -1,12 +1,27 @@
 const { BrowserWindow, app } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 class LoadingScreen {
   constructor() {
     const isDev = process.env.NODE_ENV === 'development';
     
+    // Check fullscreen startup preference
+    let shouldStartFullscreen = false;
+    try {
+      const userDataPath = app.getPath('userData');
+      const settingsPath = path.join(userDataPath, 'settings.json');
+      
+      if (fs.existsSync(settingsPath)) {
+        const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        shouldStartFullscreen = settings.startup?.startFullscreen ?? settings.fullscreen_startup ?? false;
+      }
+    } catch (error) {
+      console.error('Error reading fullscreen startup preference:', error);
+    }
+    
     this.window = new BrowserWindow({
-      fullscreen: true,
+      fullscreen: shouldStartFullscreen,
       frame: false,
       transparent: false,
       webPreferences: {

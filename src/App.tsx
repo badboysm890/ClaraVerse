@@ -17,6 +17,7 @@ import { db } from './db';
 import { InterpreterProvider } from './contexts/InterpreterContext';
 import { ProvidersProvider } from './contexts/ProvidersContext';
 import ClaraAssistant from './components/ClaraAssistant';
+import { StartupService } from './services/startupService';
 
 function App() {
   const [activePage, setActivePage] = useState(() => localStorage.getItem('activePage') || 'dashboard');
@@ -44,6 +45,11 @@ function App() {
 
   useEffect(() => {
     db.getAlphaFeaturesEnabled?.().then(val => setAlphaFeaturesEnabled(!!val));
+  }, []);
+
+  useEffect(() => {
+    // Apply startup settings
+    StartupService.getInstance().applyStartupSettings();
   }, []);
 
   const handleOnboardingComplete = async () => {

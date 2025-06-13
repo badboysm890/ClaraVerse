@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Save, User, Server, Settings as SettingsIcon, Bot, Brain, Puzzle, Hammer, RefreshCw } from 'lucide-react';
+import { Save, User, Server, Settings as SettingsIcon, Bot, Brain, Puzzle, Hammer, RefreshCw, Power } from 'lucide-react';
 import { db, type PersonalInfo, type APIConfig } from '../db';
 import { useTheme, ThemeMode } from '../hooks/useTheme';
 import { useProviders } from '../contexts/ProvidersContext';
@@ -12,8 +12,9 @@ import LocalModelsTab from './Settings/LocalModelsTab';
 import ServicesTab from './Settings/ServicesTab';
 import ExportCodeTab from './Settings/ExportCodeTab';
 import UpdatesTab from './Settings/UpdatesTab';
+import StartupTab from './Settings/StartupTab';
 
-type TabId = 'personal' | 'api' | 'preferences' | 'models' | 'mcp' | 'toolbelt' | 'updates' | 'sdk-demo' | 'servers';
+type TabId = 'personal' | 'api' | 'preferences' | 'models' | 'mcp' | 'toolbelt' | 'updates' | 'sdk-demo' | 'servers' | 'startup';
 
 interface SettingsProps {
   alphaFeaturesEnabled: boolean;
@@ -27,7 +28,14 @@ const Settings = ({ alphaFeaturesEnabled, setAlphaFeaturesEnabled }: SettingsPro
     email: '',
     avatar_url: '',
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    theme_preference: 'system'
+    theme_preference: 'system',
+    startup_settings: {
+      autoStart: false,
+      startMinimized: false,
+      startFullscreen: false,
+      checkForUpdates: true,
+      restoreLastSession: true
+    }
   });
 
   const [apiConfig, setApiConfig] = useState<APIConfig>({
@@ -52,8 +60,20 @@ const Settings = ({ alphaFeaturesEnabled, setAlphaFeaturesEnabled }: SettingsPro
       const savedApiConfig = await db.getAPIConfig();
 
       if (savedPersonalInfo) {
-        setPersonalInfo(savedPersonalInfo);
-        setTheme(savedPersonalInfo.theme_preference as ThemeMode);
+        // Ensure startup_settings exists with default values
+        const updatedPersonalInfo = {
+          ...savedPersonalInfo,
+          startup_settings: {
+            ...savedPersonalInfo.startup_settings,
+            autoStart: savedPersonalInfo.startup_settings?.autoStart ?? false,
+            startMinimized: savedPersonalInfo.startup_settings?.startMinimized ?? false,
+            startFullscreen: savedPersonalInfo.startup_settings?.startFullscreen ?? false,
+            checkForUpdates: savedPersonalInfo.startup_settings?.checkForUpdates ?? true,
+            restoreLastSession: savedPersonalInfo.startup_settings?.restoreLastSession ?? true
+          }
+        };
+        setPersonalInfo(updatedPersonalInfo);
+        setTheme(updatedPersonalInfo.theme_preference as ThemeMode);
       }
 
       if (savedApiConfig) {
@@ -86,7 +106,7 @@ const Settings = ({ alphaFeaturesEnabled, setAlphaFeaturesEnabled }: SettingsPro
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
-    if (tabParam && ['personal', 'api', 'preferences', 'models', 'mcp', 'toolbelt', 'updates', 'sdk-demo', 'servers'].includes(tabParam)) {
+    if (tabParam && ['personal', 'api', 'preferences', 'models', 'mcp', 'toolbelt', 'updates', 'sdk-demo', 'servers', 'startup'].includes(tabParam)) {
       setActiveTab(tabParam as TabId);
     }
   }, []);
@@ -193,6 +213,10 @@ const Settings = ({ alphaFeaturesEnabled, setAlphaFeaturesEnabled }: SettingsPro
     </button>
   );
 
+  const handlePersonalInfoChange = (info: Partial<PersonalInfo>) => {
+    setPersonalInfo(prev => ({ ...prev, ...info }));
+  };
+
   return (
     <>
       {/* Wallpaper */}
@@ -273,6 +297,13 @@ const Settings = ({ alphaFeaturesEnabled, setAlphaFeaturesEnabled }: SettingsPro
               label="Updates"
               icon={<RefreshCw className="w-5 h-5" />}
               isActive={activeTab === 'updates'}
+            />
+
+            <TabItem
+              id="startup"
+              label="Startup"
+              icon={<Power className="w-5 h-5" />}
+              isActive={activeTab === 'startup'}
             />
 
             {/* Save Status - Only visible when saving/saved/error */}
@@ -362,8 +393,13 @@ const Settings = ({ alphaFeaturesEnabled, setAlphaFeaturesEnabled }: SettingsPro
               setAlphaFeaturesEnabled={setAlphaFeaturesEnabled}
             />
           )}
-                </div>
-              </div>
+
+          {/* Startup Tab */}
+          {activeTab === 'startup' && (
+            <StartupTab />
+          )}
+        </div>
+      </div>
     </>
   );
 };

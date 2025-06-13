@@ -62,36 +62,27 @@ export interface ElectronAPI {
   removeListener: (channel: string) => void;
   requestMicrophonePermission?: () => Promise<boolean>;
   isDev: boolean;
+  getContainers: () => Promise<Array<{
+    id: string;
+    name: string;
+    status: string;
+    ports: Array<{ host: string; container: string }>;
+  }>>;
+  containerAction: (containerId: string, action: 'start' | 'stop' | 'restart' | 'remove') => Promise<void>;
+  createContainer: (config: {
+    name: string;
+    image: string;
+    ports: Array<{ host: string; container: string }>;
+    env?: Record<string, string>;
+  }) => Promise<void>;
+  getContainerLogs: (containerId: string) => Promise<string>;
+  send: (channel: string, data?: any) => void;
 }
 
 declare global {
   interface Window {
-    electron: {
-      getWorkflowsPath: () => Promise<string>;
-      getPythonPort: () => Promise<number>;
-      checkPythonBackend: () => Promise<{
-        port: number;
-        status: string;
-        available: boolean;
-      }>;
-      receive: (channel: string, func: (data: any) => void) => void;
-      removeListener: (channel: string, func: (data: any) => void) => void;
-      send: (channel: string, data: any) => void;
-    };
-    electronAPI: {
-      getContainers: () => Promise<Array<{
-        id: string;
-        name: string;
-        image: string;
-        status: string;
-        state: string;
-        ports: string[];
-        created: string;
-      }>>;
-      containerAction: (containerId: string, action: 'start' | 'stop' | 'restart' | 'remove') => Promise<{ success: boolean; error?: string }>;
-      createContainer: (config: any) => Promise<{ success: boolean; id?: string; error?: string }>;
-      getContainerLogs: (containerId: string) => Promise<string>;
-    };
+    electron: Electron;
+    electronAPI: ElectronAPI;
     llamaSwap: {
       start: () => Promise<{ success: boolean; message?: string; error?: string; warning?: string; diagnostics?: any; status?: any }>;
       stop: () => Promise<{ success: boolean; error?: string }>;
@@ -146,6 +137,8 @@ declare global {
         suggestions: string[];
       }>;
     };
+    webContainerManager: any;
+    claraTTSService: any;
   }
 }
 
@@ -219,4 +212,13 @@ interface MCPServerTemplate {
   type: 'stdio' | 'remote';
   category: string;
   env?: Record<string, string>;
+}
+
+interface Electron {
+  getWorkflowsPath: () => Promise<string>;
+  getPythonPort: () => Promise<number>;
+  checkPythonBackend: () => Promise<{ port: number; status: string; available: boolean; }>;
+  receive: (channel: string, func: (data: any) => void) => void;
+  removeListener: (channel: string, func: (data: any) => void) => void;
+  send: (channel: string, data?: any) => void;
 } 

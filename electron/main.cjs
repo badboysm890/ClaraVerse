@@ -1842,9 +1842,47 @@ function registerHandlers() {
   });
 
   // Handle app close request
-  ipcMain.on('app-close', () => {
+  ipcMain.on('app-close', async () => {
     log.info('App close requested from renderer');
-    app.quit();
+    
+    try {
+      // Stop watchdog service first
+      if (watchdogService) {
+        log.info('Stopping watchdog service...');
+        watchdogService.stop();
+      }
+
+      // Save MCP server running state before stopping
+      if (mcpService) {
+        log.info('Saving MCP server running state...');
+        mcpService.saveRunningState();
+      }
+      
+      // Stop llama-swap service
+      if (llamaSwapService) {
+        log.info('Stopping llama-swap service...');
+        await llamaSwapService.stop();
+      }
+      
+      // Stop all MCP servers
+      if (mcpService) {
+        log.info('Stopping all MCP servers...');
+        await mcpService.stopAllServers();
+      }
+      
+      // Stop Docker containers
+      if (dockerSetup) {
+        log.info('Stopping Docker containers...');
+        await dockerSetup.stop();
+      }
+
+      log.info('All services stopped, quitting app...');
+      app.quit();
+    } catch (error) {
+      log.error('Error during app cleanup:', error);
+      // Still quit even if cleanup fails
+      app.quit();
+    }
   });
 
   // Window management handlers
@@ -2084,21 +2122,24 @@ async function createMainWindow() {
   if (mainWindow) return;
   
   // Check fullscreen startup preference
-  let shouldStartFullscreen = true;
+  let shouldStartFullscreen = false;
+  let shouldStartMinimized = false;
+  
   try {
-    const userDataPath = app.getPath('userData');
-    const settingsPath = path.join(userDataPath, 'settings.json');
-    
+    const settingsPath = path.join(app.getPath('userData'), 'clara-settings.json');
     if (fs.existsSync(settingsPath)) {
       const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
-      shouldStartFullscreen = settings.fullscreen_startup !== false; // Default to true if not set
+      // Check both startup.fullscreen and fullscreen_startup for backward compatibility
+      shouldStartFullscreen = settings.startup?.startFullscreen ?? settings.fullscreen_startup ?? false;
+      shouldStartMinimized = settings.startup?.startMinimized ?? false;
     }
   } catch (error) {
-    log.error('Error reading fullscreen startup preference:', error);
-    shouldStartFullscreen = true; // Default to fullscreen on error
+    log.error('Error reading startup preferences:', error);
+    shouldStartFullscreen = false; // Default to not fullscreen on error
+    shouldStartMinimized = false; // Default to not minimized on error
   }
   
-  log.info(`Creating main window with fullscreen: ${shouldStartFullscreen}`);
+  log.info(`Creating main window with fullscreen: ${shouldStartFullscreen}, minimized: ${shouldStartMinimized}`);
   
   mainWindow = new BrowserWindow({
     fullscreen: shouldStartFullscreen,
@@ -2115,6 +2156,11 @@ async function createMainWindow() {
     backgroundColor: '#0f0f23', // Dark background to match loading screen
     frame: true
   });
+
+  // Apply minimized state if needed
+  if (shouldStartMinimized) {
+    mainWindow.minimize();
+  }
 
   // Create and set the application menu
   createAppMenu(mainWindow);
@@ -2293,5 +2339,85 @@ app.on('window-all-closed', async () => {
 app.on('activate', async () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     await createMainWindow();
+  }
+});
+
+// Register startup settings handler
+ipcMain.on('set-startup-settings', async (event, settings) => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const settingsPath = path.join(userDataPath, 'settings.json');
+    
+    // Read current settings
+    let currentSettings = {};
+    if (fs.existsSync(settingsPath)) {
+      const settingsData = fs.readFileSync(settingsPath, 'utf8');
+      currentSettings = JSON.parse(settingsData);
+    }
+    
+    // Update startup settings
+    currentSettings.startup = {
+      ...currentSettings.startup,
+      ...settings
+    };
+    
+    // For backward compatibility, also set fullscreen_startup
+    if (settings.startFullscreen !== undefined) {
+      currentSettings.fullscreen_startup = settings.startFullscreen;
+    }
+    
+    // Save updated settings
+    fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2));
+    
+    // Apply auto-start setting immediately if provided
+    if (settings.autoStart !== undefined) {
+      app.setLoginItemSettings({
+        openAtLogin: settings.autoStart,
+        openAsHidden: settings.startMinimized || false
+      });
+    }
+    
+    log.info('Startup settings updated successfully');
+  } catch (error) {
+    log.error('Error updating startup settings:', error);
+  }
+});
+
+// Register startup settings IPC handler
+ipcMain.on('set-startup-settings', (event, settings) => {
+  try {
+    const settingsPath = path.join(app.getPath('userData'), 'clara-settings.json');
+    let currentSettings = {};
+    
+    // Load existing settings if file exists
+    if (fs.existsSync(settingsPath)) {
+      currentSettings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    }
+    
+    // Update startup settings
+    currentSettings.startup = {
+      ...currentSettings.startup,
+      ...settings
+    };
+    
+    // Save updated settings
+    fs.writeFileSync(settingsPath, JSON.stringify(currentSettings, null, 2), 'utf8');
+    log.info('Startup settings saved:', settings);
+  } catch (error) {
+    log.error('Error saving startup settings:', error);
+  }
+});
+
+ipcMain.handle('get-startup-settings', async () => {
+  try {
+    const settingsPath = path.join(app.getPath('userData'), 'clara-settings.json');
+    if (fs.existsSync(settingsPath)) {
+      const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      return settings.startup || {};
+    }
+    return {};
+  } catch (error) {
+    log.error('Error reading startup settings:', error);
+    return {};
   }
 });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sun, Moon, Monitor, Clock, LogOut } from 'lucide-react';
+import { Sun, Moon, Monitor, Clock, LogOut, Loader2 } from 'lucide-react';
 import { useTheme, ThemeMode } from '../hooks/useTheme';
 import UserProfileButton from './common/UserProfileButton';
 import NotificationPanel from './common/NotificationPanel';
@@ -17,6 +17,7 @@ const Topbar = ({ userName, onPageChange, projectTitle, showProjectTitle = false
   const [now, setNow] = useState(new Date());
   const [timezone, setTimezone] = useState<string>(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [personalInfo, setPersonalInfo] = useState<any>(null);
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
     let timer = setInterval(() => setNow(new Date()), 1000);
@@ -55,28 +56,55 @@ const Topbar = ({ userName, onPageChange, projectTitle, showProjectTitle = false
   // Handle app cleanup
   const handleCleanup = async () => {
     try {
-      const electronAPI = (window as any).electronAPI;
-      if (!electronAPI) {
-        console.error('electronAPI not available');
-        return;
-      }
-
-      // Get all containers
-      const containers = await electronAPI.getContainers();
+      setIsExiting(true);
       
-      // Stop and remove all Clara containers
-      for (const container of containers) {
-        if (container.name.startsWith('clara_')) {
-          try {
-            // Stop the container first
-            await electronAPI.containerAction(container.id, 'stop');
-            // Then remove it
-            await electronAPI.containerAction(container.id, 'remove');
-          } catch (error) {
-            console.error(`Error cleaning up container ${container.name}:`, error);
+      // Get all services that need cleanup
+      const services = [
+        // WebContainer cleanup
+        async () => {
+          const webContainerManager = (window as any).webContainerManager;
+          if (webContainerManager) {
+            await webContainerManager.cleanup();
+          }
+        },
+        // TTS cleanup
+        async () => {
+          const claraTTSService = (window as any).claraTTSService;
+          if (claraTTSService) {
+            claraTTSService.destroy();
+          }
+        },
+        // Docker containers cleanup
+        async () => {
+          const electronAPI = (window as any).electronAPI;
+          if (!electronAPI) {
+            console.error('electronAPI not available');
+            return;
+          }
+
+          // Get all containers
+          const containers = await electronAPI.getContainers();
+          
+          // Stop and remove all Clara containers
+          for (const container of containers) {
+            if (container.name.startsWith('clara_')) {
+              try {
+                // Stop the container first
+                await electronAPI.containerAction(container.id, 'stop');
+                // Then remove it
+                await electronAPI.containerAction(container.id, 'remove');
+              } catch (error) {
+                console.error(`Error cleaning up container ${container.name}:`, error);
+              }
+            }
           }
         }
-      }
+      ];
+
+      // Execute all cleanup tasks
+      await Promise.all(services.map(service => service().catch(error => {
+        console.error('Error during service cleanup:', error);
+      })));
 
       // Close the app
       if (window.electron) {
@@ -128,11 +156,20 @@ const Topbar = ({ userName, onPageChange, projectTitle, showProjectTitle = false
         />
         <button 
           onClick={handleCleanup}
-          className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors group"
+          disabled={isExiting}
+          className={`p-2 rounded-lg transition-colors group relative ${
+            isExiting 
+              ? 'opacity-50 cursor-not-allowed' 
+              : 'hover:bg-red-50 dark:hover:bg-red-900/20'
+          }`}
           aria-label="Exit application"
           title="Exit Clara"
         >
-          <LogOut className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors" />
+          {isExiting ? (
+            <Loader2 className="w-5 h-5 text-red-600 dark:text-red-400 animate-spin" />
+          ) : (
+            <LogOut className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors" />
+          )}
         </button>
       </div>
     </div>
