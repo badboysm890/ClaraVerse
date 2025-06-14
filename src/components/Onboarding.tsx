@@ -168,6 +168,32 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
         }
     ];
 
+    // Helper function to get timezone display name with UTC offset
+    const getTimezoneDisplay = (timezone: string) => {
+        try {
+            const now = new Date();
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const targetTime = new Date(utcTime + (getTimezoneOffset(timezone) * 3600000));
+            const offset = getTimezoneOffset(timezone);
+            const offsetString = offset >= 0 ? `+${offset}` : `${offset}`;
+            return `${timezone} (UTC${offsetString})`;
+        } catch {
+            return timezone;
+        }
+    };
+
+    // Helper function to get timezone offset in hours
+    const getTimezoneOffset = (timezone: string) => {
+        try {
+            const now = new Date();
+            const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+            const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+            return Math.round((tzDate.getTime() - utcDate.getTime()) / (1000 * 60 * 60));
+        } catch {
+            return 0;
+        }
+    };
+
     // Welcome section
     if (section === "welcome") {
         return (
@@ -599,11 +625,24 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                     >
                                         {[
                                             'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-                                            'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Rome',
-                                            'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Kolkata', 'Asia/Dubai',
-                                            'Australia/Sydney', 'Pacific/Auckland', 'America/Toronto'
+                                            'America/Toronto', 'America/Vancouver', 'America/Mexico_City', 'America/Sao_Paulo',
+                                            'America/Argentina/Buenos_Aires', 'America/Lima', 'America/Bogota',
+                                            'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Rome', 
+                                            'Europe/Madrid', 'Europe/Amsterdam', 'Europe/Brussels', 'Europe/Vienna',
+                                            'Europe/Prague', 'Europe/Warsaw', 'Europe/Stockholm', 'Europe/Helsinki',
+                                            'Europe/Moscow', 'Europe/Istanbul', 'Europe/Athens', 'Europe/Zurich',
+                                            'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Seoul', 'Asia/Hong_Kong',
+                                            'Asia/Singapore', 'Asia/Bangkok', 'Asia/Jakarta', 'Asia/Manila',
+                                            'Asia/Kolkata', 'Asia/Dubai', 'Asia/Riyadh', 'Asia/Tehran',
+                                            'Asia/Karachi', 'Asia/Dhaka', 'Asia/Kathmandu', 'Asia/Colombo',
+                                            'Australia/Sydney', 'Australia/Melbourne', 'Australia/Perth', 'Australia/Brisbane',
+                                            'Australia/Adelaide', 'Australia/Darwin', 'Australia/Hobart',
+                                            'Pacific/Auckland', 'Pacific/Fiji', 'Pacific/Honolulu', 'Pacific/Tahiti',
+                                            'Africa/Cairo', 'Africa/Johannesburg', 'Africa/Lagos', 'Africa/Nairobi',
+                                            'Africa/Casablanca', 'Africa/Tunis', 'Africa/Algiers',
+                                            'UTC', 'GMT'
                                         ].map(tz => (
-                                            <option key={tz} value={tz}>{tz}</option>
+                                            <option key={tz} value={tz}>{getTimezoneDisplay(tz)}</option>
                                         ))}
                                     </select>
                                 </div>

@@ -184,6 +184,20 @@ const Settings = ({ alphaFeaturesEnabled, setAlphaFeaturesEnabled }: SettingsPro
     }
   };
 
+  // Helper function to get timezone display name with UTC offset
+  const getTimezoneDisplay = (timezone: string) => {
+    try {
+      const now = new Date();
+      const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+      const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+      const offset = Math.round((tzDate.getTime() - utcDate.getTime()) / (1000 * 60 * 60));
+      const offsetString = offset >= 0 ? `+${offset}` : `${offset}`;
+      return `${timezone} (UTC${offsetString})`;
+    } catch {
+      return timezone;
+    }
+  };
+
   // Timezone options helper
   let timezoneOptions: string[] = [];
   try {
@@ -194,10 +208,31 @@ const Settings = ({ alphaFeaturesEnabled, setAlphaFeaturesEnabled }: SettingsPro
   }
   if (!timezoneOptions.length) {
     timezoneOptions = [
-      'UTC', 'America/New_York', 'Europe/London', 'Asia/Tokyo', 'Asia/Kolkata',
-      'Europe/Paris', 'Europe/Berlin', 'America/Los_Angeles', 'Australia/Sydney'
+      'UTC', 'GMT',
+      'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+      'America/Toronto', 'America/Vancouver', 'America/Mexico_City', 'America/Sao_Paulo',
+      'America/Argentina/Buenos_Aires', 'America/Lima', 'America/Bogota',
+      'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Rome', 
+      'Europe/Madrid', 'Europe/Amsterdam', 'Europe/Brussels', 'Europe/Vienna',
+      'Europe/Prague', 'Europe/Warsaw', 'Europe/Stockholm', 'Europe/Helsinki',
+      'Europe/Moscow', 'Europe/Istanbul', 'Europe/Athens', 'Europe/Zurich',
+      'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Seoul', 'Asia/Hong_Kong',
+      'Asia/Singapore', 'Asia/Bangkok', 'Asia/Jakarta', 'Asia/Manila',
+      'Asia/Kolkata', 'Asia/Dubai', 'Asia/Riyadh', 'Asia/Tehran',
+      'Asia/Karachi', 'Asia/Dhaka', 'Asia/Kathmandu', 'Asia/Colombo',
+      'Australia/Sydney', 'Australia/Melbourne', 'Australia/Perth', 'Australia/Brisbane',
+      'Australia/Adelaide', 'Australia/Darwin', 'Australia/Hobart',
+      'Pacific/Auckland', 'Pacific/Fiji', 'Pacific/Honolulu', 'Pacific/Tahiti',
+      'Africa/Cairo', 'Africa/Johannesburg', 'Africa/Lagos', 'Africa/Nairobi',
+      'Africa/Casablanca', 'Africa/Tunis', 'Africa/Algiers'
     ];
   }
+
+  // Create timezone options with display names
+  const timezoneOptionsWithDisplay = timezoneOptions.map(tz => ({
+    value: tz,
+    display: getTimezoneDisplay(tz)
+  }));
 
   // Tab component
   const TabItem = ({ id, label, icon, isActive }: { id: TabId, label: string, icon: React.ReactNode, isActive: boolean }) => (
@@ -357,7 +392,7 @@ const Settings = ({ alphaFeaturesEnabled, setAlphaFeaturesEnabled }: SettingsPro
               personalInfo={personalInfo}
               handleThemeChange={handleThemeChange}
               setPersonalInfo={setPersonalInfo}
-              timezoneOptions={timezoneOptions}
+              timezoneOptions={timezoneOptionsWithDisplay}
             />
           )}
 

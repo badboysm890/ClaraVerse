@@ -6,7 +6,7 @@ interface PreferencesTabProps {
   personalInfo: PersonalInfo;
   handleThemeChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   setPersonalInfo: React.Dispatch<React.SetStateAction<PersonalInfo>>;
-  timezoneOptions: string[];
+  timezoneOptions: { value: string; display: string; }[];
 }
 
 const PreferencesTab: React.FC<PreferencesTabProps> = ({
@@ -49,8 +49,8 @@ const PreferencesTab: React.FC<PreferencesTabProps> = ({
             onChange={(e) => setPersonalInfo(prev => ({ ...prev, timezone: e.target.value }))}
             className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
           >
-            {timezoneOptions.map((tz: string) => (
-              <option key={tz} value={tz}>{tz}</option>
+            {timezoneOptions.map((tz: { value: string; display: string; }) => (
+              <option key={tz.value} value={tz.value}>{tz.display}</option>
             ))}
           </select>
         </div>
