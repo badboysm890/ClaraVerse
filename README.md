@@ -1,215 +1,456 @@
 <div align="center">
-  <img src="/public/logo.png" alt="Clara Logo" width="90" height="90" />
-  <h1>Clara</h1>
-  <p><strong>Your Fully Local AI Superstack — Not Just Another Chat UI.</strong></p>
-  <p>Clara isn't a wrapper. It's a full-blown AI assistant, workflow engine, agent builder, and image lab — all running 100% offline on your machine.</p>
-
+  <img src="/public/logo.png" alt="ClaraVerse Logo" width="120" height="120" />
+  
+  # 🚀 ClaraVerse
+  
+  ### **Your Fully Local AI Superstack — Privacy-First, Cloud-Free, Limitless**
+  
+  *ClaraVerse isn't just another chat UI. It's a complete AI ecosystem that runs 100% on your machine.*
+  
   <p>
-    💬 LLM Chat • 🧠 Agents • 🔄 Automation • 🎨 Image Gen • 🧱 Widgets • 🧩 App Builder — <br/>
-    Powered by open-source, privacy-first, zero-cloud tech.
+    <img src="https://img.shields.io/github/v/release/badboysm890/ClaraVerse?style=for-the-badge&color=FFD700" alt="Latest Release" />
+    <img src="https://img.shields.io/github/stars/badboysm890/ClaraVerse?style=for-the-badge&color=gold" alt="GitHub Stars" />
+    <img src="https://img.shields.io/github/license/badboysm890/ClaraVerse?style=for-the-badge&color=blue" alt="License" />
+    <img src="https://img.shields.io/github/downloads/badboysm890/ClaraVerse/total?style=for-the-badge&color=green" alt="Total Downloads" />
   </p>
-
-  <br/>
-  <a href="https://claraverse.netlify.app/"><img src="https://img.shields.io/badge/Clara-V0.1.1-FFD700.svg" alt="Clara Version Badge"></a>
-  <br/><br/>
-  <a href="https://clara.badboysm890.in/" target="_blank"><strong>🌐 Try Clara Online</strong></a> • 
-  <a href="https://claraverse.space/" target="_blank"><strong>⬇️ Download Desktop App</strong></a>
-  <br/><br/>
-  <a href="https://www.producthunt.com/posts/clara-433c5291-7639-4271-b246-8df30cbc449f" target="_blank">
-    <img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=942765&theme=light" alt="Clara on Product Hunt" width="250" height="54" />
-  </a>
+  
+  <p>
+    <a href="https://claraverse.space/" target="_blank">
+      <img src="https://img.shields.io/badge/🌐_Try_Clara_Online-4A90E2?style=for-the-badge&logo=web&logoColor=white" alt="Try Online" />
+    </a>
+    <a href="https://claraverse.space/" target="_blank">
+      <img src="https://img.shields.io/badge/⬇️_Download_Desktop-2ECC71?style=for-the-badge&logo=download&logoColor=white" alt="Download" />
+    </a>
+    <a href="https://discord.gg/j633fsrAne" target="_blank">
+      <img src="https://img.shields.io/badge/💬_Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
+    </a>
+    <a href="https://www.reddit.com/r/claraverse/" target="_blank">
+      <img src="https://img.shields.io/badge/🗨️_Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Reddit" />
+    </a>
+  </p>
+  
+  <p>
+    <strong>💬 LLM Chat • 🧠 AI Agents • 🔄 Automation • 🎨 Image Gen • 🧩 App Builder • 🧱 Widgets</strong><br/>
+    <em>Powered by open-source, privacy-first, zero-cloud technology</em>
+  </p>
+  
 </div>
 
 ---
 
-> 🧠 Clara is what happens when you give Ollama, N8N, and OpenInterpreter a shared brain — and run them offline with a beautiful UI.
+## 🌟 **What Makes ClaraVerse Special?**
 
-> If OpenWebUI, LibreChat, and crew feel limited — Clara *feels limitless.*
+> **Clara is what happens when you give Ollama, N8N, and OpenInterpreter a shared brain — and run them offline with a beautiful UI.**
 
----
+ClaraVerse is a **complete AI development suite** that runs entirely on your machine. No cloud. No API keys. No data leaving your computer. Ever.
 
-## 🌟 Help Clara Grow
-
-If you like what I'm building:
-
-- ⭐ [Star the repo](https://github.com/badboysm890/ClaraVerse)
-- 🐦 [Tweet about Clara](https://twitter.com/intent/tweet?text=Clara%20is%20a%20fully%20offline%20AI%20superstack%20with%20LLMs%2C%20automations%2C%20agents%2C%20image%20generation%20%2B%20more%20%E2%80%94%20all%20open-source.%20Get%20it%20here%20%F0%9F%91%87&url=https%3A%2F%2Fgithub.com%2Fbadboysm890%2FClaraVerse)
-- 💬 Post workflows, bugs, memes, or PRs — I respond to all
+### 🎯 **Built for Everyone**
+- **Developers**: Full-stack AI development environment
+- **Creators**: Visual workflow automation and image generation
+- **Privacy Advocates**: 100% local processing, no telemetry
+- **Businesses**: Self-hosted AI infrastructure without vendor lock-in
 
 ---
 
-## 🔐 Privacy-First by Default
+## 🚀 **Feature Universe**
 
-* 💻 **Runs 100% Locally** — Every model, every workflow
-* 🧠 **No Cloud. No API Keys. No Phoning Home**
-* 🛠️ **Open Source & Self-Hosted** — You own the stack
+<table>
+<tr>
+<td width="50%">
 
----
+### 🧠 **Clara AI Assistant**
+- **Advanced Chat Interface** with vision model support
+- **File Processing** - documents, images, code
+- **Voice Integration** - TTS/STT capabilities
+- **Context Awareness** - remembers your conversations
+- **Multi-Provider Support** - Ollama, OpenAI, OpenRouter
 
----
+</td>
+<td width="50%">
 
-## 🤜 Clara vs The Rest
+### 🧩 **LumaUI Code Builder**
+- **WebContainer-Powered** development environment
+- **Live Preview** with Monaco editor
+- **AI Code Generation** and assistance
+- **Project Templates** - React, Vue, Vanilla JS
+- **Real-time Synchronization**
 
-| Feature                      | Clara         | OpenWebUI   | LibreChat  |
-|------------------------------|---------------|-------------|------------|
-| 💻 Fully Local Stack         | ✅ Yes         | ✅ Yes      | ✅ Yes     |
-| 🧩 Visual App Builder        | ✅ Built-in    | ❌          | ❌         |
-| 🔁 Native N8N Automation     | ✅ Integrated  | ❌          | ❌         |
-| 🧠 OpenInterpreter Support   | ✅ Yes         | ❌          | ❌         |
-| 📂 File Manager & Widgets    | ✅ Fully Local | ❌          | ✅ Basic   |
-| 🧱 Agent Templates & Builder | ✅ Yes         | ❌          | ❌         |
-| 🖼️ Image Generation w/ SD    | ✅ ComfyUI     | ✅ Basic    | ❌         |
+</td>
+</tr>
+<tr>
+<td width="50%">
 
----
+### 🔄 **N8N Automation Hub**
+- **1000+ Workflow Templates**
+- **Drag-and-Drop** automation builder
+- **Webhook Testing** and tool creation
+- **Native Integration** - no external setup
+- **Visual Workflow Designer**
 
-## 🚀 Feature Showcase
+</td>
+<td width="50%">
 
-### 🧱 Widgets for Days
+### 🎨 **ComfyUI Image Studio**
+- **Local Stable Diffusion** - SDXL, SD 1.5, Flux
+- **LoRA & ControlNet** support
+- **Model Management** with download progress
+- **Prompt Enhancement** using local LLMs
+- **Image Gallery** with metadata
 
-Modular, dynamic, and persistent. Build your own dashboard.
+</td>
+</tr>
+<tr>
+<td width="50%">
 
-<p align="center"><img src="/public/screenshots/desktop_widgets.png" width="800"/></p>
+### 🧠 **Agent Builder Studio**
+- **Visual Flow Programming** with React Flow
+- **Custom Node Creation** - Auto & Manual modes
+- **Real-time Execution** with debugging
+- **Import/Export** agent workflows
+- **Template Library** with prebuilt agents
 
----
+</td>
+<td width="50%">
 
-### 💬 Talk to LLMs Like a Boss
+### 🧱 **Dynamic Widget System**
+- **Draggable Dashboard** with grid layout
+- **Custom Widget Types** - Chat, Email, Flow, Webhook
+- **Persistent Configurations**
+- **Context Menu Management**
+- **Real-time Updates**
 
-Ollama + Vision models. Local. Context-aware. No cloud bills.
-
-<p align="center"><img src="/public/screenshots/assistant-screenshot.png" width="800"/></p>
-
----
-
-### 🧑‍💻 Clara ≠ Chatbot. It's Your Local Dev Intern
-
-Write code, summarize docs, train models — via OpenInterpreter.
-
-<p align="center"><img src="/public/screenshots/clara_interpreter.png" width="800"/></p>
-
----
-
-### 🔄 Built-in N8N Automation
-
-Drag-and-drop automation directly inside Clara. No tabs. No hacks.
-
-<p align="center"><img src="/public/screenshots/n8n_ScreenShot.png" width="800"/></p>
-
----
-
-### 🧩 1000+ Workflow Templates
-
-Prebuilt automations with full source visibility.
-
-<p align="center"><img src="/public/screenshots/Workflows.png" width="800"/></p>
-
----
-
-### ⚙️ Agent Builder w/ Templates
-
-Deploy agents that actually *do* things. Logic + memory + purpose.
-
-<p align="center"><img src="/public/screenshots/Appstore.png" width="800"/></p>
-
----
-
-### 🏗️ Visual App Builder
-
-Wire up APIs, prompts, tools, and logic into fully working apps.
-
-<p align="center"><img src="/public/screenshots/app-builder-screenshot.png" width="800"/></p>
+</td>
+</tr>
+</table>
 
 ---
 
-### 🎨 Image Generation w/ ComfyUI
+## 📸 **Visual Showcase**
 
-Offline Stable Diffusion. Stylized, tuned, and customizable.
+<details>
+<summary><strong>🖼️ Click to see screenshots</strong></summary>
 
-<p align="center"><img src="/public/screenshots/image-gen-screenshot.png" width="800"/></p>
+### 💬 **AI Assistant Interface**
+<img src="/public/screenshots/assistant-screenshot.png" width="100%" alt="Clara AI Assistant" />
 
----
+### 🧩 **LumaUI Code Builder**
+<img src="/public/screenshots/app-builder-screenshot.png" width="100%" alt="LumaUI Code Builder" />
 
-### 🖼️ Image Gallery Management
+### 🔄 **N8N Automation Studio**
+<img src="/public/screenshots/n8n_ScreenShot.png" width="100%" alt="N8N Automation" />
 
-Organize your generations with tags, thumbnails, and metadata.
+### 🎨 **Image Generation Lab**
+<img src="/public/screenshots/image-gen-screenshot.png" width="100%" alt="Image Generation" />
 
-<p align="center"><img src="/public/screenshots/gallery-screenshot.png" width="800"/></p>
+### 🧱 **Widget Dashboard**
+<img src="/public/screenshots/desktop_widgets.png" width="100%" alt="Widget Dashboard" />
 
-
-## 🧪 Install & Run (Docker)
-
-> ✅ **Only Prerequisite**: [Docker Desktop](https://www.docker.com/products/docker-desktop)
-
----
-
-## 💻 Download Desktop App
-
-* 🪟 [Windows (.exe)](https://github.com/badboysm890/ClaraVerse/releases)
-* 🍎 [macOS (.dmg)](https://github.com/badboysm890/ClaraVerse/releases)
-* 🐧 [Linux (.AppImage)](https://github.com/badboysm890/ClaraVerse/releases)
+</details>
 
 ---
 
-## 🍏 macOS Unsigned App Fix
+## 🆚 **Clara vs The Competition**
 
-> Getting the "App is damaged" warning?
+| Feature | **ClaraVerse** | OpenWebUI | LibreChat | Ollama WebUI |
+|---------|----------------|-----------|-----------|--------------|
+| 💻 **100% Local Stack** | ✅ Complete | ✅ Yes | ✅ Yes | ✅ Basic |
+| 🧩 **Visual App Builder** | ✅ Built-in | ❌ No | ❌ No | ❌ No |
+| 🔄 **Native Automation** | ✅ N8N Integrated | ❌ No | ❌ No | ❌ No |
+| 🧠 **Agent Builder** | ✅ Visual Designer | ❌ No | ❌ No | ❌ No |
+| 🎨 **Image Generation** | ✅ ComfyUI | ✅ Basic DALL-E | ❌ No | ❌ No |
+| 🧱 **Widget System** | ✅ Dynamic Dashboard | ❌ No | ✅ Basic | ❌ No |
+| 🔧 **Code Execution** | ✅ OpenInterpreter | ❌ No | ❌ No | ❌ No |
+| 📱 **Desktop App** | ✅ Electron | ❌ Web Only | ❌ Web Only | ❌ Web Only |
 
-```bash
-# Just right-click the app and hit "Open"  
-# Then go to System Preferences > Security and allow it manually
+---
+
+## 🗓️ **Release Timeline & Roadmap**
+
+<div align="center">
+
+### **🎯 Current Release Status**
+
+| **Component** | **Status** | **Description** |
+|---------------|------------|-----------------|
+| 🧠 **Clara AI Assistant** | ✅ **Released** | Advanced chat interface with multi-provider support |
+| 🧩 **LumaUI Code Builder** | ✅ **Released** | WebContainer-powered development environment |
+| 🧱 **Widget System** | ✅ **Released** | Dynamic dashboard with draggable widgets |
+| 🔄 **N8N Integration** | ✅ **Released** | Native workflow automation |
+| 🎨 **Image Generation** | ✅ **Released** | ComfyUI integration for local Stable Diffusion |
+| 🧠 **Agent Builder** | ✅ **Released** | Visual flow programming for AI agents |
+| 📱 **Desktop Apps** | ✅ **Released** | Windows, macOS, Linux support |
+| 🐳 **Docker Deployment** | ✅ **Released** | One-command local deployment |
+
+### **🚀 Coming Soon**
+
+```mermaid
+timeline
+    title Upcoming Features
+    
+    section Next Release
+        Enhanced UX : Improved onboarding
+                    : Better mobile experience
+                    : Advanced tutorials
+    
+    section Future Releases
+        Mobile Apps : iOS/Android support
+                    : Cross-platform sync
+                    : Mobile-optimized UI
+        
+        Enterprise : Team collaboration
+                   : Role-based access
+                   : Advanced analytics
+        
+        Extensions : Plugin marketplace
+                   : Custom integrations
+                   : Third-party connectors
 ```
 
-Totally safe. It's unsigned, not unsafe.
+</div>
 
 ---
 
-## 👨‍💻 Dev Setup
+## 🚀 **Quick Start**
 
+### 🐳 **Docker Setup** (Recommended)
 ```bash
+# Clone the repository
 git clone https://github.com/badboysm890/ClaraVerse.git
 cd ClaraVerse
-npm install
-npm run dev           # For web
-npm run electron:dev  # For desktop
+
+# Start Clara with one command
+./start-clara.sh
+
+# Open your browser to http://localhost:3000
 ```
 
-### ⚒️ Build
+### 💻 **Desktop App**
 
+<table>
+<tr>
+<td align="center">
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" width="40"/>
+<br/><strong>Windows</strong><br/>
+<a href="https://github.com/badboysm890/ClaraVerse/releases/latest">
+<img src="https://img.shields.io/badge/Download-.exe-blue?style=for-the-badge" />
+</a>
+</td>
+<td align="center">
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apple/apple-original.svg" width="40"/>
+<br/><strong>macOS</strong><br/>
+<a href="https://github.com/badboysm890/ClaraVerse/releases/latest">
+<img src="https://img.shields.io/badge/Download-.dmg-lightgrey?style=for-the-badge" />
+</a>
+</td>
+<td align="center">
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg" width="40"/>
+<br/><strong>Linux</strong><br/>
+<a href="https://github.com/badboysm890/ClaraVerse/releases/latest">
+<img src="https://img.shields.io/badge/Download-.AppImage-orange?style=for-the-badge" />
+</a>
+</td>
+</tr>
+</table>
+
+### 🛠️ **Development Setup**
 ```bash
-npm run build              # Web
-npm run electron:build     # Desktop
+# Install dependencies
+npm install
+
+# Development server
+npm run dev           # Web version
+npm run electron:dev  # Desktop version
+
+# Build for production
+npm run build              # Web build
+npm run electron:build     # Desktop build
 ```
 
-**Note**: During build/CI processes, Docker-related popups are automatically suppressed. Set `SKIP_DOCKER_SETUP=true` to completely skip Docker initialization if needed.
+---
+
+## 🔐 **Privacy & Security**
+
+<div align="center">
+
+| 🛡️ **Privacy Feature** | **Status** | **Details** |
+|------------------------|------------|-------------|
+| **Local Processing** | ✅ 100% | All AI models run on your machine |
+| **No Telemetry** | ✅ Zero | No data collection or phone home |
+| **Open Source** | ✅ Full | Complete codebase transparency |
+| **Self-Hosted** | ✅ Complete | Own your entire AI stack |
+| **No Cloud APIs** | ✅ Optional | Cloud providers only if you choose |
+| **Encrypted Storage** | ✅ Built-in | Local data encrypted by default |
+
+</div>
+
+> **Your Data, Your Rules**: ClaraVerse processes everything locally. Your conversations, files, and generated content never leave your machine unless you explicitly choose to use cloud providers.
 
 ---
 
-## 📈 GitHub Star Growth
+## 🏗️ **Architecture Overview**
 
-[![Star History](https://api.star-history.com/svg?repos=badboysm890/ClaraVerse&type=Date)](https://www.star-history.com/#badboysm890/ClaraVerse&Date)
+<div align="center">
+
+```mermaid
+graph TB
+    subgraph "🖥️ ClaraVerse Desktop App"
+        UI[React Frontend]
+        API[API Layer]
+        DB[(Local Database)]
+    end
+    
+    subgraph "🧠 AI Stack"
+        LLM[Clara Core<br/>Llama.cpp]
+        VISION[Vision Models]
+        TTS[Text-to-Speech]
+        STT[Speech-to-Text]
+    end
+    
+    subgraph "🔧 Developer Tools"
+        LUMA[LumaUI<br/>Code Builder]
+        AGENT[Agent Builder<br/>Studio]
+        WEB[WebContainer<br/>Environment]
+    end
+    
+    subgraph "🎨 Creative Tools"
+        COMFY[ComfyUI<br/>Image Gen]
+        N8N[N8N Workflows<br/>Automation]
+        WIDGETS[Widget System<br/>Dashboard]
+    end
+    
+    UI --> API
+    API --> LLM
+    API --> LUMA
+    API --> AGENT
+    API --> COMFY
+    API --> N8N
+    API --> WIDGETS
+    LLM --> VISION
+    LLM --> TTS
+    LLM --> STT
+    LUMA --> WEB
+    API --> DB
+```
+
+</div>
 
 ---
 
-## 💬 Support / Feedback / Memes
+## 🌍 **Community & Support**
 
-📧 **[praveensm890@gmail.com](mailto:praveensm890@gmail.com)**  
-🐙 [Raise issues or PRs on GitHub](https://github.com/badboysm890/ClaraVerse)  
-🔥 Got memes? Post them. I'll probably feature them.
+<div align="center">
+
+### **Join the ClaraVerse Community**
+
+<table>
+<tr>
+<td align="center">
+<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" width="50"/>
+<br/><strong>GitHub</strong><br/>
+<a href="https://github.com/badboysm890/ClaraVerse">Issues & PRs</a>
+</td>
+<td align="center">
+<img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6ca814282eca7172c6_icon_clyde_white_RGB.svg" width="50"/>
+<br/><strong>Discord</strong><br/>
+<a href="https://discord.gg/j633fsrAne">Live Chat</a>
+</td>
+<td align="center">
+<img src="https://www.redditstatic.com/shreddit/assets/thinking-snoo.png" width="50"/>
+<br/><strong>Reddit</strong><br/>
+<a href="https://www.reddit.com/r/claraverse/">Community</a>
+</td>
+<td align="center">
+<img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Twitter-logo.svg" width="50"/>
+<br/><strong>Twitter</strong><br/>
+<a href="https://twitter.com/intent/tweet?text=Clara%20is%20a%20fully%20offline%20AI%20superstack%20with%20LLMs%2C%20automations%2C%20agents%2C%20image%20generation%20%2B%20more%20%E2%80%94%20all%20open-source.%20Get%20it%20here%20%F0%9F%91%87&url=https%3A%2F%2Fgithub.com%2Fbadboysm890%2FClaraVerse">Share Clara</a>
+</td>
+</tr>
+</table>
+
+### **Get Help & Share Ideas**
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/badboysm890/ClaraVerse/issues)
+- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/badboysm890/ClaraVerse/discussions)
+- 📧 **Direct Contact**: [praveensm890@gmail.com](mailto:praveensm890@gmail.com)
+- 🔥 **Show & Tell**: Share your workflows, agents, and creations!
+
+</div>
 
 ---
 
-## 🧠 Want to Launch Your Own AI SaaS?
+## 🤝 **Contributing**
 
-Clara gives you the full local AI stack — no vendor lock-in, no API hell, no GPU bills.
+We love contributions! Here's how you can help make ClaraVerse even better:
 
-**Clara's your rocket. Light it up. 🚀**
+### **🌟 Ways to Contribute**
+- ⭐ **Star the repository** to show your support
+- 🐛 **Report bugs** and suggest improvements
+- 📝 **Improve documentation** and tutorials
+- 🧩 **Create new templates** for agents and workflows
+- 🎨 **Design new widgets** and UI components
+- 🔧 **Add new features** and integrations
 
-## Features
+### **🛠️ Development Guidelines**
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and test thoroughly
+4. Commit with clear messages: `git commit -m 'Add amazing feature'`
+5. Push to your branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request with detailed description
 
-- 🧠 **AI-Powered Agent Building**: Create intelligent agents with visual flow-based programming
-- 🤖 **Custom Node Creation**: Build your own nodes with custom logic and interfaces
-  - **Auto Mode**: AI-powered node generation using structured output - just describe what you want and let AI create the complete implementation
-  - **Manual Mode**: Step-by-step node creation with full control over inputs, outputs, properties, and code
-- 🔧 **Drag & Drop Interface**: Intuitive visual programming with nodes and connections
-- ⚡ **Real-time Execution**: See your agents run and debug in real-time
-- 🎨 **Customizable Themes**: Beautiful light and dark themes
-- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
+---
+
+## 📊 **GitHub Stats**
+
+<div align="center">
+
+[![Star History Chart](https://api.star-history.com/svg?repos=badboysm890/ClaraVerse&type=Date)](https://star-history.com/#badboysm890/ClaraVerse&Date)
+
+<p>
+  <img src="https://img.shields.io/github/contributors/badboysm890/ClaraVerse?style=for-the-badge&color=orange" alt="Contributors" />
+  <img src="https://img.shields.io/github/forks/badboysm890/ClaraVerse?style=for-the-badge&color=blue" alt="Forks" />
+  <img src="https://img.shields.io/github/issues/badboysm890/ClaraVerse?style=for-the-badge&color=red" alt="Issues" />
+  <img src="https://img.shields.io/github/issues-pr/badboysm890/ClaraVerse?style=for-the-badge&color=green" alt="Pull Requests" />
+</p>
+
+</div>
+
+---
+
+## 📜 **License**
+
+ClaraVerse is open-source software licensed under the [MIT License](LICENSE). This means you can:
+
+- ✅ Use it commercially
+- ✅ Modify and distribute
+- ✅ Use it privately
+- ✅ Contribute back to the community
+
+---
+
+## 🚀 **Ready to Launch Your AI Journey?**
+
+<div align="center">
+
+**ClaraVerse gives you the complete local AI stack — no vendor lock-in, no API hell, no GPU bills.**
+
+<p>
+  <a href="https://claraverse.space/" target="_blank">
+    <img src="https://img.shields.io/badge/🚀_Launch_Clara_Now-FF6B6B?style=for-the-badge&logo=rocket&logoColor=white" alt="Launch Clara" />
+  </a>
+</p>
+
+### **Clara's your rocket. Light it up. 🚀**
+
+<sub>Made with ❤️ by the ClaraVerse community</sub>
+
+</div>
+
+---
+
+<div align="center">
+
+*"The future of AI is local, private, and in your hands."*
+
+**⭐ Star us on GitHub • 🗨️ Join our Discord • 🎯 Follow our journey**
+
+</div> 
