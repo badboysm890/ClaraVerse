@@ -40,7 +40,8 @@ class SetupConfigService {
         skipSetupOnStartup: false,
         autoStartServices: true,
         showProgressDetails: true
-      }
+      },
+      activeBrandId: 'studentlyai' // Default brand ID
     };
     
     console.log('🔧 SetupConfigService constructor - loading config...');
@@ -258,6 +259,22 @@ class SetupConfigService {
    */
   isDockerChecked() {
     return this.config.docker.checked;
+  }
+
+  /**
+   * Get the active brand ID
+   */
+  getActiveBrandId() {
+    return this.config.activeBrandId || this.defaultConfig.activeBrandId;
+  }
+
+  /**
+   * Set the active brand ID
+   */
+  setActiveBrandId(brandId) {
+    this.config.activeBrandId = brandId;
+    this.saveConfig();
+    return true;
   }
 }
 

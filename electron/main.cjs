@@ -19,6 +19,7 @@ const WatchdogService = require('./watchdogService.cjs');
 const ComfyUIModelService = require('./comfyUIModelService.cjs');
 const { platformUpdateService } = require('./updateService.cjs');
 const { debugPaths, logDebugInfo } = require('./debug-paths.cjs');
+const SetupConfigService = require('./setupConfigService.cjs');
 
 /**
  * Helper function to show dialogs properly during startup when loading screen is active
@@ -76,6 +77,7 @@ let mcpService;
 let watchdogService;
 let updateService;
 let comfyUIModelService;
+let setupConfigService; // Added for brand configuration
 
 // Track active downloads for stop functionality
 const activeDownloads = new Map();
@@ -1665,6 +1667,30 @@ function registerHandlers() {
   registerDockerContainerHandlers();
   registerModelManagerHandlers();
   registerMCPHandlers();
+
+  // Instantiate SetupConfigService if not already done
+  if (!setupConfigService) {
+    setupConfigService = new SetupConfigService();
+  }
+
+  // IPC handler for get-active-brand-id
+  ipcMain.handle('get-active-brand-id', async () => {
+    try {
+      return setupConfigService.getActiveBrandId();
+    } catch (error) {
+      log.error('Error getting active brand ID:', error);
+      return null; // Or a default brand ID
+    }
+  });
+
+  // IPC handler for set-active-brand-id
+  ipcMain.on('set-active-brand-id', (event, brandId) => {
+    try {
+      setupConfigService.setActiveBrandId(brandId);
+    } catch (error) {
+      log.error('Error setting active brand ID:', error);
+    }
+  });
   
   // Add dialog handler for folder picker
   ipcMain.handle('show-open-dialog', async (_event, options) => {

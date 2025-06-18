@@ -111,7 +111,9 @@ contextBridge.exposeInMainWorld('electron', {
   getWorkflowsPath: () => ipcRenderer.invoke('get-workflows-path'),
   dialog: {
     showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options)
-  }
+  },
+  getActiveBrandId: () => ipcRenderer.invoke('get-active-brand-id'),
+  setActiveBrandId: (brandId) => ipcRenderer.send('set-active-brand-id', brandId),
 });
 
 // Add Docker container management API

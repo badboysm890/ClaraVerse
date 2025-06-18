@@ -1,0 +1,261 @@
+{
+  "version": "1.1.0",
+  "lastUpdated": "2024-07-29T10:00:00Z",
+  "brands": {
+    "studentlyai": {
+      "brandName": "StudentlyAI",
+      "id": "studentlyai",
+      "theme": {
+        "primary": "#DF679F",
+        "secondary": "#F4A7C4",
+        "accent": "#F8C8DC",
+        "background": "#FFF5FA",
+        "text": "#5E374D",
+        "sakura50": "#FDEAF1",
+        "sakura100": "#FBCDE3",
+        "sakura200": "#F8B0D5",
+        "sakura300": "#F4A7C4",
+        "sakura400": "#F18BC0",
+        "sakura500": "#DF679F",
+        "sakura600": "#C95A8D",
+        "sakura700": "#B34D7A",
+        "sakura800": "#9C4068",
+        "sakura900": "#853355"
+      },
+      "logoPath": "/assets/logos/studentlyai_logo.png",
+      "pricingTierId": "studentlyai_default_pricing",
+      "featureFlags": {
+        "enableInternationalStudentFeatures": true,
+        "enableUkSpecificContent": false,
+        "enableSchoolSpecificModules": false,
+        "enableGraduateCareerTools": false,
+        "enableEducatorResources": false,
+        "enableBusinessAnalytics": false,
+        "enableAdvancedAnalytics": false
+      },
+      "metadata": {
+        "description": "AI tools tailored for students, focusing on study aids and international student support.",
+        "targetAudience": "Higher education students, international students",
+        "website": "https://studently.ai"
+      },
+      "settings": {
+        "defaultLanguage": "en-US",
+        "region": "GLOBAL"
+      }
+    },
+    "studentsai": {
+      "brandName": "StudentsAI",
+      "id": "studentsai",
+      "theme": {
+        "primary": "#4A90E2",
+        "secondary": "#7FBCF5",
+        "accent": "#B5D8FF",
+        "background": "#F0F8FF",
+        "text": "#2A4A6E",
+        "sakura50": "#FDEAF1",
+        "sakura100": "#FBCDE3",
+        "sakura200": "#F8B0D5",
+        "sakura300": "#F4A7C4",
+        "sakura400": "#F18BC0",
+        "sakura500": "#DF679F",
+        "sakura600": "#C95A8D",
+        "sakura700": "#B34D7A",
+        "sakura800": "#9C4068",
+        "sakura900": "#853355"
+      },
+      "logoPath": "/assets/logos/studentsai_logo.png",
+      "pricingTierId": "studentsai_uk_tier",
+      "featureFlags": {
+        "enableInternationalStudentFeatures": false,
+        "enableUkSpecificContent": true,
+        "enableSchoolSpecificModules": false,
+        "enableGraduateCareerTools": false,
+        "enableEducatorResources": false,
+        "enableBusinessAnalytics": false,
+        "enableAdvancedAnalytics": false
+      },
+      "metadata": {
+        "description": "AI-powered academic tools for UK students, with a focus on UK curriculum and resources.",
+        "targetAudience": "UK-based students",
+        "website": "https://students.ai.uk"
+      },
+      "settings": {
+        "defaultLanguage": "en-GB",
+        "region": "UK"
+      }
+    },
+    "pupilsai": {
+      "brandName": "PupilsAI",
+      "id": "pupilsai",
+      "theme": {
+        "primary": "#50C878",
+        "secondary": "#8DE0A6",
+        "accent": "#C5F2D3",
+        "background": "#F0FFF5",
+        "text": "#2A6A3D",
+        "sakura50": "#FDEAF1",
+        "sakura100": "#FBCDE3",
+        "sakura200": "#F8B0D5",
+        "sakura300": "#F4A7C4",
+        "sakura400": "#F18BC0",
+        "sakura500": "#DF679F",
+        "sakura600": "#C95A8D",
+        "sakura700": "#B34D7A",
+        "sakura800": "#9C4068",
+        "sakura900": "#853355"
+      },
+      "logoPath": "/assets/logos/pupilsai_logo.png",
+      "pricingTierId": "pupilsai_school_tier",
+      "featureFlags": {
+        "enableInternationalStudentFeatures": false,
+        "enableUkSpecificContent": false,
+        "enableSchoolSpecificModules": true,
+        "enableGraduateCareerTools": false,
+        "enableEducatorResources": false,
+        "enableBusinessAnalytics": false,
+        "enableAdvancedAnalytics": false
+      },
+      "metadata": {
+        "description": "Safe and engaging AI tools for K-12 pupils, designed for classroom and home learning.",
+        "targetAudience": "K-12 students, schools",
+        "website": "https://pupils.ai"
+      },
+      "settings": {
+        "defaultLanguage": "en-US",
+        "region": "GLOBAL",
+        "contentSafetyLevel": "high"
+      }
+    },
+    "graduatesai": {
+      "brandName": "GraduatesAI",
+      "id": "graduatesai",
+      "theme": {
+        "primary": "#FF8C00",
+        "secondary": "#FFB366",
+        "accent": "#FFD9AA",
+        "background": "#FFF8F0",
+        "text": "#804600",
+        "sakura50": "#FDEAF1",
+        "sakura100": "#FBCDE3",
+        "sakura200": "#F8B0D5",
+        "sakura300": "#F4A7C4",
+        "sakura400": "#F18BC0",
+        "sakura500": "#DF679F",
+        "sakura600": "#C95A8D",
+        "sakura700": "#B34D7A",
+        "sakura800": "#9C4068",
+        "sakura900": "#853355"
+      },
+      "logoPath": "/assets/logos/graduatesai_logo.png",
+      "pricingTierId": "graduatesai_career_tier",
+      "featureFlags": {
+        "enableInternationalStudentFeatures": false,
+        "enableUkSpecificContent": false,
+        "enableSchoolSpecificModules": false,
+        "enableGraduateCareerTools": true,
+        "enableEducatorResources": false,
+        "enableBusinessAnalytics": false,
+        "enableAdvancedAnalytics": true
+      },
+      "metadata": {
+        "description": "Career development and job search tools for recent graduates, powered by AI.",
+        "targetAudience": "University graduates, young professionals",
+        "website": "https://graduates.ai"
+      },
+      "settings": {
+        "defaultLanguage": "en-US",
+        "region": "GLOBAL"
+      }
+    },
+    "teachersai": {
+      "brandName": "TeachersAI",
+      "id": "teachersai",
+      "theme": {
+        "primary": "#8A2BE2",
+        "secondary": "#B370F0",
+        "accent": "#D6A8FA",
+        "background": "#F8F0FF",
+        "text": "#451571",
+        "sakura50": "#FDEAF1",
+        "sakura100": "#FBCDE3",
+        "sakura200": "#F8B0D5",
+        "sakura300": "#F4A7C4",
+        "sakura400": "#F18BC0",
+        "sakura500": "#DF679F",
+        "sakura600": "#C95A8D",
+        "sakura700": "#B34D7A",
+        "sakura800": "#9C4068",
+        "sakura900": "#853355"
+      },
+      "logoPath": "/assets/logos/teachersai_logo.png",
+      "pricingTierId": "teachersai_pro_tier",
+      "featureFlags": {
+        "enableInternationalStudentFeatures": false,
+        "enableUkSpecificContent": false,
+        "enableSchoolSpecificModules": false,
+        "enableGraduateCareerTools": false,
+        "enableEducatorResources": true,
+        "enableBusinessAnalytics": false,
+        "enableAdvancedAnalytics": true
+      },
+      "metadata": {
+        "description": "AI-driven tools and resources for educators to enhance teaching and productivity.",
+        "targetAudience": "Teachers, educators, academic institutions",
+        "website": "https://teachers.ai"
+      },
+      "settings": {
+        "defaultLanguage": "en-US",
+        "region": "GLOBAL"
+      }
+    },
+    "mccaigs": {
+      "brandName": "McCaigs",
+      "id": "mccaigs",
+      "theme": {
+        "primary": "#006400",
+        "secondary": "#50A150",
+        "accent": "#A0DDA0",
+        "background": "#F0FFF0",
+        "text": "#003200",
+        "sakura50": "#FDEAF1",
+        "sakura100": "#FBCDE3",
+        "sakura200": "#F8B0D5",
+        "sakura300": "#F4A7C4",
+        "sakura400": "#F18BC0",
+        "sakura500": "#DF679F",
+        "sakura600": "#C95A8D",
+        "sakura700": "#B34D7A",
+        "sakura800": "#9C4068",
+        "sakura900": "#853355"
+      },
+      "logoPath": "/assets/logos/mccaigs_logo.png",
+      "pricingTierId": "mccaigs_enterprise_tier",
+      "featureFlags": {
+        "enableInternationalStudentFeatures": false,
+        "enableUkSpecificContent": false,
+        "enableSchoolSpecificModules": false,
+        "enableGraduateCareerTools": false,
+        "enableEducatorResources": false,
+        "enableBusinessAnalytics": true,
+        "enableAdvancedAnalytics": true
+      },
+      "metadata": {
+        "description": "Bespoke AI solutions for businesses, focusing on analytics and enterprise applications.",
+        "targetAudience": "Businesses, enterprise clients",
+        "website": "https://mccaigs.com"
+      },
+      "settings": {
+        "defaultLanguage": "en-GB",
+        "region": "UK"
+      }
+    }
+  },
+  "defaultBrandId": "studentlyai",
+  "globalSettings": {
+    "globalCdnUrl": "https://cdn.example.com/assets",
+    "apiEndpoints": {
+      "userAuth": "/api/auth",
+      "billing": "/api/billing"
+    }
+  }
+}

@@ -18,8 +18,12 @@ import { db } from './db';
 import { ProvidersProvider } from './contexts/ProvidersContext';
 import ClaraAssistant from './components/ClaraAssistant';
 import { StartupService } from './services/startupService';
+import { useBrandTheme } from './hooks/useBrandTheme'; // Adjust path
+import PricingPage from './components/PricingPage'; // Added
+import AdvancedAnalyticsPage from './components/AdvancedAnalyticsPage'; // Added
 
 function App() {
+  useBrandTheme(); // Apply the brand theme
   const [activePage, setActivePage] = useState(() => localStorage.getItem('activePage') || 'dashboard');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userInfo, setUserInfo] = useState<{ name: string } | null>(null);
@@ -117,6 +121,10 @@ function App() {
                   return <Lumaui onPageChange={setActivePage} />;
                 case 'lumaui-lite':
                   return <LumaUILite />;
+                case 'pricing':
+                  return <PricingPage />;
+                case 'advanced-analytics': // Added case
+                  return <AdvancedAnalyticsPage />;
                 case 'dashboard':
                 default:
                   return <Dashboard onPageChange={setActivePage} />;

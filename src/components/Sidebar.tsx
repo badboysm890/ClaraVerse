@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Home, Bot, Settings, HelpCircle, ImageIcon, Network, BrainCircuit, Download, X, Zap, Code2, BookOpen } from 'lucide-react';
-import logo from '../assets/logo.png';
+import { Home, Bot, Settings, HelpCircle, ImageIcon, Network, BrainCircuit, Download, X, Zap, Code2, BookOpen, DollarSign, BarChartBig } from 'lucide-react'; // Added BarChartBig
+import logoFallback from '../assets/logo.png'; // Renamed for clarity
+import brandService from '../../services/brandService'; // Added
 
 // interface HuggingFaceModel {
 //   id: string;
@@ -68,6 +69,13 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
     pythonAvailable: false,
     comfyuiAvailable: false
   });
+
+  // Updated to use new service methods
+  const brandName = brandService.getBrandName() || 'Clara';
+  const tagline = brandService.getTagline();
+  const logoPath = brandService.getBrandAsset('logoPath') || logoFallback;
+  const showAdvancedAnalytics = brandService.getFeatureFlag('enableAdvancedAnalytics');
+
 
   // Listen for Clara background activity changes
   useEffect(() => {
@@ -234,10 +242,13 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
       id: 'image-gen',
       status: dockerServices.comfyuiAvailable ? 'ready' : 'starting'
     },
+    // Conditionally add Advanced Analytics
+    ...(showAdvancedAnalytics ? [{ icon: BarChartBig, label: 'Analytics', id: 'advanced-analytics' }] : []),
     // Only show n8n if Docker services are available
     ...(dockerServices.dockerAvailable && dockerServices.n8nAvailable 
       ? [{ icon: Network, label: 'Workflows', id: 'n8n' }] 
-      : [])
+      : []),
+    { icon: DollarSign, label: 'Pricing', id: 'pricing' },
   ];
 
   const bottomMenuItems: MenuItem[] = [
@@ -261,14 +272,19 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
           onClick={() => onPageChange('dashboard')}
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          <img src={logo} alt="Clara Logo" className="w-8 h-8 flex-shrink-0" />
-          <h1 
-            className={`text-2xl font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap overflow-hidden transition-all duration-300 ${
-              isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
-            }`}
-          >
-            Clara
-          </h1>
+          <img src={logoPath} alt={`${brandName} Logo`} className="w-8 h-8 flex-shrink-0" />
+          <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+            <h1
+              className="text-2xl font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap"
+            >
+              {brandName}
+            </h1>
+            {tagline && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap truncate">
+                {tagline}
+              </p>
+            )}
+          </div>
         </button>
       </div>
 

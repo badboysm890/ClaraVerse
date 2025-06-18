@@ -1,0 +1,32 @@
+{
+  "brandName": "PupilsAI",
+  "id": "pupilsai",
+  "theme": {
+    "primary": "#DF679F",
+    "secondary": "#F4A7C4",
+    "accent": "#F8C8DC",
+    "background": "#FFF5FA",
+    "text": "#5E374D",
+    "sakura50": "#FDEAF1",
+    "sakura100": "#FBCDE3",
+    "sakura200": "#F8B0D5",
+    "sakura300": "#F4A7C4",
+    "sakura400": "#F18BC0",
+    "sakura500": "#DF679F",
+    "sakura600": "#C95A8D",
+    "sakura700": "#B34D7A",
+    "sakura800": "#9C4068",
+    "sakura900": "#853355"
+  },
+  "logoPath": "/assets/logos/pupilsai_logo.png",
+  "pricingTierId": "pupilsai_default_pricing",
+  "featureFlags": {
+    "enableInternationalStudentFeatures": false,
+    "enableUkSpecificContent": false,
+    "enableSchoolSpecificModules": true,
+    "enableGraduateCareerTools": false,
+    "enableEducatorResources": false,
+    "enableBusinessAnalytics": false,
+    "enableAdvancedAnalytics": false
+  }
+}

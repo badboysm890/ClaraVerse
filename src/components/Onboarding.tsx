@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import {db} from '../db';
 import {OllamaClient} from '../utils/OllamaClient';
+import brandService from '../services/brandService'; // Added
 
 interface OnboardingProps {
     onComplete: () => void;
@@ -50,6 +51,12 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
     const [logoError, setLogoError] = useState(false);
     const [ollamaModels, setOllamaModels] = useState<string[]>([]);
     const [checkingModels, setCheckingModels] = useState(false);
+
+    // Updated to use new service methods
+    const brandName = brandService.getBrandName() || 'Clara';
+    const logoPath = brandService.getBrandAsset('logoPath') || '/logo.png';
+    const welcomeMessage = brandService.getWelcomeMessage() || `Welcome to ${brandName}!`;
+    // No need for currentBrandConfig directly in the component state anymore for these properties
 
     // Apply theme immediately when selected
     useEffect(() => {
@@ -212,20 +219,36 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                                 className="relative bg-white dark:bg-gray-800 rounded-full p-3 sm:p-4 shadow-xl">
                                                 {!logoError ? (
                                                     <img
-                                                        src="/logo.png"
-                                                        alt="Clara Logo"
+                                                        src={logoPath}
+                                                        alt={`${brandName} Logo`}
                                                         className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                                                        onError={() => setLogoError(true)}
+                                                        onError={() => {
+                                                          console.warn(`Error loading brand logo: ${logoPath}. Falling back.`);
+                                                          setLogoError(true);
+                                                        }}
                                                     />
                                                 ) : (
-                                                    <Bot className="w-12 h-12 sm:w-16 sm:h-16 text-sakura-500" />
+                                                    // Fallback to a generic icon or the original public/logo.png if that's preferred
+                                                    <img
+                                                        src="/logo.png"
+                                                        alt="Fallback Logo"
+                                                        className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
+                                                    />
                                                 )}
                                             </div>
                                         </div>
                                     </div>
 
                                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white animate-fadeIn leading-tight">
-                                        Welcome to <span className="text-sakura-500">Clara</span>
+                                        {welcomeMessage.includes(brandName) ? (
+                                          <>
+                                            {welcomeMessage.split(brandName)[0]}
+                                            <span className="text-sakura-500">{brandName}</span>
+                                            {welcomeMessage.split(brandName)[1]}
+                                          </>
+                                        ) : (
+                                          welcomeMessage
+                                        )}
                                     </h1>
 
                                     <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto lg:mx-0 animate-fadeInUp delay-200 leading-relaxed">
@@ -281,7 +304,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                 className={`glassmorphic rounded-2xl p-6 sm:p-8 max-w-md w-full mx-4 space-y-4 sm:space-y-6 shadow-2xl ${animationClass}`}>
                 <div className="text-center space-y-2">
                     <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                        Let's Set Up Clara
+                        Let's Set Up {brandName}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
                         {step === 1 ? "First, tell us a bit about yourself" :
@@ -315,7 +338,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                 </h3>
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Your name helps personalize your experience with Clara.
+                                Your name helps personalize your experience with {brandName}.
                             </p>
                             <input
                                 type="text"
@@ -686,7 +709,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed
                 hover:shadow-[0_0_20px_rgba(244,163,187,0.5)] hover:bg-sakura-400"
                             >
-                                {step === 4 ? 'Launch Clara' : 'Continue'}
+                                {step === 4 ? `Launch ${brandName}` : 'Continue'}
                             </button>
                         </>
                     )}
