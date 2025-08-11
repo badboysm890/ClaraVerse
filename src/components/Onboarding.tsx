@@ -20,6 +20,7 @@ import {
     HardDrive,
 } from 'lucide-react';
 import {db} from '../db';
+import { getTimezoneOptions } from '../utils/timezones';
 import { useProviders } from '../contexts/ProvidersContext';
 
 interface OnboardingProps {
@@ -811,6 +812,9 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
             return 0;
         }
     };
+
+    // Shared timezone options used across app (matches Settings)
+    const timezoneOptions = getTimezoneOptions();
 
     // Welcome section
     if (section === "welcome") {
@@ -1679,12 +1683,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                         onChange={(e) => setFormData(prev => ({...prev, timezone: e.target.value}))}
                                         className="w-full px-3 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
                                     >
-                                        {[
-                                            'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-                                            'America/Toronto', 'America/Vancouver', 'Europe/London', 'Europe/Paris', 
-                                            'Europe/Berlin', 'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Seoul', 'Asia/Singapore',
-                                            'Australia/Sydney', 'UTC'
-                                        ].map(tz => (
+                                        {timezoneOptions.map(tz => (
                                             <option key={tz} value={tz}>{getTimezoneDisplay(tz)}</option>
                                         ))}
                                     </select>
