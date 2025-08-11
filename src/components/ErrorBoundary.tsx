@@ -1,4 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
+import errorClaraMascot from '../assets/mascot/Error_Clara.png';
 
 interface Props {
   children: ReactNode;
@@ -63,12 +64,12 @@ class ErrorBoundary extends Component<Props, State> {
                 {/* Clara mascot image */}
                 <div className="w-80 h-80 relative">
                   <img 
-                    src="/mascot/Error_Clara.png" 
+                    src={errorClaraMascot} 
                     alt="Clara Error Mascot" 
                     className="w-full h-full object-contain drop-shadow-2xl"
-                    onError={(e) => {
-                      // Fallback to src/assets path if public path fails
-                      e.currentTarget.src = "/src/assets/mascot/Error_Clara.png";
+                    onError={() => {
+                      // Fallback to Bot icon from lucide-react if mascot fails
+                      console.warn('Failed to load Clara mascot, no fallback available');
                     }}
                   />
                   

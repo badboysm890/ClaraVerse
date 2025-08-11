@@ -67,12 +67,17 @@ export default {
         'bounce-gentle': {
           '0%, 100%': { transform: 'translateY(-5%)' },
           '50%': { transform: 'translateY(5%)' },
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' }
         }
       },
       animation: {
         'fade-out': 'fade-out 3s ease-out forwards',
         'glow': 'glow 2s ease-in-out infinite',
         'bounce-gentle': 'bounce-gentle 2s ease-in-out infinite',
+        'shimmer': 'shimmer 2s ease-in-out infinite',
       },
       fontFamily: {
         sans: ['Quicksand', 'ui-sans-serif', 'system-ui', 'sans-serif'],

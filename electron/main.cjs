@@ -3419,6 +3419,67 @@ function registerHandlers() {
     return updateLlamacppBinaries();
   });
 
+  // Enhanced update handlers for in-app downloading
+  ipcMain.handle('start-in-app-download', async (event, updateInfo) => {
+    try {
+      // Import the enhanced update service
+      const { enhancedPlatformUpdateService } = require('./updateService.cjs');
+      
+      if (!enhancedPlatformUpdateService) {
+        throw new Error('Enhanced update service not available');
+      }
+
+      const result = await enhancedPlatformUpdateService.startInAppDownload(updateInfo);
+      
+      // If download completed successfully, show completion dialog
+      if (result.success && result.filePath) {
+        // Send completion event to renderer
+        mainWindow.webContents.send('update-download-completed', {
+          filePath: result.filePath,
+          fileName: result.fileName
+        });
+
+        const response = await dialog.showMessageBox(mainWindow, {
+          type: 'info',
+          title: '✅ Download Complete!',
+          message: `Clara ${updateInfo.latestVersion} has been downloaded`,
+          detail: `The installer has been saved to:\n${result.filePath}\n\nWould you like to open it now?`,
+          buttons: ['Open Installer', 'Open Downloads Folder', 'Later'],
+          defaultId: 0
+        });
+
+        if (response.response === 0) {
+          // Open the installer
+          shell.openPath(result.filePath);
+        } else if (response.response === 1) {
+          // Open downloads folder
+          shell.showItemInFolder(result.filePath);
+        }
+      } else if (!result.success) {
+        // Send error event to renderer
+        mainWindow.webContents.send('update-download-error', {
+          error: result.error
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      log.error('Error starting in-app download:', error);
+      
+      // Send error event to renderer
+      if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('update-download-error', {
+          error: error.message
+        });
+      }
+      
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
+
   // Permissions handler
   ipcMain.handle('request-microphone-permission', async () => {
     if (process.platform === 'darwin') {

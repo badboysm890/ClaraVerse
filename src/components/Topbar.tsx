@@ -151,7 +151,8 @@ const Topbar = ({ userName, onPageChange, projectTitle, showProjectTitle = false
         </button>
         <NotificationPanel onNavigateToClara={() => onPageChange?.('clara')} />
         <UserProfileButton
-          userName={userName || 'Profile'}
+          userName={userName || personalInfo?.name || 'Profile'}
+          avatarUrl={personalInfo?.avatar_url}
           onPageChange={onPageChange || (() => {})}
         />
         <button 

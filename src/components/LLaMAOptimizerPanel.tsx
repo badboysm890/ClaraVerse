@@ -281,7 +281,7 @@ const LLaMAOptimizerPanel: React.FC<LLaMAOptimizerPanelProps> = ({
             <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
               Automatically optimize your model configurations based on system capabilities and use case.
               <br />
-              <small>Note: its not only trying to optimize for system stability,  but does not guarantee it max throughput from the system (you will have to play with model config a bit).</small>
+              <small><b>Note:</b> its only trying to optimize for system stability,  but does not guarantee it max throughput from the system (you will have to play with model config a bit).</small>
             </p>
             {optimizerState.lastOptimized && (
               <p className="text-xs text-gray-500 dark:text-gray-400">

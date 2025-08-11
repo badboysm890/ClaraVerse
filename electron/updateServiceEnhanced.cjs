@@ -563,44 +563,11 @@ class EnhancedPlatformUpdateService {
     this.notify('check-started', { timestamp: new Date() });
 
     try {
-      const preferences = getUpdatePreferences();
-      
-      // Determine which endpoint to use based on beta channel preference
-      let url;
-      if (preferences.betaChannel) {
-        // For beta channel, get all releases and find the latest (including pre-releases)
-        url = `https://api.github.com/repos/${this.githubRepo}/releases`;
-        logger.info(`Checking for beta updates (including pre-releases) at: ${url}`);
-      } else {
-        // For stable channel, get only the latest stable release
-        url = `https://api.github.com/repos/${this.githubRepo}/releases/latest`;
-        logger.info(`Checking for stable updates at: ${url}`);
-      }
+      const url = `https://api.github.com/repos/${this.githubRepo}/releases/latest`;
+      logger.info(`Checking for updates at: ${url}`);
       
       const response = await makeRobustRequest(url);
-      
-      let release;
-      if (preferences.betaChannel) {
-        // Get all releases and find the latest one (including pre-releases)
-        const releases = await response.json();
-        if (!Array.isArray(releases) || releases.length === 0) {
-          throw new UpdateError('No releases found in repository', 'NO_RELEASES', false);
-        }
-        
-        // Sort releases by published date (newest first) and take the first one
-        release = releases
-          .filter(r => r && r.tag_name && r.published_at)
-          .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())[0];
-          
-        if (!release) {
-          throw new UpdateError('No valid releases found', 'NO_VALID_RELEASES', false);
-        }
-        
-        logger.info(`Found latest release (beta channel): ${release.tag_name}${release.prerelease ? ' (pre-release)' : ''}`);
-      } else {
-        // For stable channel, use the single latest stable release
-        release = await response.json();
-      }
+      const release = await response.json();
       
       // Validate release data structure
       validateReleaseData(release);
@@ -623,10 +590,7 @@ class EnhancedPlatformUpdateService {
         hasBreakingChanges: processedNotes.hasBreakingChanges,
         publishedAt: release.published_at,
         assetSize: this.getAssetSize(release.assets),
-        downloadEstimate: this.estimateDownloadTime(release.assets),
-        assets: release.assets, // Include assets for download handling
-        isPrerelease: release.prerelease || false, // Include pre-release status
-        isBetaChannel: preferences.betaChannel // Include beta channel status
+        downloadEstimate: this.estimateDownloadTime(release.assets)
       };
       
       logger.info('Update check completed successfully:', {
@@ -804,141 +768,7 @@ class EnhancedPlatformUpdateService {
   }
 
   /**
-   * Start in-app download from UI (called from renderer process)
-   */
-  async startInAppDownload(updateInfo) {
-    try {
-      if (!updateInfo || !updateInfo.downloadUrl) {
-        throw new Error('Invalid update info or download URL');
-      }
-
-      const asset = this.findPlatformAsset(updateInfo.assets || []);
-      const fileName = asset ? asset.name : `Clara-${updateInfo.latestVersion}-${this.platform}.${this.platform === 'win32' ? 'exe' : 'AppImage'}`;
-      
-      logger.info(`Starting in-app download for: ${fileName}`);
-      
-      // Start download and return promise
-      const filePath = await this.downloadUpdateFile(updateInfo.downloadUrl, fileName);
-      
-      return {
-        success: true,
-        filePath,
-        fileName
-      };
-      
-    } catch (error) {
-      logger.error('Error starting in-app download:', error);
-      
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  }
-
-  /**
-   * Download update file with progress tracking
-   */
-  async downloadUpdateFile(downloadUrl, fileName) {
-    try {
-      this.notify('download-started', { 
-        fileName,
-        timestamp: new Date() 
-      });
-
-      const { app, BrowserWindow } = require('electron');
-      const downloadsPath = app.getPath('downloads');
-      const filePath = path.join(downloadsPath, fileName);
-      
-      // Make sure downloads directory exists
-      if (!fs.existsSync(downloadsPath)) {
-        fs.mkdirSync(downloadsPath, { recursive: true });
-      }
-      
-      logger.info(`Starting download: ${downloadUrl} -> ${filePath}`);
-      
-      const response = await makeRobustRequest(downloadUrl);
-      const totalSize = parseInt(response.headers.get('content-length') || '0');
-      
-      let downloadedSize = 0;
-      const fileStream = fs.createWriteStream(filePath);
-      
-      // Track download progress
-      const reader = response.body.getReader();
-      
-      // Send progress updates to all renderer processes
-      const sendProgressUpdate = (progress) => {
-        this.notify('download-progress', progress);
-        
-        // Also send to main window if available
-        const windows = BrowserWindow.getAllWindows();
-        windows.forEach(window => {
-          if (window && window.webContents) {
-            window.webContents.send('update-download-progress', progress);
-          }
-        });
-      };
-      
-      const pump = async () => {
-        return reader.read().then(({ done, value }) => {
-          if (done) {
-            fileStream.end();
-            return;
-          }
-          
-          downloadedSize += value.length;
-          fileStream.write(value);
-          
-          // Send progress update
-          const progress = {
-            percent: totalSize > 0 ? Math.round((downloadedSize / totalSize) * 100) : 0,
-            transferred: this.formatFileSize(downloadedSize),
-            total: this.formatFileSize(totalSize),
-            fileName
-          };
-          
-          sendProgressUpdate(progress);
-          
-          return pump();
-        });
-      };
-      
-      await pump();
-      
-      // Verify file was downloaded successfully
-      if (!fs.existsSync(filePath)) {
-        throw new Error('Download completed but file not found');
-      }
-      
-      const fileStats = fs.statSync(filePath);
-      if (fileStats.size === 0) {
-        throw new Error('Downloaded file is empty');
-      }
-      
-      logger.info(`Download completed: ${filePath} (${this.formatFileSize(fileStats.size)})`);
-      
-      this.notify('download-completed', { 
-        filePath,
-        fileName,
-        fileSize: this.formatFileSize(fileStats.size),
-        timestamp: new Date()
-      });
-      
-      return filePath;
-      
-    } catch (error) {
-      logger.error('Download failed:', error);
-      this.notify('download-error', { 
-        error: error.message,
-        fileName,
-        timestamp: new Date()
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Enhanced platform-specific update dialog with beautiful UX and in-app downloading
+   * Enhanced platform-specific update dialog with beautiful UX
    */
   async showEnhancedUpdateDialog(updateInfo) {
     try {
@@ -956,17 +786,7 @@ class EnhancedPlatformUpdateService {
       }
 
       // Build enhanced message with categorized release notes
-      let detailMessage = `Current version: Clara ${this.currentVersion}\nNew version: Clara ${latestVersion}`;
-      
-      // Indicate if this is a pre-release version
-      if (updateInfo.isPrerelease) {
-        detailMessage += ` (Beta/Pre-release)`;
-      }
-      detailMessage += '\n\n';
-      
-      if (updateInfo.isPrerelease) {
-        detailMessage += `🧪 This is a beta/pre-release version. It may contain experimental features and bugs.\n\n`;
-      }
+      let detailMessage = `Current version: Clara ${this.currentVersion}\nNew version: Clara ${latestVersion}\n\n`;
       
       if (hasBreakingChanges) {
         detailMessage += `⚠️ This update contains breaking changes. Please review the release notes.\n\n`;
@@ -989,18 +809,10 @@ class EnhancedPlatformUpdateService {
 
       if (this.isOTASupported()) {
         // Mac: Enhanced OTA update dialog
-        const dialogTitle = updateInfo.isPrerelease 
-          ? (hasBreakingChanges ? '⚠️ Important Beta Update Available' : '🧪 Beta Update Available')
-          : (hasBreakingChanges ? '⚠️ Important Update Available' : '🎉 Update Available');
-          
-        const dialogMessage = updateInfo.isPrerelease
-          ? `Clara ${latestVersion} Beta is ready to install`
-          : `Clara ${latestVersion} is ready to install`;
-          
         return await dialog.showMessageBox({
           type: 'info',
-          title: dialogTitle,
-          message: dialogMessage,
+          title: hasBreakingChanges ? '⚠️ Important Update Available' : '🎉 Update Available',
+          message: `Clara ${latestVersion} is ready to install`,
           detail: detailMessage,
           buttons: ['Download & Install Now', 'View Release Notes', 'Remind Me Later', 'Skip This Version'],
           defaultId: 0,
@@ -1031,74 +843,26 @@ class EnhancedPlatformUpdateService {
           }
         });
       } else {
-        // Windows/Linux: Enhanced in-app download dialog
+        // Windows/Linux: Enhanced manual update dialog
         const platformName = this.platform === 'win32' ? 'Windows' : 'Linux';
         
-        detailMessage += `\n🔒 On ${platformName}, updates are installed manually for security. The file will be downloaded to your Downloads folder and opened automatically.`;
-        
-        const dialogTitle = updateInfo.isPrerelease 
-          ? (hasBreakingChanges ? '⚠️ Important Beta Update Available' : '🧪 Beta Update Available')
-          : (hasBreakingChanges ? '⚠️ Important Update Available' : '📦 Update Available');
-          
-        const dialogMessage = updateInfo.isPrerelease
-          ? `Clara ${latestVersion} Beta is ready to download`
-          : `Clara ${latestVersion} is ready to download`;
+        detailMessage += `\n🔒 On ${platformName}, updates are installed manually for security. The download will open in your browser.`;
         
         return await dialog.showMessageBox({
           type: 'info',
-          title: dialogTitle,
-          message: dialogMessage,
+          title: hasBreakingChanges ? '⚠️ Important Update Available' : '📦 Update Available',
+          message: `Clara ${latestVersion} is ready to download`,
           detail: detailMessage,
           buttons: ['Download Now', 'View Release Notes', 'Remind Me Later', 'Skip This Version'],
           defaultId: 0,
           cancelId: 2
-        }).then(async ({ response }) => {
+        }).then(({ response }) => {
           try {
             switch (response) {
               case 0:
-                // Start in-app download with progress tracking
-                try {
-                  const asset = this.findPlatformAsset(updateInfo.assets || []);
-                  const fileName = asset ? asset.name : `Clara-${latestVersion}-${this.platform}.${this.platform === 'win32' ? 'exe' : 'AppImage'}`;
-                  
-                  // Start download in background
-                  this.downloadUpdateFile(downloadUrl, fileName).then((filePath) => {
-                    // Show completion dialog and offer to open
-                    dialog.showMessageBox({
-                      type: 'info',
-                      title: '✅ Download Complete!',
-                      message: `Clara ${latestVersion} has been downloaded`,
-                      detail: `The installer has been saved to:\n${filePath}\n\nWould you like to open it now?`,
-                      buttons: ['Open Installer', 'Open Downloads Folder', 'Later'],
-                      defaultId: 0
-                    }).then(({ response: openResponse }) => {
-                      try {
-                        if (openResponse === 0) {
-                          // Open the installer
-                          shell.openPath(filePath);
-                        } else if (openResponse === 1) {
-                          // Open downloads folder
-                          shell.showItemInFolder(filePath);
-                        }
-                      } catch (error) {
-                        logger.error('Error opening downloaded file:', error);
-                      }
-                    });
-                  }).catch((error) => {
-                    // Show download error dialog
-                    dialog.showErrorBox(
-                      '❌ Download Failed', 
-                      `Failed to download update: ${error.message}\n\nYou can manually download from:\n${updateInfo.releaseUrl}`
-                    );
-                  });
-                  
-                  return { action: 'download' };
-                } catch (error) {
-                  logger.error('Error starting download:', error);
-                  // Fallback to browser download
-                  shell.openExternal(downloadUrl);
-                  return { action: 'download_fallback' };
-                }
+                // Open download page
+                shell.openExternal(downloadUrl);
+                return { action: 'download' };
               case 1:
                 // Open release notes
                 shell.openExternal(updateInfo.releaseUrl);

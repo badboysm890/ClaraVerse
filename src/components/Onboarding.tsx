@@ -22,6 +22,7 @@ import {
 import {db} from '../db';
 import { getTimezoneOptions } from '../utils/timezones';
 import { useProviders } from '../contexts/ProvidersContext';
+import logoImage from '../assets/logo.png';
 
 interface OnboardingProps {
     onComplete: () => void;
@@ -834,7 +835,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                                 className="relative bg-white dark:bg-gray-800 rounded-full p-3 sm:p-4 shadow-xl">
                                                 {!logoError ? (
                                                     <img
-                                                        src="/logo.png"
+                                                        src={logoImage}
                                                         alt="Clara Logo"
                                                         className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
                                                         onError={() => setLogoError(true)}
@@ -1714,7 +1715,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                             </span>
                                         </div>
                                         <p className="text-xs text-blue-600 dark:text-blue-400">
-                                            Saving your preferences and starting selected services
+                                            Saving your preferences and starting selected services - <b>Note:</b> might require restart of Clara.
                                         </p>
                                     </div>
                                 )}

@@ -1448,7 +1448,7 @@ const BackendConfigurationPanel: React.FC = () => {
                                   </div>
                                 </div>
 
-                                {/* GPU Acceleration Section */}
+                                {/* GPU Acceleration Section always keep the max 999 */}
                                 {!selectedModel.isEmbedding && (
                                   <div className="glassmorphic rounded-lg p-5 bg-white/40 dark:bg-gray-800/30 backdrop-blur-sm">
                                     <div className="flex items-center justify-between mb-4">
@@ -1458,7 +1458,7 @@ const BackendConfigurationPanel: React.FC = () => {
                                       </div>
                                       <div className="flex items-center gap-3">
                                         <span className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                                          {selectedModel.gpuLayers || 0} / {selectedModel.estimatedTotalLayers || 100} layers
+                                          {selectedModel.gpuLayers || 0} / {999} layers
                                         </span>
                                       </div>
                                     </div>
@@ -1468,7 +1468,7 @@ const BackendConfigurationPanel: React.FC = () => {
                                       <input
                                         type="range"
                                         min="0"
-                                        max={selectedModel.estimatedTotalLayers || 100}
+                                        max={999}
                                         step="1"
                                         value={selectedModel.gpuLayers || 0}
                                         onChange={(e) => updateModelConfig(selectedModel.name, 'gpuLayers', parseInt(e.target.value))}

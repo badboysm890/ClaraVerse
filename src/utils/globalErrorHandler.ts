@@ -1,4 +1,6 @@
 // Global error handler for unhandled promise rejections and other JS errors
+import errorClaraMascot from '../assets/mascot/Error_Clara.png';
+
 export const setupGlobalErrorHandlers = () => {
   // Handle unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
@@ -81,7 +83,7 @@ const showGlobalErrorMessage = (message: string) => {
   `;
 
   const claraImg = document.createElement('img');
-  claraImg.src = '/mascot/Error_Clara.png';
+  claraImg.src = errorClaraMascot;
   claraImg.alt = 'Clara Error Mascot';
   claraImg.style.cssText = `
     width: 100%;
@@ -92,8 +94,8 @@ const showGlobalErrorMessage = (message: string) => {
 
   // Add error fallback for image loading
   claraImg.onerror = () => {
-    // Fallback to src/assets path if public path fails
-    claraImg.src = '/src/assets/mascot/Error_Clara.png';
+    // Log warning if mascot fails to load
+    console.warn('Failed to load Clara mascot in global error handler');
   };
 
   // Alert indicator

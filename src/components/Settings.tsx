@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Save, User, Globe, Server, Image, Settings as SettingsIcon, Trash2, HardDrive, Plus, Check, X, Edit3, Zap, Router, Bot, Download, RotateCcw, AlertCircle, ExternalLink, Brain, Puzzle, Power, Palette, Type } from 'lucide-react';
+import { Save, User, Globe, Server, Image, Settings as SettingsIcon, Trash2, HardDrive, Plus, Check, X, Edit3, Zap, Router, Bot, Download, RotateCcw, AlertCircle, ExternalLink, Brain, Puzzle, Power, Palette, Type, Search, Clock } from 'lucide-react';
 import { db, type PersonalInfo, type APIConfig, type Provider } from '../db';
 import { useTheme, ThemeMode } from '../hooks/useTheme';
 import { useProviders } from '../contexts/ProvidersContext';
@@ -25,6 +25,8 @@ import {
   processWallpaper,
   type ImageEffects
 } from '../utils/imageProcessing';
+import { indexedDBService } from '../services/indexedDB';
+import { GalleryImage } from '../types';
 
 // Type for llama.cpp update info
 interface LlamacppUpdateInfo {
@@ -60,6 +62,14 @@ interface StartupConfig {
   startFullscreen: boolean;
   checkForUpdates: boolean;
   restoreLastSession: boolean;
+  checkFrequency?: string;
+  notifyOnAvailable?: boolean;
+  quietHours?: {
+    enabled: boolean;
+    start: string;
+    end: string;
+  };
+  betaChannel?: boolean;
 }
 
 const Settings = () => {
@@ -128,6 +138,15 @@ const Settings = () => {
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [lastUpdateCheck, setLastUpdateCheck] = useState<Date | null>(null);
+  
+  // Download progress state
+  const [downloadProgress, setDownloadProgress] = useState<{
+    isDownloading: boolean;
+    percent: number;
+    transferred: string;
+    total: string;
+    fileName: string;
+  } | null>(null);
 
   // Add llama.cpp binary update state
   const [llamacppUpdateInfo, setLlamacppUpdateInfo] = useState<LlamacppUpdateInfo | null>(null);
@@ -171,6 +190,10 @@ const Settings = () => {
 
   // Wallpaper gallery and processing state
   const [showBuiltinGallery, setShowBuiltinGallery] = useState(false);
+  const [showYourCreations, setShowYourCreations] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [gallerySearchQuery, setGallerySearchQuery] = useState('');
+  const [isLoadingGalleryImages, setIsLoadingGalleryImages] = useState(false);
 
   // Type for update info to fix TypeScript errors
   interface UpdateInfo {
@@ -183,7 +206,11 @@ const Settings = () => {
     releaseUrl?: string;
     downloadUrl?: string;
     releaseNotes?: string;
+    releaseNotesFormatted?: string;
     publishedAt?: string;
+    assetSize?: string;
+    downloadEstimate?: string;
+    hasBreakingChanges?: boolean;
   }
 
   const { setTheme } = useTheme();
@@ -253,7 +280,42 @@ const Settings = () => {
       await loadFeatureConfig();
     };
 
+    // Listen for download progress updates from main process
+    const handleDownloadProgress = (_event: any, progress: any) => {
+      setDownloadProgress({
+        isDownloading: true,
+        percent: progress.percent || 0,
+        transferred: progress.transferred || '0 B',
+        total: progress.total || 'Unknown',
+        fileName: progress.fileName || 'Clara Update'
+      });
+    };
+
+    const handleDownloadCompleted = () => {
+      setDownloadProgress(null);
+    };
+
+    const handleDownloadError = () => {
+      setDownloadProgress(null);
+    };
+
+    // Set up IPC listeners for download progress
+    if ((window as any).electronAPI?.on) {
+      (window as any).electronAPI.on('update-download-progress', handleDownloadProgress);
+      (window as any).electronAPI.on('update-download-completed', handleDownloadCompleted);
+      (window as any).electronAPI.on('update-download-error', handleDownloadError);
+    }
+
     loadSettings();
+
+    // Cleanup listeners on unmount
+    return () => {
+      if ((window as any).electronAPI?.removeAllListeners) {
+        (window as any).electronAPI.removeAllListeners('update-download-progress');
+        (window as any).electronAPI.removeAllListeners('update-download-completed');
+        (window as any).electronAPI.removeAllListeners('update-download-error');
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -647,8 +709,44 @@ const Settings = () => {
     }
   };
 
-  const downloadUpdate = () => {
-    if (updateInfo?.downloadUrl) {
+  const downloadUpdate = async () => {
+    if (!updateInfo?.downloadUrl) {
+      return;
+    }
+
+    try {
+      // Check if this is a manual platform (Windows/Linux)
+      if (updateInfo.platform !== 'darwin') {
+        // Start download progress tracking
+        setDownloadProgress({
+          isDownloading: true,
+          percent: 0,
+          transferred: '0 B',
+          total: updateInfo.assetSize || 'Unknown',
+          fileName: `Clara-${updateInfo.latestVersion}-${updateInfo.platform}.${updateInfo.platform === 'win32' ? 'exe' : 'AppImage'}`
+        });
+
+        // Start in-app download for manual platforms
+        const result = await (window as any).electronAPI?.startInAppDownload?.(updateInfo);
+        
+        if (result?.success) {
+          // Download completed successfully
+          setDownloadProgress(null);
+          console.log('In-app download completed successfully');
+        } else {
+          // Download failed, reset progress and fallback to browser
+          setDownloadProgress(null);
+          console.warn('In-app download failed, falling back to browser:', result?.error);
+          window.open(updateInfo.downloadUrl, '_blank', 'noopener,noreferrer');
+        }
+      } else {
+        // For macOS, use OTA update system
+        await (window as any).electronAPI?.checkForUpdates?.();
+      }
+    } catch (error) {
+      console.error('Error starting download:', error);
+      // Reset progress and fallback to browser download
+      setDownloadProgress(null);
       window.open(updateInfo.downloadUrl, '_blank', 'noopener,noreferrer');
     }
   };
@@ -1406,6 +1504,104 @@ const Settings = () => {
     }
   };
 
+  // Load gallery images for wallpaper selection
+  const loadGalleryImages = async () => {
+    setIsLoadingGalleryImages(true);
+    try {
+      // Use the same fallback method as the Gallery component
+      let storedItems;
+      try {
+        storedItems = await indexedDBService.getAll('storage');
+      } catch (error) {
+        console.error('IndexedDB retrieval failed, falling back to localStorage', error);
+        const data = localStorage.getItem('clara_db_storage');
+        storedItems = data ? JSON.parse(data) : [];
+      }
+      
+      const imageItems = storedItems.filter((item: any) => item.type === 'image');
+      const galleryImages: GalleryImage[] = imageItems.map((item: any, idx: number) => {
+        let finalPrompt = item.description ?? '';
+        if (finalPrompt.startsWith('Prompt:')) {
+          finalPrompt = finalPrompt.replace(/^Prompt:\s*/, '');
+        }
+        return {
+          id: item.id ?? `img-${idx}`,
+          url: item.data,
+          prompt: finalPrompt,
+          createdAt: item.timestamp || new Date().toISOString(),
+          likes: item.likes ?? 0,
+          views: item.views ?? 0,
+          model: item.model || 'SD-Model',
+          resolution: item.resolution || '1024x1024'
+        };
+      });
+      
+      // Sort by newest first and take only 10 recent images initially
+      galleryImages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setGalleryImages(galleryImages);
+    } catch (error) {
+      console.error('Error loading gallery images:', error);
+    } finally {
+      setIsLoadingGalleryImages(false);
+    }
+  };
+
+  // Handle setting a gallery image as wallpaper
+  const handleGalleryImageWallpaper = async (image: GalleryImage) => {
+    try {
+      await db.setWallpaper(image.url);
+      setWallpaperUrl(image.url);
+      setShowYourCreations(false);
+      console.log('✅ Set gallery image as wallpaper');
+    } catch (error) {
+      console.error('Error setting gallery image as wallpaper:', error);
+      alert('Failed to set image as wallpaper. Please try again.');
+    }
+  };
+
+  // Load gallery images when "Your Creations" is first opened
+  useEffect(() => {
+    if (showYourCreations && galleryImages.length === 0) {
+      loadGalleryImages();
+    }
+  }, [showYourCreations]);
+
+  // Filter gallery images based on search query
+  const filteredGalleryImages = galleryImages.filter(image => 
+    image.prompt.toLowerCase().includes(gallerySearchQuery.toLowerCase()) ||
+    image.model.toLowerCase().includes(gallerySearchQuery.toLowerCase())
+  ).slice(0, 10); // Show only 10 images
+
+  // Handle setting avatar image
+  const handleSetAvatar = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          // Convert file to base64
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const base64String = e.target?.result as string;
+            // Update personal info with the new avatar
+            const updatedInfo = { ...personalInfo, avatar_url: base64String };
+            setPersonalInfo(updatedInfo);
+            // Save to database
+            await db.updatePersonalInfo(updatedInfo);
+            console.log('✅ Avatar uploaded successfully');
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error('Error setting avatar:', error);
+          alert('Failed to upload avatar. Please try again.');
+        }
+      }
+    };
+    input.click();
+  };
+
   return (
     <>
       {/* Wallpaper */}
@@ -1612,16 +1808,79 @@ const Settings = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Avatar URL
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Avatar
                   </label>
+                  
+                  {/* Avatar Preview */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                      {personalInfo.avatar_url ? (
+                        <img
+                          src={personalInfo.avatar_url}
+                          alt="Avatar preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // If image fails to load, show fallback
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      {!personalInfo.avatar_url && (
+                        <User className="w-8 h-8 text-gray-400" />
+                      )}
+                      {personalInfo.avatar_url && (
+                        <User className="w-8 h-8 text-gray-400 hidden" />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex gap-2 mb-3">
+                        <button
+                          onClick={handleSetAvatar}
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                        >
+                          Upload Image
+                        </button>
+                        {personalInfo.avatar_url && (
+                          <button
+                            onClick={() => setPersonalInfo(prev => ({ ...prev, avatar_url: '' }))}
+                            className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Upload an image or enter a URL below
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Avatar URL Input */}
                   <input
                     type="url"
                     value={personalInfo.avatar_url}
                     onChange={(e) => setPersonalInfo(prev => ({ ...prev, avatar_url: e.target.value }))}
                     className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
-                    placeholder="https://example.com/avatar.jpg"
+                    placeholder="Or enter avatar URL: https://example.com/avatar.jpg"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Timezone
+                  </label>
+                  <select
+                    value={personalInfo.timezone}
+                    onChange={(e) => setPersonalInfo(prev => ({ ...prev, timezone: e.target.value }))}
+                    className="w-full px-4 py-2 rounded-lg bg-white/50 border border-gray-200 focus:outline-none focus:border-sakura-300 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100"
+                  >
+                    {timezoneOptions.map((tz: string) => (
+                      <option key={tz} value={tz}>{tz}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -2469,7 +2728,7 @@ const Settings = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                       Choose Background Source
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                       <button
                         onClick={handleSetWallpaper}
                         className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-purple-300 dark:hover:border-purple-600 transition-colors text-center"
@@ -2484,6 +2743,7 @@ const Settings = () => {
                       <button
                         onClick={() => {
                           setShowBuiltinGallery(!showBuiltinGallery);
+                          setShowYourCreations(false);
                         }}
                         className={`p-4 border rounded-lg transition-colors text-center ${
                           showBuiltinGallery 
@@ -2496,6 +2756,24 @@ const Settings = () => {
                         </div>
                         <p className="text-sm font-medium text-gray-900 dark:text-white">Gallery</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Built-in collection</p>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setShowYourCreations(!showYourCreations);
+                          setShowBuiltinGallery(false);
+                        }}
+                        className={`p-4 border rounded-lg transition-colors text-center ${
+                          showYourCreations 
+                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20' 
+                            : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600'
+                        }`}
+                      >
+                        <div className="w-8 h-8 mx-auto mb-2 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                          <Palette className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">Your Creations</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">AI generated images</p>
                       </button>
                     </div>
                   </div>
@@ -2535,6 +2813,88 @@ const Settings = () => {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Your Creations Gallery */}
+                  {showYourCreations && (
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                          🎨 Your Creations
+                        </h4>
+                        <button
+                          onClick={loadGalleryImages}
+                          className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+                        >
+                          Refresh
+                        </button>
+                      </div>
+                      
+                      {/* Search Bar */}
+                      <div className="relative mb-4">
+                        <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search your images..."
+                          value={gallerySearchQuery}
+                          onChange={(e) => setGallerySearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 text-sm"
+                        />
+                      </div>
+
+                      {/* Loading State */}
+                      {isLoadingGalleryImages ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="w-6 h-6 border-2 border-green-200 dark:border-green-800 border-t-green-600 dark:border-t-green-400 rounded-full animate-spin"></div>
+                          <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading your creations...</span>
+                        </div>
+                      ) : filteredGalleryImages.length === 0 ? (
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <Palette size={24} className="text-gray-400" />
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            {gallerySearchQuery ? 'No matching images found' : 'No AI creations found'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500">
+                            {gallerySearchQuery ? 'Try different search terms' : 'Generate some images first to use them as wallpapers'}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {filteredGalleryImages.map((image) => (
+                            <div
+                              key={image.id}
+                              className="relative group cursor-pointer"
+                              onClick={() => handleGalleryImageWallpaper(image)}
+                            >
+                              <div className="aspect-video rounded-lg border-2 border-gray-200 dark:border-gray-600 overflow-hidden hover:border-green-400 dark:hover:border-green-500 transition-colors">
+                                <img
+                                  src={image.url}
+                                  alt={image.prompt}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium bg-black/50 px-2 py-1 rounded">
+                                    Select
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-xs text-center text-gray-600 dark:text-gray-400 mt-1 truncate" title={image.prompt}>
+                                {image.prompt.length > 20 ? `${image.prompt.substring(0, 20)}...` : image.prompt}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {galleryImages.length > 10 && !gallerySearchQuery && (
+                        <p className="text-xs text-gray-500 dark:text-gray-500 text-center mt-3">
+                          Showing 10 most recent images. Use search to find older ones.
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -3124,12 +3484,181 @@ const ProcessButton = () => {
                 <Download className="w-6 h-6 text-sakura-500" />
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Updates
+                    Updates & Notifications
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Keep Clara up to date with the latest features and improvements
+                    Keep Clara up to date with smart, automated checking and beautiful notifications
                   </p>
                 </div>
+              </div>
+
+              {/* Update Preferences Section */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <SettingsIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                    🎯 Smart Update Preferences
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Auto Check Settings */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={startupConfig.checkForUpdates}
+                          onChange={(e) => updateStartupConfig({ checkForUpdates: e.target.checked })}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            🔄 Automatic Checking
+                          </span>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Check for updates automatically in the background
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {startupConfig.checkForUpdates && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            📅 Check Frequency
+                          </label>
+                          <select 
+                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            value={startupConfig.checkFrequency || 'daily'}
+                            onChange={(e) => updateStartupConfig({ checkFrequency: e.target.value })}
+                          >
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="manual">Manual Only</option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={startupConfig.notifyOnAvailable || true}
+                              onChange={(e) => updateStartupConfig({ notifyOnAvailable: e.target.checked })}
+                              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                            />
+                            <div>
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                🔔 Smart Notifications
+                              </span>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Get beautiful, non-intrusive update notifications
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Quiet Hours */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={startupConfig.quietHours?.enabled || false}
+                          onChange={(e) => updateStartupConfig({ 
+                            quietHours: { 
+                              enabled: e.target.checked,
+                              start: startupConfig.quietHours?.start || '22:00',
+                              end: startupConfig.quietHours?.end || '08:00'
+                            } 
+                          })}
+                          className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 dark:focus:ring-purple-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            🌙 Quiet Hours
+                          </span>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            No update checks during specified hours
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {startupConfig.quietHours?.enabled && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            From
+                          </label>
+                          <input
+                            type="time"
+                            value={startupConfig.quietHours?.start || '22:00'}
+                            onChange={(e) => updateStartupConfig({ 
+                              quietHours: { 
+                                enabled: startupConfig.quietHours?.enabled || false,
+                                start: e.target.value,
+                                end: startupConfig.quietHours?.end || '08:00'
+                              } 
+                            })}
+                            className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            To
+                          </label>
+                          <input
+                            type="time"
+                            value={startupConfig.quietHours?.end || '08:00'}
+                            onChange={(e) => updateStartupConfig({ 
+                              quietHours: { 
+                                enabled: startupConfig.quietHours?.enabled || false,
+                                start: startupConfig.quietHours?.start || '22:00',
+                                end: e.target.value
+                              } 
+                            })}
+                            className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={startupConfig.betaChannel || false}
+                          onChange={(e) => updateStartupConfig({ betaChannel: e.target.checked })}
+                          className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <div>
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            🧪 Beta Channel
+                          </span>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Get pre-release versions with cutting-edge features
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Last Check Info */}
+                {lastUpdateCheck && (
+                  <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                      <Clock className="w-3 h-3" />
+                      Last automatic check: {lastUpdateCheck.toLocaleString()}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Current Version Info */}
@@ -3146,7 +3675,7 @@ const ProcessButton = () => {
                   <button
                     onClick={handleManualUpdateCheck}
                     disabled={checkingUpdates}
-                    className="px-4 py-2 bg-sakura-500 text-white rounded-lg hover:bg-sakura-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-sakura-500 text-white rounded-lg hover:bg-sakura-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 transform hover:scale-105 disabled:hover:scale-100"
                   >
                     {checkingUpdates ? (
                       <>
@@ -3156,7 +3685,7 @@ const ProcessButton = () => {
                     ) : (
                       <>
                         <RotateCcw className="w-4 h-4" />
-                        Check for Updates
+                        Check Now
                       </>
                     )}
                   </button>
@@ -3181,85 +3710,146 @@ const ProcessButton = () => {
                       </div>
                     </div>
                   ) : updateInfo.hasUpdate ? (
-                    <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                    <div className="bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6">
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center">
-                          <Download className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                          <Download className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                            New Version Available: Clara {updateInfo.latestVersion || 'Unknown'}
+                          <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-2 text-lg">
+                            🎉 Clara {updateInfo.latestVersion || 'Unknown'} is Available!
                           </h4>
 
                           {/* Platform-specific messaging */}
                           {updateInfo.isOTASupported ? (
-                            <div className="space-y-3">
-                              <p className="text-sm text-blue-700 dark:text-blue-300">
-                                🍎 Automatic updates are supported on macOS. Click "Download & Install" to update Clara automatically.
-                              </p>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={handleManualUpdateCheck}
-                                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-                                >
-                                  <Download className="w-4 h-4" />
-                                  Download & Install
-                                </button>
-                                {updateInfo.releaseUrl && (
+                            <div className="space-y-4">
+                              <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-4">
+                                <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-3 flex items-center gap-2">
+                                  <span className="text-lg">🍎</span>
+                                  <strong>Automatic updates supported!</strong> Your macOS installation allows secure, signed updates that install automatically.
+                                </p>
+                                <div className="flex gap-3">
                                   <button
-                                    onClick={openReleaseNotes}
-                                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                                    onClick={handleManualUpdateCheck}
+                                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-lg hover:from-emerald-600 hover:to-blue-600 transition-all duration-200 flex items-center gap-2 shadow-lg transform hover:scale-105"
                                   >
-                                    <ExternalLink className="w-4 h-4" />
-                                    Release Notes
+                                    <Download className="w-4 h-4" />
+                                    Download & Install Automatically
                                   </button>
-                                )}
+                                  {updateInfo.releaseUrl && (
+                                    <button
+                                      onClick={openReleaseNotes}
+                                      className="px-4 py-2 bg-white/80 dark:bg-gray-700/80 text-emerald-700 dark:text-emerald-300 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 flex items-center gap-2 border border-emerald-200 dark:border-emerald-600"
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                      View Release Notes
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           ) : (
-                            <div className="space-y-3">
-                              <p className="text-sm text-blue-700 dark:text-blue-300">
-                                🔒 On {getPlatformName(updateInfo.platform)}, updates need to be installed manually for security reasons.
-                                Click "Download Now" to get the latest version.
-                              </p>
-                              <div className="flex gap-3">
-                                <button
-                                  onClick={downloadUpdate}
-                                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-                                >
-                                  <ExternalLink className="w-4 h-4" />
-                                  Download Now
-                                </button>
-                                {updateInfo.releaseUrl && (
+                            <div className="space-y-4">
+                              <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-4">
+                                <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-3 flex items-center gap-2">
+                                  <span className="text-lg">🔒</span>
+                                  <strong>Secure manual installation</strong> On {getPlatformName(updateInfo.platform)}, updates are installed manually to ensure your system's security.
+                                </p>
+                                
+                                {updateInfo.assetSize && (
+                                  <div className="mb-3 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 rounded px-3 py-1 inline-flex items-center gap-2">
+                                    <HardDrive className="w-3 h-3" />
+                                    Download size: {updateInfo.assetSize}
+                                    {updateInfo.downloadEstimate && ` (${updateInfo.downloadEstimate})`}
+                                  </div>
+                                )}
+                                
+                                <div className="flex gap-3">
                                   <button
-                                    onClick={openReleaseNotes}
-                                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                                    onClick={downloadUpdate}
+                                    disabled={downloadProgress?.isDownloading}
+                                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white rounded-lg hover:from-emerald-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-lg transform hover:scale-105 disabled:hover:scale-100"
                                   >
-                                    <ExternalLink className="w-4 h-4" />
-                                    Release Notes
+                                    {downloadProgress?.isDownloading ? (
+                                      <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        Downloading {downloadProgress.percent}%
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ExternalLink className="w-4 h-4" />
+                                        Download Now
+                                      </>
+                                    )}
                                   </button>
+                                  {updateInfo.releaseUrl && (
+                                    <button
+                                      onClick={openReleaseNotes}
+                                      className="px-4 py-2 bg-white/80 dark:bg-gray-700/80 text-emerald-700 dark:text-emerald-300 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-all duration-200 flex items-center gap-2 border border-emerald-200 dark:border-emerald-600"
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                      Release Notes
+                                    </button>
+                                  )}
+                                </div>
+                                
+                                {/* Download Progress Bar */}
+                                {downloadProgress?.isDownloading && (
+                                  <div className="mt-4 bg-white/60 dark:bg-gray-800/60 rounded-lg p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                                        Downloading {downloadProgress.fileName}
+                                      </span>
+                                      <span className="text-sm text-emerald-600 dark:text-emerald-400">
+                                        {downloadProgress.transferred} / {downloadProgress.total}
+                                      </span>
+                                    </div>
+                                    <div className="w-full bg-emerald-100 dark:bg-emerald-900/30 rounded-full h-2">
+                                      <div 
+                                        className="bg-gradient-to-r from-emerald-500 to-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+                                        style={{ width: `${downloadProgress.percent}%` }}
+                                      ></div>
+                                    </div>
+                                    <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 text-center">
+                                      {downloadProgress.percent}% complete
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                             </div>
                           )}
 
-                          {updateInfo.releaseNotes && updateInfo.releaseNotes !== 'No release notes available.' && (
-                            <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
-                              <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                          {updateInfo.releaseNotesFormatted && updateInfo.releaseNotesFormatted !== 'No release notes available.' && (
+                            <div className="mt-4 pt-4 border-t border-emerald-200 dark:border-emerald-800">
+                              <h5 className="font-medium text-emerald-900 dark:text-emerald-100 mb-3 flex items-center gap-2">
+                                <span className="text-lg">✨</span>
                                 What's New:
                               </h5>
-                              <div className="text-sm text-blue-700 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-950/30 rounded p-3 max-h-32 overflow-y-auto">
+                              <div className="text-sm text-emerald-700 dark:text-emerald-300 bg-white/50 dark:bg-gray-800/50 rounded-lg p-4 max-h-40 overflow-y-auto">
                                 <pre className="whitespace-pre-wrap font-sans">
-                                  {updateInfo.releaseNotes.length > 500
-                                    ? updateInfo.releaseNotes.substring(0, 500) + '...'
-                                    : updateInfo.releaseNotes}
+                                  {updateInfo.releaseNotesFormatted.length > 600
+                                    ? updateInfo.releaseNotesFormatted.substring(0, 600) + '...\n\nClick "Release Notes" for full details.'
+                                    : updateInfo.releaseNotesFormatted}
                                 </pre>
                               </div>
+                              
+                              {updateInfo.hasBreakingChanges && (
+                                <div className="mt-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+                                  <div className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
+                                    <AlertCircle className="w-4 h-4" />
+                                    <span className="text-sm font-medium">This update contains breaking changes</span>
+                                  </div>
+                                  <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                                    Please review the release notes carefully before updating.
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           )}
 
                           {updateInfo.publishedAt && (
-                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 flex items-center gap-2">
+                              <Clock className="w-3 h-3" />
                               Released {new Date(updateInfo.publishedAt).toLocaleDateString()}
                             </p>
                           )}
@@ -3267,17 +3857,18 @@ const ProcessButton = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-green-50/50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center">
-                          <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                          <Check className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <h4 className="font-medium text-green-900 dark:text-green-100">
+                          <h4 className="font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
+                            <span className="text-lg">✅</span>
                             You're Up to Date!
                           </h4>
                           <p className="text-sm text-green-700 dark:text-green-300">
-                            Clara {updateInfo.currentVersion || 'Unknown'} is the latest version.
+                            Clara {updateInfo.currentVersion || 'Unknown'} is the latest version. You're all set!
                           </p>
                         </div>
                       </div>
@@ -3285,7 +3876,8 @@ const ProcessButton = () => {
                   )}
 
                   {lastUpdateCheck && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center flex items-center justify-center gap-2">
+                      <Clock className="w-3 h-3" />
                       Last checked: {lastUpdateCheck.toLocaleString()}
                     </p>
                   )}
@@ -3294,61 +3886,42 @@ const ProcessButton = () => {
 
               {/* Update Information */}
               <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-4">
-                  Update Information
+                <h3 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-purple-500" />
+                  How Clara Updates Work
                 </h3>
-                <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-sakura-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <div>
-                      <strong>macOS:</strong> Supports automatic over-the-air (OTA) updates with code signing verification for security.
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="bg-gradient-to-br from-sakura-50 to-pink-50 dark:from-sakura-900/20 dark:to-pink-900/20 rounded-lg p-4 border border-sakura-200 dark:border-sakura-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🍎</span>
+                      <strong className="text-sakura-900 dark:text-sakura-100">macOS</strong>
                     </div>
+                    <p className="text-sakura-700 dark:text-sakura-300">
+                      Automatic over-the-air (OTA) updates with code signing verification for maximum security.
+                    </p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <div>
-                      <strong>Windows & Linux:</strong> Manual updates ensure security. Download links point to the official GitHub releases.
+                  
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🪟</span>
+                      <strong className="text-blue-900 dark:text-blue-100">Windows & Linux</strong>
                     </div>
+                    <p className="text-blue-700 dark:text-blue-300">
+                      Secure manual updates ensure system integrity. Downloads point to official GitHub releases.
+                    </p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <div>
-                      <strong>Release Notes:</strong> View detailed information about new features, improvements, and bug fixes.
+                  
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">📝</span>
+                      <strong className="text-green-900 dark:text-green-100">Release Notes</strong>
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Llama.cpp Binary Updates Section */}
-              {/* TEMPORARILY HIDDEN - Causes issues on some systems */}
-              {false && (
-              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3 mb-6">
-                  <HardDrive className="w-6 h-6 text-orange-500" />
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Llama.cpp Binary Updates
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Keep official llama.cpp inference binaries up to date (Clara's custom binaries are preserved)
+                    <p className="text-green-700 dark:text-green-300">
+                      Detailed information about new features, improvements, and bug fixes with smart categorization.
                     </p>
                   </div>
                 </div>
-
-                {/* Current Binary Version Info */}
-          
-
-                {/* Llama.cpp Update Status */}
-             
-
-                {/* Binary Update Information */}
-                
               </div>
-              )}
-
-              {/* Llama.cpp Binary Updates Section - TEMPORARILY HIDDEN */}
-              {/* This section has been temporarily hidden due to system compatibility issues */}
-              {/* To re-enable, replace the above comment with the complete llama.cpp update UI */}
             </div>
           )}
         </div>

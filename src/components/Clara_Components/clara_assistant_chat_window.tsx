@@ -623,12 +623,12 @@ const LoadingScreen: React.FC<{
         </div>
         
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-          Initializing Clara...
+          Initializing Clara... (Updating Backend & Loading Models)
         </h2>
         
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           {userName ? `Welcome back, ${userName}! ` : ''}
-          Setting up your AI assistant and loading your chat history.
+          Loading and Updating Backend & Loading Models...
         </p>
 
         {/* Loading Steps */}

@@ -25,6 +25,9 @@ const validChannels = [
   'app-close',
   'update-available',
   'update-downloaded',
+  'update-download-progress',
+  'update-download-completed',
+  'update-download-error',
   'download-progress',
   'llama-progress-update',
   'llama-progress-complete',
@@ -75,6 +78,19 @@ contextBridge.exposeInMainWorld('electron', {
   // Updates
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   getUpdateInfo: () => ipcRenderer.invoke('get-update-info'),
+  startInAppDownload: (updateInfo) => ipcRenderer.invoke('start-in-app-download', updateInfo),
+  
+  // IPC Event Listeners for updates
+  on: (channel, callback) => {
+    if (validChannels.includes(channel)) {
+      ipcRenderer.on(channel, callback);
+    }
+  },
+  removeAllListeners: (channel) => {
+    if (validChannels.includes(channel)) {
+      ipcRenderer.removeAllListeners(channel);
+    }
+  },
   
   // Llama.cpp Binary Updates
   checkLlamacppUpdates: () => ipcRenderer.invoke('check-llamacpp-updates'),

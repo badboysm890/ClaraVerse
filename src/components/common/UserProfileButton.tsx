@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { User, Settings } from 'lucide-react';
 
 interface UserProfileButtonProps {
-  userName: string;
+  userName?: string;
+  avatarUrl?: string;
   onPageChange: (page: string) => void;
 }
 
 const UserProfileButton: React.FC<UserProfileButtonProps> = ({
   userName,
+  avatarUrl,
   onPageChange
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,8 +32,24 @@ const UserProfileButton: React.FC<UserProfileButtonProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sakura-50 dark:hover:bg-sakura-100/10 transition-colors"
       >
-        <div className="w-8 h-8 rounded-full bg-sakura-100 dark:bg-sakura-100/10 flex items-center justify-center">
-          <User className="w-5 h-5 text-sakura-500" />
+        <div className="w-8 h-8 rounded-full bg-sakura-100 dark:bg-sakura-100/10 flex items-center justify-center overflow-hidden">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="User avatar"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // If image fails to load, show fallback icon
+                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : (
+            <User className="w-5 h-5 text-sakura-500" />
+          )}
+          {avatarUrl && (
+            <User className="w-5 h-5 text-sakura-500 hidden" />
+          )}
         </div>
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {userName || 'Profile'}

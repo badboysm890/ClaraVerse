@@ -39,7 +39,7 @@ class WidgetService {
     
     // Try electron app resources first (production)
     const resourcesPath = process.resourcesPath 
-      ? path.join(process.resourcesPath, 'services', execName)
+      ? path.join(process.resourcesPath, 'electron', 'services', execName)
       : null;
     
     // Try local development path

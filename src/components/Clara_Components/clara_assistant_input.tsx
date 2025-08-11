@@ -833,7 +833,8 @@ const AdvancedOptions: React.FC<{
   onProviderChange?: (providerId: string) => void;
   onModelChange?: (modelId: string, type: 'text' | 'vision' | 'code') => void;
   show: boolean;
-}> = ({ aiConfig, onConfigChange, providers, models, onProviderChange, onModelChange, show }) => {
+  userInfo?: { name?: string; email?: string; timezone?: string };
+}> = ({ aiConfig, onConfigChange, providers, models, onProviderChange, onModelChange, show, userInfo }) => {
   const [mcpServers, setMcpServers] = useState<ClaraMCPServer[]>([]);
   const [isLoadingMcpServers, setIsLoadingMcpServers] = useState(false);
   
@@ -893,7 +894,7 @@ const AdvancedOptions: React.FC<{
     const provider = providers.find(p => p.id === providerId);
     const providerName = provider?.name || 'AI Assistant';
     
-    // Generate user context information if available
+    // Generate user context information (sync version - memory enhancement happens in ClaraAssistant)
     const getUserContext = (): string => {
       if (!userInfo?.name && !userInfo?.email) {
         return '';
@@ -1214,7 +1215,7 @@ Skip for: quick answers, simple lists
               icon={<MessageCircle className="w-4 h-4 text-sakura-500" />}
               isExpanded={expandedSections.systemPrompt}
               onToggle={() => toggleSection('systemPrompt')}
-              badge={aiConfig.systemPrompt ? 'Custom' : 'Default'}
+              badge={aiConfig.systemPrompt && aiConfig.systemPrompt.trim() !== '' && aiConfig.systemPrompt !== getDefaultSystemPrompt(aiConfig.provider, aiConfig.artifacts, userInfo) ? 'Custom' : 'Default'}
             />
             
             {expandedSections.systemPrompt && (
@@ -1231,7 +1232,7 @@ Skip for: quick answers, simple lists
                   </button>
                 </div>
                 <textarea
-                  value={aiConfig.systemPrompt || getDefaultSystemPrompt(aiConfig.provider)}
+                  value={aiConfig.systemPrompt || getDefaultSystemPrompt(aiConfig.provider, aiConfig.artifacts, userInfo)}
                   onChange={(e) => handleSystemPromptChange(e.target.value)}
                   placeholder="Enter custom system prompt for this provider..."
                   className="w-full min-h-[80px] max-h-[200px] p-3 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sakura-500 focus:border-transparent transition-colors text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
@@ -5099,7 +5100,7 @@ You can right-click on the image to save it or use it in your projects.`;
 
             {/* Title */}
             <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-3">
-              {isServiceStarting ? 'Starting Clara\'s Pocket' : 'Provider Not Responding'}
+              {isServiceStarting ? 'Starting Clara\'s Pocket' : 'Provider Not Responding (Probably Restarting)'}
             </h2>
 
             {/* Message */}

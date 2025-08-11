@@ -139,7 +139,23 @@ const ComfyUIModelManagerTest: React.FC = () => {
 
     const errorUnsubscribe = (window as any).modelManager.onComfyUILocalDownloadError((data: any) => {
       setDownloadProgress(null);
-      alert(`Download error: ${data.error}`);
+      
+      // Enhanced error handling with specific messages for different error types
+      let userMessage = `Download failed for ${data.filename}`;
+      
+      if (data.error.includes('HTTP 401') || data.error.includes('Unauthorized')) {
+        userMessage = `Download failed for ${data.filename}\n\nThis model requires an API key for download. Please:\n• Set up your CivitAI API key in the main Model Manager\n• Or get an API key from: civitai.com/user/account`;
+      } else if (data.error.includes('HTTP 403') || data.error.includes('Forbidden')) {
+        userMessage = `Download failed for ${data.filename}\n\nAccess forbidden. Please check your API key or account permissions.`;
+      } else if (data.error.includes('HTTP 404') || data.error.includes('Not Found')) {
+        userMessage = `Download failed for ${data.filename}\n\nModel file not found. The download link may be expired.`;
+      } else if (data.error.includes('network') || data.error.includes('timeout')) {
+        userMessage = `Download failed for ${data.filename}\n\nNetwork connection issue. Please check your internet connection.`;
+      } else {
+        userMessage = `Download failed for ${data.filename}\n\nError: ${data.error}`;
+      }
+      
+      alert(userMessage);
     });
 
     return () => {

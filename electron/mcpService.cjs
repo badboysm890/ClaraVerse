@@ -129,8 +129,6 @@ class MCPService {
   resolveBundledExecutablePath(command) {
     // Check if this is a bundled Python MCP server request
     if (command === 'python-mcp-server') {
-      const basePath = path.join(__dirname, 'services');
-      
       let executableName;
       switch (os.platform()) {
         case 'win32':
@@ -154,7 +152,24 @@ class MCPService {
           throw new Error(`Unsupported platform: ${os.platform()}`);
       }
       
-      const resolvedPath = path.join(basePath, executableName);
+      // Try electron app resources first (production)
+      let resolvedPath;
+      const resourcesPath = process.resourcesPath 
+        ? path.join(process.resourcesPath, 'electron', 'services', executableName)
+        : null;
+      
+      // Try local development path
+      const devPath = path.join(__dirname, 'services', executableName);
+      
+      // Check which path exists
+      if (resourcesPath && fs.existsSync(resourcesPath)) {
+        resolvedPath = resourcesPath;
+      } else if (fs.existsSync(devPath)) {
+        resolvedPath = devPath;
+      } else {
+        throw new Error(`MCP server binary not found. Tried paths: ${resourcesPath || 'N/A'}, ${devPath}`);
+      }
+      
       log.info(`Resolved bundled executable path: ${command} -> ${resolvedPath}`);
       return resolvedPath;
     }

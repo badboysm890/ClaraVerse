@@ -14,7 +14,6 @@ import {
   ClaraFileAttachment, 
   ClaraSessionConfig, 
   ClaraChatSession,
-  ClaraArtifact,
   ClaraProvider,
   ClaraModel,
   ClaraAIConfig,
@@ -41,6 +40,13 @@ import { claraTTSService } from '../services/claraTTSService';
   // Import artifact detection service
 import ArtifactDetectionService, { DetectionContext } from '../services/artifactDetectionService';
 
+// Import ClaraSweetMemory for automatic memory extraction
+import ClaraSweetMemory, { ClaraSweetMemoryAPI } from './ClaraSweetMemory';
+
+// Import ClaraMemoryToast for learning notifications
+import ClaraMemoryToast from './Clara_Components/ClaraMemoryToast';
+import { claraMemoryToastService, type MemoryToastState } from '../services/claraMemoryToastService';
+
 // Import clipboard test functions for development
 if (process.env.NODE_ENV === 'development') {
   import('../utils/clipboard.test');
@@ -56,7 +62,7 @@ interface ClaraAssistantProps {
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 /**
- * Get default system prompt for a provider
+ * Get default system prompt for a provider with enhanced memory integration
  */
 const getDefaultSystemPrompt = (provider: ClaraProvider, artifactConfig?: any, userInfo?: { name?: string; email?: string; timezone?: string }): string => {
   const providerName = provider?.name || 'AI Assistant';
@@ -96,6 +102,202 @@ const getDefaultSystemPrompt = (provider: ClaraProvider, artifactConfig?: any, u
     
     return context;
   };
+
+  /**
+   * Enhance system prompt with memory data - async function
+   */
+  const enhanceSystemPromptWithMemory = async (basePrompt: string): Promise<string> => {
+    try {
+      const memoryProfile = await ClaraSweetMemoryAPI.getCurrentUserProfile();
+      if (!memoryProfile) {
+        return basePrompt;
+      }
+
+      console.log('🧠 System Prompt: Enhancing with user memory data');
+      
+      /**
+       * Safely convert any value to a readable string, handling objects dynamically
+       */
+      const safeToString = (value: any): string => {
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'string') return value;
+        if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+        
+        if (Array.isArray(value)) {
+          // Handle arrays properly - process each item and extract meaningful data
+          const stringItems = value
+            .map(item => {
+              if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+                return String(item);
+              }
+              if (typeof item === 'object' && item !== null) {
+                // Handle array of objects (like hobbies, interests, devices)
+                if (item.name) return item.name; // Extract name field
+                if (item.value) return item.value; // Extract value field
+                if (item.type && item.model) return `${item.type} (${item.model})`; // Device format
+                if (item.type && item.name) return `${item.name} (${item.type})`; // Social connection format
+                
+                // If no recognizable fields, try to create a readable string
+                const entries = Object.entries(item);
+                const meaningfulEntries = entries.filter(([key, val]) => 
+                  key !== 'confidence' && val !== null && val !== undefined && String(val).trim() !== ''
+                );
+                
+                if (meaningfulEntries.length > 0) {
+                  return meaningfulEntries
+                    .map(([key, val]) => `${key}: ${String(val)}`)
+                    .join(', ');
+                }
+              }
+              return '';
+            })
+            .filter(item => item && item.trim() !== '');
+          
+          return stringItems.join(', ');
+        }
+        
+        if (typeof value === 'object' && value !== null) {
+          // Handle objects - extract meaningful values
+          const entries = Object.entries(value);
+          const stringValues = entries
+            .map(([key, val]) => {
+              // Skip confidence fields for cleaner output
+              if (key === 'confidence') return '';
+              
+              const stringVal = safeToString(val);
+              if (stringVal && stringVal.trim() !== '') {
+                // For single values, just return the value
+                if (key === 'value') return stringVal;
+                // For other keys, include the key name
+                return `${key}: ${stringVal}`;
+              }
+              return '';
+            })
+            .filter(item => item && item.trim() !== '');
+          
+          return stringValues.join(', ');
+        }
+        
+        return String(value);
+      };
+
+      /**
+       * Dynamically process a data section
+       */
+      const processSection = (sectionData: any, sectionTitle: string): string => {
+        if (!sectionData || typeof sectionData !== 'object') return '';
+        
+        let sectionContent = `### ${sectionTitle}:\n`;
+        let hasData = false;
+        
+        for (const [key, value] of Object.entries(sectionData)) {
+          const stringValue = safeToString(value);
+          if (stringValue && stringValue.trim() !== '' && stringValue !== '[object Object]') {
+            // Convert camelCase to readable format
+            const readableKey = key.replace(/([A-Z])/g, ' $1')
+              .replace(/^./, str => str.toUpperCase())
+              .trim();
+            sectionContent += `- ${readableKey}: ${stringValue}\n`;
+            hasData = true;
+          }
+        }
+        
+        return hasData ? sectionContent : '';
+      };
+
+      let memoryContext = `\n## 🧠 PERSONAL MEMORY\n`;
+      let hasMemoryData = false;
+      
+      // **DYNAMIC SECTION DISCOVERY**: Automatically detect all memory categories
+      // This supports runtime additions without code changes
+      const sections = [];
+      const skipFields = ['id', 'userId', 'metadata', 'version', 'createdAt', 'updatedAt']; // System fields to ignore
+      
+      // Map of field names to human-readable titles
+      const titleMap: { [key: string]: string } = {
+        coreIdentity: 'Personal Identity',
+        personalCharacteristics: 'Personal Traits',
+        preferences: 'Preferences',
+        relationship: 'Relationship Context',
+        interactions: 'Interaction History',
+        context: 'Current Context',
+        emotional: 'Emotional & Social Intelligence',
+        practical: 'Practical Information',
+        // Dynamic titles for future fields
+        skills: 'Skills & Expertise',
+        social: 'Social Networks',
+        professional: 'Professional Context',
+        learning: 'Learning & Development',
+        health: 'Health & Wellness',
+        financial: 'Financial Context',
+        travel: 'Travel & Location',
+        communication: 'Communication Patterns'
+      };
+      
+      // Dynamically discover all memory sections from the profile
+      for (const [fieldName, fieldData] of Object.entries(memoryProfile)) {
+        // Skip system/metadata fields
+        if (skipFields.includes(fieldName)) continue;
+        
+        // Convert camelCase field name to readable title
+        const title = titleMap[fieldName] || 
+          fieldName.replace(/([A-Z])/g, ' $1')
+                   .replace(/^./, str => str.toUpperCase())
+                   .trim();
+        
+        sections.push({
+          data: fieldData,
+          title: title,
+          fieldName: fieldName // Keep track of the original field name
+        });
+      }
+
+      console.log(`🧠 Dynamic Memory Discovery: Found ${sections.length} memory sections:`, 
+                  sections.map(s => `${s.fieldName} → "${s.title}"`));
+
+      for (const section of sections) {
+        const sectionContent = processSection(section.data, section.title);
+        if (sectionContent) {
+          memoryContext += sectionContent;
+          hasMemoryData = true;
+          console.log(`✅ Added memory section: ${section.title}`);
+        } else {
+          console.log(`⏭️ Skipped empty section: ${section.title}`);
+        }
+      }
+      
+      if (hasMemoryData) {
+        memoryContext += `\nUse this personal information to provide more personalized and relevant responses. Address the user naturally using their preferred name when appropriate, and tailor your assistance based on their interests, preferences, and context.\n\n`;
+        
+        // Insert memory context after user context but before main instructions
+        const userContextIndex = basePrompt.indexOf('## 👤 USER CONTEXT');
+        if (userContextIndex !== -1) {
+          // Find the end of user context section
+          const nextSectionIndex = basePrompt.indexOf('\n## ', userContextIndex + 1);
+          if (nextSectionIndex !== -1) {
+            return basePrompt.slice(0, nextSectionIndex) + memoryContext + basePrompt.slice(nextSectionIndex);
+          } else {
+            return basePrompt + memoryContext;
+          }
+        } else {
+          // If no user context section, add memory context at the end of the existing context
+          const contextEndIndex = basePrompt.indexOf('\n\n## ');
+          if (contextEndIndex !== -1) {
+            return basePrompt.slice(0, contextEndIndex) + memoryContext + basePrompt.slice(contextEndIndex);
+          } else {
+            return basePrompt + memoryContext;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('🧠 System Prompt: Failed to enhance with memory data:', error);
+    }
+    
+    return basePrompt;
+  };
+
+  // Store the enhancement function for use by the caller
+  (getDefaultSystemPrompt as any).enhanceWithMemory = enhanceSystemPromptWithMemory;
   
   const userContext = getUserContext();
   
@@ -103,272 +305,36 @@ const getDefaultSystemPrompt = (provider: ClaraProvider, artifactConfig?: any, u
   const artifactsEnabled = artifactConfig?.autoDetectArtifacts ?? true;
   
   // **CONTEXTUAL ARTIFACT SYSTEM** - Only when specifically requested
-  const artifactGuidance = artifactsEnabled ? `
+    const artifactGuidance = artifactsEnabled ? `
 
-## 🎨 CONTEXTUAL ARTIFACT SYSTEM
+## 🎨 ARTIFACT SYSTEM
 
-You have artifact generation capabilities that can create visual components when they would be genuinely helpful. Use this feature thoughtfully and contextually.
+**AUTO-CREATE FOR:** Code >5 lines, data tables, charts, diagrams, docs >20 lines, HTML/CSS, configs, scripts, queries
 
-### **🎯 WHEN TO CREATE ARTIFACTS**
+**TYPES:**
+• Code: All languages with syntax highlighting
+• Data: CSV/JSON/tables
+• Charts: Bar/line/pie/scatter (Chart.js format)
+• Diagrams: Flowcharts/UML/network (Mermaid)
+• Web: HTML+CSS interactive
+• Docs: Markdown/technical guides
 
-Only create artifacts when the user specifically requests visual content or when data would be significantly clearer as a visualization:
-
-#### **Clear Requests for Visual Content:**
-- User asks for a "chart", "graph", "diagram", "flowchart", or "visualization"
-- User explicitly requests "show me visually" or "create a diagram"
-- User asks to "visualize the data" or "make a chart"
-- User provides data and asks for analysis with visualization
-
-#### **Data That Benefits from Visualization:**
-- Numerical data with trends, comparisons, or patterns
-- Process flows that are complex to explain in text
-- System architectures with multiple components
-- Organizational structures or hierarchies
-
-### **❌ DO NOT CREATE ARTIFACTS FOR:**
-- Simple text responses or explanations
-- Code examples (unless user asks for interactive demos)
-- Basic lists or bullet points
-- General knowledge questions
-- Conversational responses
-- Documentation or tutorials (unless explicitly requested as interactive)
-
-### **🎯 ARTIFACT CREATION PRINCIPLES**
-
-1. **User Intent First**: Only create artifacts when they enhance the user's specific request
-2. **Value Addition**: Artifacts should provide genuine value over plain text
-3. **Relevance**: Visual content should be directly related to the user's question
-4. **Simplicity**: Prefer clear, focused text responses over unnecessary visual elements
-
-### **📝 VISUAL FORMATTING GUIDELINES**
-
-When creating artifacts (only when appropriate):
-
-**Bar Chart Example:**
-\`\`\`json
-{
-    "type": "bar",
-    "data": {
-        "labels": ["January", "February", "March", "April", "May", "June"],
-        "datasets": [{
-            "label": "Monthly Sales ($)",
-            "data": [12000, 15000, 18000, 22000, 25000, 28000],
-            "backgroundColor": [
-                "rgba(54, 162, 235, 0.6)",
-                "rgba(255, 99, 132, 0.6)",
-                "rgba(255, 205, 86, 0.6)",
-                "rgba(75, 192, 192, 0.6)",
-                "rgba(153, 102, 255, 0.6)",
-                "rgba(255, 159, 64, 0.6)"
-            ],
-            "borderColor": [
-                "rgba(54, 162, 235, 1)",
-                "rgba(255, 99, 132, 1)",
-                "rgba(255, 205, 86, 1)",
-                "rgba(75, 192, 192, 1)",
-                "rgba(153, 102, 255, 1)",
-                "rgba(255, 159, 64, 1)"
-            ],
-            "borderWidth": 2
-        }]
-    },
-    "options": {
-        "responsive": true,
-        "plugins": {
-            "title": {
-                "display": true,
-                "text": "Monthly Sales Performance"
-            }
-        },
-        "scales": {
-            "y": {
-                "beginAtZero": true,
-                "title": {
-                    "display": true,
-                    "text": "Sales Amount ($)"
-                }
-            }
-        }
-    }
-}
+**FORMAT:**
+\`\`\`language
+// Code with proper syntax
 \`\`\`
 
-**Line Chart Example:**
-\`\`\`json
-{
-    "type": "line",
-    "data": {
-        "labels": ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"],
-        "datasets": [
-            {
-                "label": "Website Traffic",
-                "data": [1200, 1900, 3000, 5000, 4200, 6000],
-                "borderColor": "rgb(75, 192, 192)",
-                "backgroundColor": "rgba(75, 192, 192, 0.2)",
-                "tension": 0.4
-            },
-            {
-                "label": "Conversions",
-                "data": [65, 95, 150, 250, 210, 300],
-                "borderColor": "rgb(255, 99, 132)",
-                "backgroundColor": "rgba(255, 99, 132, 0.2)",
-                "tension": 0.4
-            }
-        ]
-    },
-    "options": {
-        "responsive": true,
-        "plugins": {
-            "title": {
-                "display": true,
-                "text": "Website Performance Metrics"
-            }
-        }
-    }
-}
-\`\`\`
-
-**Pie Chart Example:**
-\`\`\`json
-{
-    "type": "pie",
-    "data": {
-        "labels": ["Desktop", "Mobile", "Tablet", "Other"],
-        "datasets": [{
-            "data": [45.2, 38.7, 12.8, 3.3],
-            "backgroundColor": [
-                "#FF6384",
-                "#36A2EB", 
-                "#FFCE56",
-                "#4BC0C0"
-            ],
-            "hoverBackgroundColor": [
-                "#FF6384CC",
-                "#36A2EBCC",
-                "#FFCE56CC", 
-                "#4BC0C0CC"
-            ]
-        }]
-    },
-    "options": {
-        "responsive": true,
-        "plugins": {
-            "title": {
-                "display": true,
-                "text": "Traffic by Device Type (%)"
-            },
-            "legend": {
-                "position": "bottom"
-            }
-        }
-    }
-}
-\`\`\`
-
-#### **2. MERMAID DIAGRAMS - VISUAL EXAMPLES**
-
-Create beautiful flowcharts and diagrams using Mermaid syntax:
-
-**Flowchart:**
 \`\`\`mermaid
-graph TD
-    A[User Request] --> B{Authentication Required?}
-    B -->|Yes| C[Check Credentials]
-    B -->|No| D[Process Request]
-    C --> E{Valid Credentials?}
-    E -->|Yes| D
-    E -->|No| F[Return Error]
-    D --> G[Generate Response]
-    G --> H[Send Response]
-    F --> I[Log Failed Attempt]
-    I --> H
+graph TD: A-->B
 \`\`\`
 
-**System Architecture:**
-\`\`\`mermaid
-graph TD
-    A[Users] --> B[Load Balancer]
-    B --> C[Web Servers]
-    C --> D[Application Servers]
-    D --> E[Database Cluster]
-    D --> F[Cache Layer]
-    E --> G[Primary DB]
-    E --> H[Replica DB]
+\`\`\`json
+{"type":"chart","data":{}}
 \`\`\`
 
-#### **3. INTERACTIVE HTML VISUALIZATIONS**
+**RULES:** Complete examples, proper formatting, responsive design, real data
 
-Create beautiful, interactive visual content with HTML:
-
-\`\`\`html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Data Dashboard</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            transition: transform 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        .metric {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #FFD700;
-        }
-    </style>
-</head>
-<body>
-    <h1 style="text-align: center;">📊 Visual Dashboard</h1>
-    <div class="dashboard">
-        <div class="card">
-            <h3>📈 Growth</h3>
-            <div class="metric" id="growth">+25%</div>
-        </div>
-    </div>
-</body>
-</html>
-\`\`\`
-
-### **🎯 VISUAL ARTIFACT RULES**
-
-1. **FOCUS ON VISUALIZATION**: Create charts, graphs, and diagrams only
-2. **INTERACTIVE ELEMENTS**: Include hover effects, clickable elements
-3. **CLEAR VISUAL HIERARCHY**: Use colors, spacing, and typography effectively
-4. **RESPONSIVE DESIGN**: Ensure artifacts work on all screen sizes
-5. **DESCRIPTIVE TITLES**: Make artifact purpose immediately clear
-
-### **🎯 RESPONSE GUIDELINES**
-
-**Default Response Mode**: Provide clear, helpful text responses that directly answer the user's question.
-
-**Artifact Creation**: Only create visual artifacts when:
-- User explicitly requests visualization ("show me a chart", "create a diagram")  
-- Data would be significantly clearer as a visual than as text
-- User asks for interactive demonstrations
-
-**Remember**: Most questions are best answered with clear, focused text. Artifacts are for specific visualization needs!` : '';
+**CREATE ONLY WHEN:** Visual adds value, user requests charts/demos, data needs visualization` : '';
   
 const toolsGuidance =  `
 Always use tools when needed. 
@@ -499,6 +465,17 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
   // No models modal state
   const [showNoModelsModal, setShowNoModelsModal] = useState(false);
 
+  // Service startup state tracking
+  const [serviceStartupStatus, setServiceStartupStatus] = useState<{
+    isStarting: boolean;
+    serviceName: string | null;
+    phase: string | null;
+  }>({
+    isStarting: false,
+    serviceName: null,
+    phase: null
+  });
+
   // Wallpaper state
   const [wallpaperUrl, setWallpaperUrl] = useState<string | null>(null);
 
@@ -508,6 +485,14 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
 
   // Autonomous agent status management
   const autonomousAgentStatus = useAutonomousAgentStatus();
+
+  // Memory toast state
+  const [memoryToastState, setMemoryToastState] = useState<MemoryToastState>({
+    isVisible: false,
+    knowledgeLevel: 0,
+    learnedInfo: undefined,
+    lastShownAt: 0
+  });
 
   // Parse status updates from streaming chunks for autonomous agent
   const parseAndUpdateAgentStatus = useCallback((chunk: string) => {
@@ -658,7 +643,10 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
       // Cache the result
       setProviderHealthCache(prev => {
         const newCache = new Map(prev);
-        newCache.set(provider.id, { isHealthy, timestamp: now });
+        newCache.set(provider.id, {
+          isHealthy,
+          timestamp: now
+        });
         return newCache;
       });
       
@@ -670,13 +658,70 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
       // Cache the failure
       setProviderHealthCache(prev => {
         const newCache = new Map(prev);
-        newCache.set(provider.id, { isHealthy: false, timestamp: now });
+        newCache.set(provider.id, {
+          isHealthy: false,
+          timestamp: now
+        });
         return newCache;
       });
       
       return false;
     }
   }, [providerHealthCache, HEALTH_CHECK_CACHE_TIME]);
+
+  // Check if any critical services are starting up
+  const checkServiceStartupStatus = useCallback(async (): Promise<{
+    isStarting: boolean;
+    serviceName: string | null;
+    phase: string | null;
+  }> => {
+    try {
+      // Check Clara's Pocket service status - check regardless of current provider setting
+      // since during startup the provider might not be set yet
+      if (window.llamaSwap) {
+        const status = await window.llamaSwap.getStatus?.();
+        console.log('🔍 Checking llamaSwap service status:', status);
+        
+        if (status?.isStarting) {
+          console.log(`🚀 Service starting detected: ${status.currentStartupPhase || 'Initializing...'}`);
+          return {
+            isStarting: true,
+            serviceName: "Clara's Core",
+            phase: status.currentStartupPhase || 'Initializing...'
+          };
+        }
+        
+        // Also check if service is running but models haven't loaded yet
+        if (status?.isRunning && models.length === 0) {
+          console.log('🔄 Service running but models not loaded yet, checking if it just started...');
+          // If service just started (within last 30 seconds), consider it still starting
+          if (status.startingTimestamp && (Date.now() - status.startingTimestamp) < 30000) {
+            return {
+              isStarting: true,
+              serviceName: "Clara's Core",
+              phase: 'Loading models...'
+            };
+          }
+        }
+      }
+      
+      // Check for other service startup indicators here if needed
+      // For example, check MCP services, other providers, etc.
+      
+      return {
+        isStarting: false,
+        serviceName: null,
+        phase: null
+      };
+    } catch (error) {
+      console.warn('Error checking service startup status:', error);
+      return {
+        isStarting: false,
+        serviceName: null,
+        phase: null
+      };
+    }
+  }, [models.length]);
 
   // Refresh providers, models, and MCP services
   const refreshProvidersAndServices = useCallback(async (force: boolean = false) => {
@@ -980,6 +1025,16 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
         let allModels: ClaraModel[] = [];
         for (const provider of loadedProviders) {
           try {
+            // Special handling for Clara's Pocket provider - wait for service to be ready
+            if (provider.type === 'claras-pocket' && window.llamaSwap) {
+              const status = await window.llamaSwap.getStatus?.();
+              if (status?.isStarting) {
+                console.log(`⏳ Clara's Core is starting, skipping model loading for now...`);
+                // Don't load models yet, they will be loaded once startup completes
+                continue;
+              }
+            }
+            
             const providerModels = await claraApiService.getModels(provider.id);
             allModels = [...allModels, ...providerModels];
             console.log(`Loaded ${providerModels.length} models from provider: ${provider.name}`);
@@ -991,6 +1046,14 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
         // Set all models for the modal check
         setModels(allModels);
         console.log(`Total models available across all providers: ${allModels.length}`);
+        
+        // Check for service startup status immediately after loading models
+        const startupStatus = await checkServiceStartupStatus();
+        setServiceStartupStatus(startupStatus);
+        
+        if (startupStatus.isStarting) {
+          console.log(`🚀 Service startup detected during provider load: ${startupStatus.serviceName} (${startupStatus.phase})`);
+        }
 
         // Get primary provider and set it in config
         const primaryProvider = loadedProviders.find(p => p.isPrimary) || loadedProviders[0];
@@ -1076,10 +1139,7 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
 
             const defaultConfig = {
               provider: primaryProvider.id,
-              systemPrompt: getDefaultSystemPrompt(primaryProvider, {
-                enableCodeArtifacts: true,
-                autoDetectArtifacts: true
-              }, userInfo || undefined),
+              systemPrompt: '', // Leave empty to indicate default should be used
               models: {
                 text: textModel?.id || '',
                 vision: visionModel?.id || '',
@@ -1163,18 +1223,78 @@ const ClaraAssistant: React.FC<ClaraAssistantProps> = ({ onPageChange }) => {
 
   // Monitor models availability to show/hide no models modal
   useEffect(() => {
-    if (!isLoadingProviders) {
-      // Check if there are any models available across all providers
-      const hasModels = models.length > 0;
-      setShowNoModelsModal(!hasModels);
-      
-      if (!hasModels) {
-        console.log('No models available - showing no models modal');
-      } else {
-        console.log(`Found ${models.length} models - hiding no models modal`);
+    const checkModelsAndServices = async () => {
+      if (!isLoadingProviders) {
+        // Check if there are any models available across all providers
+        const hasModels = models.length > 0;
+        
+        // Check if any critical services are starting up
+        const startupStatus = await checkServiceStartupStatus();
+        setServiceStartupStatus(startupStatus);
+        
+        // Only show "No Models Available" if:
+        // 1. There are truly no models AND
+        // 2. No critical services are starting up
+        const shouldShowNoModelsModal = !hasModels && !startupStatus.isStarting;
+        setShowNoModelsModal(shouldShowNoModelsModal);
+        
+        if (!hasModels && startupStatus.isStarting) {
+          console.log(`Service startup detected: ${startupStatus.serviceName} (${startupStatus.phase}) - not showing no models modal`);
+        } else if (!hasModels) {
+          console.log('No models available and no services starting - showing no models modal');
+        } else {
+          console.log(`Found ${models.length} models - hiding no models modal`);
+        }
       }
+    };
+
+    checkModelsAndServices();
+  }, [models, isLoadingProviders, checkServiceStartupStatus]);
+
+  // Poll for service startup status changes when a service is starting OR when we have no models
+  useEffect(() => {
+    let pollInterval: NodeJS.Timeout | null = null;
+    
+    // Start polling if service is starting OR if we have no models and llamaSwap is available
+    const shouldPoll = serviceStartupStatus.isStarting || 
+                      (models.length === 0 && window.llamaSwap && !isLoadingProviders);
+    
+    if (shouldPoll) {
+      const reason = serviceStartupStatus.isStarting ? 
+        `${serviceStartupStatus.serviceName} status` : 
+        'potential service startup (no models detected)';
+      console.log(`🔄 Starting polling for ${reason}...`);
+      
+      pollInterval = setInterval(async () => {
+        const startupStatus = await checkServiceStartupStatus();
+        setServiceStartupStatus(startupStatus);
+        
+        // If service is no longer starting, refresh providers and models
+        if (!startupStatus.isStarting && serviceStartupStatus.isStarting) {
+          console.log(`✅ Service startup completed, refreshing providers and models...`);
+          await refreshProvidersAndServices(true);
+          clearInterval(pollInterval!);
+        }
+        
+        // If we found that a service is starting when we didn't know before, continue polling
+        if (startupStatus.isStarting && !serviceStartupStatus.isStarting) {
+          console.log(`🚀 Service startup detected during polling: ${startupStatus.serviceName}`);
+        }
+        
+        // Stop polling if we now have models and no services are starting
+        if (!startupStatus.isStarting && models.length > 0) {
+          console.log(`✅ Stopping polling - models available and no services starting`);
+          clearInterval(pollInterval!);
+        }
+      }, 2000); // Check every 2 seconds
     }
-  }, [models, isLoadingProviders]);
+    
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [serviceStartupStatus.isStarting, models.length, isLoadingProviders, checkServiceStartupStatus, refreshProvidersAndServices]);
 
   // Initialize TTS service
   useEffect(() => {
@@ -1588,10 +1708,23 @@ Please provide your refined response for following user question:
 
       console.log(`📚 Prepared ${conversationHistory.length} properly formatted history messages for AI service`);
 
-      // Get system prompt (provider-specific or fallback to default)
+      // Get system prompt (provider-specific or fallback to default) and enhance with memory data
       const currentProvider = providers.find(p => p.id === enforcedConfig.provider);
-      const systemPrompt = enforcedConfig.systemPrompt || 
+      let baseSystemPrompt = enforcedConfig.systemPrompt || 
                           (currentProvider ? getDefaultSystemPrompt(currentProvider, enforcedConfig.artifacts, userInfo || undefined) : 'You are Clara, a helpful AI assistant.');
+      
+      // Enhance system prompt with memory data
+      let systemPrompt = baseSystemPrompt;
+      try {
+        const enhanceFunction = (getDefaultSystemPrompt as any).enhanceWithMemory;
+        if (enhanceFunction) {
+          systemPrompt = await enhanceFunction(baseSystemPrompt);
+          console.log('🧠 System prompt enhanced with user memory data');
+        }
+      } catch (error) {
+        console.error('🧠 Failed to enhance system prompt with memory:', error);
+        // Continue with base system prompt
+      }
       
       // Create enhanced streaming callback that updates both message content and status panel
       const enhancedStreamingCallback = (chunk: string) => {
@@ -1817,6 +1950,44 @@ Please provide your refined response for following user question:
       // Save AI message to database
       try {
         await claraDB.addClaraMessage(currentSession.id, finalMessage);
+        
+        // **NEW: Automatic Memory Extraction**
+        // Process memory extraction if conditions are met (reasonable request size)
+        try {
+          // Ensure memory extraction always happens for meaningful messages
+          if (content.length <= 2000 && content.trim().length > 10) {
+            // Trigger memory extraction asynchronously to avoid blocking the UI
+            setTimeout(async () => {
+              try {
+                const extractionResult = await ClaraSweetMemoryAPI.processMemory(
+                  content, // User message (display content without voice prefix)
+                  finalMessage, // Assistant response
+                  conversationHistory, // Conversation context
+                  enforcedConfig // AI configuration for memory extraction
+                );
+                console.log('🧠 Memory extraction completed successfully');
+                
+                // Show memory toast if new information was learned
+                if (extractionResult && extractionResult.confidence > 0.3) {
+                  try {
+                    const updatedProfile = await ClaraSweetMemoryAPI.getCurrentUserProfile();
+                    if (updatedProfile) {
+                      claraMemoryToastService.showMemoryToast(updatedProfile);
+                    }
+                  } catch (toastError) {
+                    console.warn('🧠 Memory toast update failed:', toastError);
+                  }
+                }
+              } catch (memoryError) {
+                console.warn('🧠 Memory extraction failed:', memoryError);
+                // Memory extraction failure shouldn't affect the main flow
+              }
+            }, 1000); // Small delay to ensure DB operations complete first
+          }
+        } catch (memoryError) {
+          console.warn('🧠 Memory extraction setup failed:', memoryError);
+          // Continue with normal flow even if memory extraction fails
+        }
         
         // Update message count in sessions list for real-time sidebar updates
         setSessions(prev => prev.map(s => 
@@ -2373,18 +2544,7 @@ Would you like me to help with text-only responses for now?`,
         
         const defaultConfig = {
           provider: providerId,
-          systemPrompt: getDefaultSystemPrompt(provider, {
-            enableCodeArtifacts: true,
-            enableChartArtifacts: true,
-            enableTableArtifacts: true,
-            enableMermaidArtifacts: true,
-            enableHtmlArtifacts: true,
-            enableMarkdownArtifacts: true,
-            enableJsonArtifacts: true,
-            enableDiagramArtifacts: true,
-            autoDetectArtifacts: true,
-            maxArtifactsPerMessage: 10
-          }, userInfo || undefined),
+          systemPrompt: '', // Leave empty to indicate default should be used
           models: {
             text: textModel?.id || '',
             vision: visionModel?.id || '',
@@ -3690,6 +3850,15 @@ Let me execute this for you.`;
   }, [providers, models, sessionConfig, currentSession, isVisible, handleSendMessage, 
       providerHealthCache, HEALTH_CHECK_CACHE_TIME, checkProviderHealthCached, clearProviderHealthCache]);
 
+  // Subscribe to memory toast state changes
+  useEffect(() => {
+    const unsubscribe = claraMemoryToastService.subscribe((state) => {
+      setMemoryToastState(state);
+    });
+
+    return unsubscribe;
+  }, []);
+
   // Initialize with a new session if none exists
   useEffect(() => {
     const initializeSession = async () => {
@@ -4037,6 +4206,7 @@ ${data.timezone ? `• **Timezone:** ${data.timezone}` : ''}`;
                   onProviderChange={handleProviderChange}
                   onModelChange={handleModelChange}
                   show={showAdvancedOptions}
+                  userInfo={userInfo || undefined}
                 />
               </div>
             </div>
@@ -4084,49 +4254,105 @@ ${data.timezone ? `• **Timezone:** ${data.timezone}` : ''}`;
         />
       </div>
 
-      {/* No Models Available Modal */}
-      {showNoModelsModal && (
+      {/* No Models Available / Service Starting Modal */}
+      {(showNoModelsModal || serviceStartupStatus.isStarting) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 m-4 max-w-md w-full mx-auto transform transition-all duration-300 ease-out scale-100 animate-in fade-in-0 zoom-in-95">
             {/* Icon */}
             <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                serviceStartupStatus.isStarting 
+                  ? 'bg-yellow-100 dark:bg-yellow-900' 
+                  : 'bg-blue-100 dark:bg-blue-900'
+              }`}>
+                {serviceStartupStatus.isStarting ? (
+                  // Loading/Starting icon
+                  <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  // No models icon
+                  <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                )}
               </div>
             </div>
 
             {/* Title */}
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-4">
-              No AI Models Available
+              {serviceStartupStatus.isStarting 
+                ? `${serviceStartupStatus.serviceName} Starting Up`
+                : 'No AI Models Available'
+              }
             </h2>
 
             {/* Message */}
             <p className="text-gray-600 dark:text-gray-300 text-center mb-6 leading-relaxed">
-              You don't seem to have any AI models downloaded yet. To start chatting with Clara, 
-              you'll need to download at least one model from the Model Manager.
+              {serviceStartupStatus.isStarting ? (
+                <>
+                  Clara is starting up her AI services for you. This process may take a moment as we prepare your models and initialize the system.
+                  {serviceStartupStatus.phase && (
+                    <span className="block mt-2 text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                      Current status: {serviceStartupStatus.phase}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  You don't seem to have any AI models downloaded yet. To start chatting with Clara, 
+                  you'll need to download at least one model from the Model Manager.
+                </>
+              )}
             </p>
 
             {/* Action Buttons */}
             <div className="flex flex-col space-y-3">
-              <button
-                onClick={() => onPageChange('settings')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span>Go to Model Manager</span>
-              </button>
+              {serviceStartupStatus.isStarting ? (
+                // Service starting - show waiting state
+                <div className="w-full bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 font-semibold py-3 px-6 rounded-lg flex items-center justify-center space-x-2">
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Please wait...</span>
+                </div>
+              ) : (
+                // No models - show action button
+                <button
+                  onClick={() => onPageChange('settings')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>Go to Model Manager</span>
+                </button>
+              )}
               
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                This dialog will disappear once you have downloaded a model
+                {serviceStartupStatus.isStarting 
+                  ? 'This dialog will close automatically when the service is ready'
+                  : 'This dialog will disappear once you have downloaded a model'
+                }
               </p>
             </div>
           </div>
         </div>
       )}
+      
+      {/* Clara Sweet Memory Component */}
+      <ClaraSweetMemory />
+
+      {/* Clara Memory Learning Toast */}
+      <ClaraMemoryToast
+        isVisible={memoryToastState.isVisible}
+        onHide={() => claraMemoryToastService.hideMemoryToast()}
+        knowledgeLevel={memoryToastState.knowledgeLevel}
+        learnedInfo={memoryToastState.learnedInfo}
+        duration={4000}
+      />
     </div>
   );
 };

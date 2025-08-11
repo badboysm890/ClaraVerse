@@ -349,16 +349,16 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
       (Date.now() - serviceStatus.lastHealthCheck < 120000); // Within last 2 minutes (more lenient)
     
     // For debugging, show what we're checking
-    if (serviceName === 'comfyui' || serviceName === 'n8n') {
-      console.log(`🔍 Service ${serviceName} health check:`, {
-        state: serviceStatus?.state,
-        lastHealthCheck: serviceStatus?.lastHealthCheck,
-        timeSinceLastCheck: serviceStatus?.lastHealthCheck ? Date.now() - serviceStatus.lastHealthCheck : 'never',
-        hasRecentHealthCheck: Boolean(hasRecentHealthCheck),
-        isStateRunning,
-        shouldShow: isStateRunning || Boolean(hasRecentHealthCheck)
-      });
-    }
+    // if (serviceName === 'comfyui' || serviceName === 'n8n') {
+    //   console.log(`🔍 Service ${serviceName} health check:`, {
+    //     state: serviceStatus?.state,
+    //     lastHealthCheck: serviceStatus?.lastHealthCheck,
+    //     timeSinceLastCheck: serviceStatus?.lastHealthCheck ? Date.now() - serviceStatus.lastHealthCheck : 'never',
+    //     hasRecentHealthCheck: Boolean(hasRecentHealthCheck),
+    //     isStateRunning,
+    //     shouldShow: isStateRunning || Boolean(hasRecentHealthCheck)
+    //   });
+    // }
     
     // Service is considered responding if either:
     // 1. State is explicitly 'running', OR
@@ -388,17 +388,17 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
   ];
 
   // Enhanced debug logging for service visibility
-  console.log('🔍 Sidebar Service Debug:', {
-    'featureConfig': featureConfig,
-    'enhancedServiceStatus': enhancedServiceStatus,
-    'comfyui enabled': featureConfig.comfyUI,
-    'comfyui responding': isServiceResponding('comfyui'),
-    'comfyui should show': featureConfig.comfyUI || isServiceResponding('comfyui'),
-    'n8n enabled': featureConfig.n8n,
-    'n8n responding': isServiceResponding('n8n'),
-    'n8n should show': featureConfig.n8n || isServiceResponding('n8n'),
-    'final menu items': mainMenuItems.map(item => ({ id: item.id, label: item.label }))
-  });
+  // console.log('🔍 Sidebar Service Debug:', {
+  //   'featureConfig': featureConfig,
+  //   'enhancedServiceStatus': enhancedServiceStatus,
+  //   'comfyui enabled': featureConfig.comfyUI,
+  //   'comfyui responding': isServiceResponding('comfyui'),
+  //   'comfyui should show': featureConfig.comfyUI || isServiceResponding('comfyui'),
+  //   'n8n enabled': featureConfig.n8n,
+  //   'n8n responding': isServiceResponding('n8n'),
+  //   'n8n should show': featureConfig.n8n || isServiceResponding('n8n'),
+  //   'final menu items': mainMenuItems.map(item => ({ id: item.id, label: item.label }))
+  // });
 
   const bottomMenuItems: MenuItem[] = [
     { icon: Settings, label: 'Settings', id: 'settings' },

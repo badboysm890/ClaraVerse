@@ -7763,11 +7763,22 @@ ${cmdLine}`;
           throw new Error(`Unsupported platform: ${os.platform()}`);
       }
       
-      const binaryPath = path.join(__dirname, 'services', binaryName);
+      // Try electron app resources first (production)
+      let binaryPath;
+      const resourcesPath = process.resourcesPath 
+        ? path.join(process.resourcesPath, 'electron', 'services', binaryName)
+        : null;
       
-      // Check if binary exists
-      if (!fs.existsSync(binaryPath)) {
-        throw new Error(`LLaMA Optimizer binary not found: ${binaryPath}`);
+      // Try local development path
+      const devPath = path.join(__dirname, 'services', binaryName);
+      
+      // Check which path exists
+      if (resourcesPath && fs.existsSync(resourcesPath)) {
+        binaryPath = resourcesPath;
+      } else if (fs.existsSync(devPath)) {
+        binaryPath = devPath;
+      } else {
+        throw new Error(`LLaMA Optimizer binary not found. Tried paths: ${resourcesPath || 'N/A'}, ${devPath}`);
       }
       
       log.info(`Running LLaMA Optimizer: ${binaryPath} -config "${configPath}" -preset ${preset}`);

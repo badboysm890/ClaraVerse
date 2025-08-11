@@ -116,6 +116,7 @@ const ImageModelManager: React.FC<ImageModelManagerProps> = ({ onClose }) => {
   const [trendingModels, setTrendingModels] = useState<TrendingModels | null>(null);
   const [isLoadingTrending, setIsLoadingTrending] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -142,10 +143,12 @@ const ImageModelManager: React.FC<ImageModelManagerProps> = ({ onClose }) => {
     // Set up download progress listeners for CivitAI
     const unsubscribeProgress = window.modelManager?.onComfyUILocalDownloadProgress?.(handleDownloadProgress);
     const unsubscribeComplete = window.modelManager?.onComfyUILocalDownloadComplete?.(handleDownloadComplete);
+    const unsubscribeError = window.modelManager?.onComfyUILocalDownloadError?.(handleDownloadError);
     
     return () => {
       unsubscribeProgress?.();
       unsubscribeComplete?.();
+      unsubscribeError?.();
     };
   }, []);
 
@@ -303,6 +306,71 @@ const ImageModelManager: React.FC<ImageModelManagerProps> = ({ onClose }) => {
     });
   }, []);
 
+  const handleDownloadError = (data: { filename: string; error: string }) => {
+    console.error(`❌ Download error for ${data.filename}:`, data.error);
+    
+    setDownloads(prev => 
+      prev.map(d => 
+        (d.filename || d.fileName) === data.filename 
+          ? { 
+              ...d, 
+              error: data.error, 
+              progress: 0,
+              completed: false 
+            }
+          : d
+      )
+    );
+
+    // Show user-friendly error message with specific guidance
+    let userMessage = `Download failed for ${data.filename}`;
+    
+    if (data.error.includes('HTTP 401') || data.error.includes('Unauthorized')) {
+      userMessage = 'API key required for download. Click Settings → Add CivitAI API key';
+      setNotification({ 
+        message: userMessage, 
+        type: 'error' 
+      });
+    } else if (data.error.includes('HTTP 403') || data.error.includes('Forbidden')) {
+      userMessage = 'Access forbidden. Check your API key or account permissions.';
+      setNotification({ 
+        message: userMessage, 
+        type: 'error' 
+      });
+    } else if (data.error.includes('HTTP 404') || data.error.includes('Not Found')) {
+      userMessage = 'Model file not found. The download link may be expired.';
+      setNotification({ 
+        message: userMessage, 
+        type: 'error' 
+      });
+    } else if (data.error.includes('network') || data.error.includes('timeout')) {
+      userMessage = 'Network connection issue. Please check your internet connection.';
+      setNotification({ 
+        message: userMessage, 
+        type: 'error' 
+      });
+    } else {
+      userMessage = `Download failed: ${data.error}`;
+      setNotification({ 
+        message: userMessage, 
+        type: 'error' 
+      });
+    }
+
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => {
+      setNotification(null);
+    }, 5000);
+
+    // Also show detailed alert for API key errors
+    if (data.error.includes('HTTP 401') || data.error.includes('Unauthorized')) {
+      const detailedMessage = `Download failed for ${data.filename}\n\nThis model requires an API key for download. Please:\n• Click the "Settings" button above\n• Add your CivitAI API key\n• Then try downloading again\n\nTo get a CivitAI API key:\n1. Go to civitai.com\n2. Create an account or sign in\n3. Go to Account Settings → API Keys\n4. Generate a new API key`;
+      setTimeout(() => {
+        alert(detailedMessage);
+      }, 100);
+    }
+  };
+
   const handleDownloadProgress = (progress: DownloadProgress) => {
     setDownloads(prev => {
       const filename = progress.filename || progress.fileName || '';
@@ -325,6 +393,17 @@ const ImageModelManager: React.FC<ImageModelManagerProps> = ({ onClose }) => {
     );
     
     console.log(`✅ Model downloaded to persistent storage: ${data.filename} -> ${data.localPath}`);
+    
+    // Show success notification
+    setNotification({
+      message: `✅ ${data.filename} downloaded successfully`,
+      type: 'success'
+    });
+    
+    // Auto-hide success notification after 3 seconds
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
     
     // Refresh local models after successful download
     setTimeout(() => {
@@ -498,6 +577,10 @@ const ImageModelManager: React.FC<ImageModelManagerProps> = ({ onClose }) => {
       );
     }
   }, [apiKeys]);
+
+  const clearDownloadError = useCallback((filename: string) => {
+    setDownloads(prev => prev.filter(d => (d.filename || d.fileName) !== filename));
+  }, []);
 
   const handleDeleteModel = useCallback(async (modelType: string, filename: string) => {
     try {
@@ -683,6 +766,50 @@ const ImageModelManager: React.FC<ImageModelManagerProps> = ({ onClose }) => {
             </button>
           </div>
         </div>
+
+        {/* Notification Banner */}
+        {notification && (
+          <div className={`px-6 py-3 border-b border-gray-200/50 dark:border-gray-700/20 ${
+            notification.type === 'error' 
+              ? 'bg-red-50/80 dark:bg-red-900/20' 
+              : notification.type === 'success'
+              ? 'bg-green-50/80 dark:bg-green-900/20'
+              : 'bg-blue-50/80 dark:bg-blue-900/20'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className={`flex items-center gap-3 text-sm font-medium ${
+                notification.type === 'error'
+                  ? 'text-red-700 dark:text-red-300'
+                  : notification.type === 'success'
+                  ? 'text-green-700 dark:text-green-300'
+                  : 'text-blue-700 dark:text-blue-300'
+              }`}>
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                  notification.type === 'error'
+                    ? 'bg-red-500'
+                    : notification.type === 'success'
+                    ? 'bg-green-500'
+                    : 'bg-blue-500'
+                }`}>
+                  {notification.type === 'error' ? (
+                    <X className="w-3 h-3 text-white" />
+                  ) : notification.type === 'success' ? (
+                    <CheckCircle className="w-3 h-3 text-white" />
+                  ) : (
+                    <Settings className="w-3 h-3 text-white" />
+                  )}
+                </div>
+                <span>{notification.message}</span>
+              </div>
+              <button
+                onClick={() => setNotification(null)}
+                className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* API Configuration Panel - Apple Card Style */}
         {showApiKeys && (
@@ -1271,46 +1398,102 @@ const ImageModelManager: React.FC<ImageModelManagerProps> = ({ onClose }) => {
                                             </div>
                                           )}
                                           
-                                          {/* Error Display */}
+                                          {/* Enhanced Error Display */}
                                           {downloadProgress?.error && (
-                                            <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded text-xs text-red-600 dark:text-red-400">
-                                              Error: {downloadProgress.error}
+                                            <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-lg">
+                                              <div className="flex items-start gap-2">
+                                                <div className="flex-shrink-0 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center mt-0.5">
+                                                  <X className="w-3 h-3 text-white" />
+                                                </div>
+                                                <div className="flex-1 text-xs text-red-600 dark:text-red-400">
+                                                  <div className="font-medium mb-1">Download Failed</div>
+                                                  {downloadProgress.error.includes('HTTP 401') || downloadProgress.error.includes('Unauthorized') ? (
+                                                    <div className="space-y-1">
+                                                      <div>This model requires an API key for download.</div>
+                                                      <div className="text-red-700 dark:text-red-300 font-medium">
+                                                        → Click "Settings" button above to add your CivitAI API key
+                                                      </div>
+                                                    </div>
+                                                  ) : downloadProgress.error.includes('HTTP 403') || downloadProgress.error.includes('Forbidden') ? (
+                                                    <div>Access forbidden. Please check your API key or account permissions.</div>
+                                                  ) : downloadProgress.error.includes('HTTP 404') || downloadProgress.error.includes('Not Found') ? (
+                                                    <div>Model file not found. The download link may be expired.</div>
+                                                  ) : (
+                                                    <div>{downloadProgress.error}</div>
+                                                  )}
+                                                </div>
+                                              </div>
+                                              {(downloadProgress.error.includes('HTTP 401') || downloadProgress.error.includes('Unauthorized')) && (
+                                                <div className="mt-2 pt-2 border-t border-red-200 dark:border-red-800/30">
+                                                  <a 
+                                                    href="https://civitai.com/user/account" 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-red-700 dark:text-red-300 hover:text-red-800 dark:hover:text-red-200 font-medium text-xs underline"
+                                                  >
+                                                    Get CivitAI API Key →
+                                                  </a>
+                                                </div>
+                                              )}
                                             </div>
                                           )}
                                         </div>
                                         
-                                        {/* Compact Download Button */}
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDownload(selectedModel, version, file);
-                                          }}
-                                          disabled={isDownloading}
-                                          className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all duration-200 ${
-                                            isCompleted
-                                              ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
-                                              : isDownloading
-                                              ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
-                                              : 'bg-sakura-500 text-white hover:bg-sakura-600 shadow-md hover:shadow-lg'
-                                          }`}
-                                        >
-                                          {isCompleted ? (
-                                            <>
-                                              <CheckCircle className="w-4 h-4" />
-                                              <span>Done</span>
-                                            </>
-                                          ) : isDownloading ? (
-                                            <>
-                                              <RefreshCw className="w-4 h-4 animate-spin" />
-                                              <span>...</span>
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Download className="w-4 h-4" />
-                                              <span>Get</span>
-                                            </>
+                                        {/* Enhanced Download Button with Error States */}
+                                        <div className="flex-shrink-0 flex gap-2">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDownload(selectedModel, version, file);
+                                            }}
+                                            disabled={isDownloading}
+                                            className={`px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all duration-200 ${
+                                              isCompleted
+                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                                                : downloadProgress?.error
+                                                ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/60'
+                                                : isDownloading
+                                                ? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
+                                                : 'bg-sakura-500 text-white hover:bg-sakura-600 shadow-md hover:shadow-lg'
+                                            }`}
+                                          >
+                                            {isCompleted ? (
+                                              <>
+                                                <CheckCircle className="w-4 h-4" />
+                                                <span>Done</span>
+                                              </>
+                                            ) : downloadProgress?.error ? (
+                                              <>
+                                                <RefreshCw className="w-4 h-4" />
+                                                <span>Retry</span>
+                                              </>
+                                            ) : isDownloading ? (
+                                              <>
+                                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                                <span>...</span>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Download className="w-4 h-4" />
+                                                <span>Get</span>
+                                              </>
+                                            )}
+                                          </button>
+                                          
+                                          {/* Clear Error Button */}
+                                          {downloadProgress?.error && (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                clearDownloadError(file.name);
+                                              }}
+                                              className="px-2 py-2 rounded-lg text-xs font-medium flex items-center gap-1 bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200"
+                                              title="Clear error"
+                                            >
+                                              <X className="w-3 h-3" />
+                                            </button>
                                           )}
-                                        </button>
+                                        </div>
                                       </div>
                                     </div>
                                   );
