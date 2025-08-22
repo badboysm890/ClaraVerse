@@ -317,7 +317,7 @@ const calculateDynamicTokens = (messages: Message[], retryCount: number = 0): nu
 };
 
 // Initial Planning System Prompt - Before any tool execution
-const INITIAL_PLANNING_SYSTEM_PROMPT = `You are Clara's strategic planning module. Before executing any tools, you must analyze the project structure and create a comprehensive execution plan.
+const INITIAL_PLANNING_SYSTEM_PROMPT = `You are angela's strategic planning module. Before executing any tools, you must analyze the project structure and create a comprehensive execution plan.
 
 Your response must be a JSON object with this exact structure:
 {
@@ -371,7 +371,7 @@ PLANNING STRATEGY:
 Be thorough and strategic in your planning.`;
 
 // Reflection Planning System Prompt - After tool execution
-const REFLECTION_PLANNING_SYSTEM_PROMPT = `You are Clara's reflection and adaptation module. After each tool execution, you must analyze the results and plan the next steps.
+const REFLECTION_PLANNING_SYSTEM_PROMPT = `You are angela's reflection and adaptation module. After each tool execution, you must analyze the results and plan the next steps.
 
 Your response must be a JSON object with this exact structure:
 {
@@ -400,7 +400,7 @@ EXAMPLE REFLECTION SCENARIOS:
 
 Be concise but thorough in your reflection.`;
 
-const SYSTEM_PROMPT = `You are Clara, an expert AI assistant and exceptional senior software developer with vast knowledge across multiple programming languages, frameworks, and best practices. You are a Bolt-like AI agent that works automatically using the provided tools.
+const SYSTEM_PROMPT = `You are angela, an expert AI assistant and exceptional senior software developer with vast knowledge across multiple programming languages, frameworks, and best practices. You are a Bolt-like AI agent that works automatically using the provided tools.
 
 <strategic_planning_workflow>
   You follow a sophisticated planning-first approach that prevents repetitive actions:
@@ -2166,7 +2166,7 @@ Please check your request and try again. Make sure the file exists and your inst
         {/* Enhanced Typing/Thinking Indicator */}
         <TypingIndicator 
           isVisible={isLoading && !showLiveExecution} 
-          message={currentTask || 'Clara is thinking...'}
+          message={currentTask || 'angela is thinking...'}
         />
         
         <div ref={messagesEndRef} />

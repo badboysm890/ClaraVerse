@@ -5,12 +5,12 @@
  * standard OpenAI-style tool calling. It uses structured text generation to simulate tool calls.
  */
 
-import { ClaraMessage, ClaraAIConfig, ClaraFileAttachment } from '../types/clara_assistant_types';
+import { angelaMessage, angelaAIConfig, angelaFileAttachment } from '../types/angela_assistant_types';
 import { Tool } from '../db';
-import { defaultTools, executeTool } from '../utils/claraTools';
+import { defaultTools, executeTool } from '../utils/angelaTools';
 import { db } from '../db';
-import { claraMCPService } from './claraMCPService';
-import { claraMemoryService } from './claraMemoryService';
+import { angelaMCPService } from './angelaMCPService';
+import { angelaMemoryService } from './angelaMemoryService';
 
 /**
  * Structured tool call result
@@ -208,10 +208,10 @@ export class StructuredToolCallService {
     modelId: string,
     message: string,
     tools: Tool[],
-    config: ClaraAIConfig,
-    attachments: ClaraFileAttachment[],
+    config: angelaAIConfig,
+    attachments: angelaFileAttachment[],
     systemPrompt?: string,
-    conversationHistory?: ClaraMessage[],
+    conversationHistory?: angelaMessage[],
     onContentChunk?: (content: string) => void,
     currentProviderId?: string
   ): Promise<{ response: string; toolCalls: StructuredToolCall[]; needsToolExecution: boolean; reasoning: string }> {
@@ -241,10 +241,10 @@ export class StructuredToolCallService {
     modelId: string, 
     message: string,
     tools: Tool[],
-    config: ClaraAIConfig,
-    attachments: ClaraFileAttachment[],
+    config: angelaAIConfig,
+    attachments: angelaFileAttachment[],
     systemPrompt?: string,
-    conversationHistory?: ClaraMessage[],
+    conversationHistory?: angelaMessage[],
     onContentChunk?: (content: string) => void
   ): Promise<{ response: string; toolCalls: StructuredToolCall[]; needsToolExecution: boolean; reasoning: string }> {
     
@@ -315,10 +315,10 @@ export class StructuredToolCallService {
     modelId: string,
     message: string, 
     tools: Tool[],
-    config: ClaraAIConfig,
-    attachments: ClaraFileAttachment[],
+    config: angelaAIConfig,
+    attachments: angelaFileAttachment[],
     systemPrompt?: string,
-    conversationHistory?: ClaraMessage[],
+    conversationHistory?: angelaMessage[],
     onContentChunk?: (content: string) => void
   ): Promise<{ response: string; toolCalls: StructuredToolCall[]; needsToolExecution: boolean; reasoning: string }> {
     
@@ -361,7 +361,7 @@ export class StructuredToolCallService {
   private buildNativeStructuredPrompt(tools: Tool[], originalSystemPrompt?: string): string {
     const toolsDescription = this.formatToolsForPrompt(tools);
     
-    return `You are Clara, an autonomous AI agent. Your task is to accomplish user requests using available tools.
+    return `You are angela, an autonomous AI agent. Your task is to accomplish user requests using available tools.
 
 ${originalSystemPrompt || ''}
 
@@ -390,8 +390,8 @@ Be thorough, accurate, and helpful in your responses.`;
   private buildConversationMessages(
     systemPrompt: string,
     message: string,
-    attachments: ClaraFileAttachment[],
-    conversationHistory?: ClaraMessage[]
+    attachments: angelaFileAttachment[],
+    conversationHistory?: angelaMessage[]
   ): any[] {
     const messages: any[] = [];
     
@@ -435,8 +435,8 @@ Be thorough, accurate, and helpful in your responses.`;
   public generateStructuredToolPrompt(
     userMessage: string,
     tools: Tool[],
-    config: ClaraAIConfig,
-    conversationHistory?: ClaraMessage[],
+    config: angelaAIConfig,
+    conversationHistory?: angelaMessage[],
     memoryContext?: string
   ): string {
     const toolsDescription = this.formatToolsForPrompt(tools);
@@ -444,7 +444,7 @@ Be thorough, accurate, and helpful in your responses.`;
     // Check if the task appears to be already completed based on memory context
     const hasCompletedTask = this.isTaskAlreadyCompleted(userMessage, memoryContext);
     
-    let systemPrompt = `You are Clara, an autonomous AI agent. ACCOMPLISH THE TASK using structured tool calls.
+    let systemPrompt = `You are angela, an autonomous AI agent. ACCOMPLISH THE TASK using structured tool calls.
 
 STRUCTURED TOOL FORMAT:
 \`\`\`json
@@ -652,7 +652,7 @@ EXECUTION RULES:
 
         console.log(`🔍 [STRUCTURED-MCP] Parsed server: ${parsedTool.server}, tool: ${parsedTool.name}`);
         console.log(`📡 Sending MCP tool call:`, mcpToolCall);
-        const mcpResult = await claraMCPService.executeToolCall(mcpToolCall);
+        const mcpResult = await angelaMCPService.executeToolCall(mcpToolCall);
         console.log(`📥 MCP tool result:`, mcpResult);
         
         return {
@@ -674,13 +674,13 @@ EXECUTION RULES:
       }
     }
 
-    // Check Clara default tools
-    const claraTool = defaultTools.find(tool => tool.name === toolName || tool.id === toolName);
-    if (claraTool) {
+    // Check angela default tools
+    const angelaTool = defaultTools.find(tool => tool.name === toolName || tool.id === toolName);
+    if (angelaTool) {
       try {
-        console.log(`🛠️ Executing Clara tool: ${claraTool.name}`);
-        const result = await executeTool(claraTool.id, args);
-        console.log(`✅ Clara tool result:`, result);
+        console.log(`🛠️ Executing angela tool: ${angelaTool.name}`);
+        const result = await executeTool(angelaTool.id, args);
+        console.log(`✅ angela tool result:`, result);
         
         return {
           toolName,
@@ -690,11 +690,11 @@ EXECUTION RULES:
           reasoning
         };
       } catch (error) {
-        console.error(`❌ Clara tool execution error for ${toolName}:`, error);
+        console.error(`❌ angela tool execution error for ${toolName}:`, error);
         return {
           toolName,
           success: false,
-          error: error instanceof Error ? error.message : 'Clara tool execution failed',
+          error: error instanceof Error ? error.message : 'angela tool execution failed',
           reasoning
         };
       }
@@ -808,7 +808,7 @@ If any tools failed, acknowledge the failures and provide alternative suggestion
   /**
    * Format conversation history for context
    */
-  private formatConversationHistory(history?: ClaraMessage[]): string {
+  private formatConversationHistory(history?: angelaMessage[]): string {
     if (!history || history.length === 0) {
       return 'No previous conversation context';
     }
@@ -863,7 +863,7 @@ This is ideal for local models, older models, or specialized models that don't h
       // Most tools should work with structured calling
       if (tool.implementation === 'mcp') {
         // MCP tools need special handling
-        if (claraMCPService.isReady()) {
+        if (angelaMCPService.isReady()) {
           supported.push(tool);
         } else {
           unsupported.push(tool);

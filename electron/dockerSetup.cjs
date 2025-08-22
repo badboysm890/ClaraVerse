@@ -15,7 +15,7 @@ class DockerSetup extends EventEmitter {
   constructor() {
     super();
     this.isDevMode = process.env.NODE_ENV === 'development';
-    this.appDataPath = path.join(os.homedir(), '.clara');
+    this.appDataPath = path.join(os.homedir(), '.angela');
     
     // Docker binary paths - using Docker CLI path for both docker and compose commands
     this.dockerPath = '/usr/local/bin/docker';
@@ -46,21 +46,21 @@ class DockerSetup extends EventEmitter {
     // Container configuration - Removed Ollama container
     this.containers = {
       python: {
-        name: 'clara_python',
-        image: this.getArchSpecificImage('clara17verse/clara-backend', 'latest'),
+        name: 'angela_python',
+        image: this.getArchSpecificImage('angela17verse/angela-backend', 'latest'),
         port: 5001,
         internalPort: 5000,
         healthCheck: this.isPythonRunning.bind(this),
         volumes: [
-          // Mount the python_backend_data folder as the clara user's home directory
-          `${this.pythonBackendDataPath}:/home/clara`,
+          // Mount the python_backend_data folder as the angela user's home directory
+          `${this.pythonBackendDataPath}:/home/angela`,
           // Keep backward compatibility for existing data paths
-          'clara_python_models:/app/models'
+          'angela_python_models:/app/models'
         ],
-        volumeNames: ['clara_python_models']
+        volumeNames: ['angela_python_models']
       },
       n8n: {
-        name: 'clara_n8n',
+        name: 'angela_n8n',
         image: this.getArchSpecificImage('n8nio/n8n', 'latest'),
         port: 5678,
         internalPort: 5678,
@@ -70,8 +70,8 @@ class DockerSetup extends EventEmitter {
         ]
       },
       comfyui: {
-        name: 'clara_comfyui',
-        image: this.getArchSpecificImage('clara17verse/clara-comfyui', 'with-custom-nodes'),
+        name: 'angela_comfyui',
+        image: this.getArchSpecificImage('angela17verse/angela-comfyui', 'with-custom-nodes'),
         port: 8188,
         internalPort: 8188,
         healthCheck: this.isComfyUIRunning.bind(this),
@@ -128,8 +128,8 @@ class DockerSetup extends EventEmitter {
     this.maxRetries = 3;
     this.retryDelay = 5000; // 5 seconds
 
-    // Clara container names
-    this.containerNames = ['clara_python', 'clara_n8n', 'clara_comfyui'];
+    // angela container names
+    this.containerNames = ['angela_python', 'angela_n8n', 'angela_comfyui'];
 
     // Create subdirectories for each service
     Object.keys(this.containers).forEach(service => {
@@ -167,9 +167,9 @@ class DockerSetup extends EventEmitter {
       
       // Create essential directories for Python backend data
       const pythonDirectories = [
-        '.clara',                    // Clara configuration directory
-        '.clara/lightrag_storage',   // RAG storage directory
-        '.clara/lightrag_storage/metadata', // Metadata for notebooks and documents
+        '.angela',                    // angela configuration directory
+        '.angela/lightrag_storage',   // RAG storage directory
+        '.angela/lightrag_storage/metadata', // Metadata for notebooks and documents
         '.cache',                    // Python cache directory
         'uploads',                   // File uploads directory
         'temp'                       // Temporary files directory
@@ -185,8 +185,8 @@ class DockerSetup extends EventEmitter {
 
       // Create initial metadata files if they don't exist
       const metadataFiles = [
-        { file: '.clara/lightrag_storage/metadata/notebooks.json', content: '{}' },
-        { file: '.clara/lightrag_storage/metadata/documents.json', content: '{}' }
+        { file: '.angela/lightrag_storage/metadata/notebooks.json', content: '{}' },
+        { file: '.angela/lightrag_storage/metadata/documents.json', content: '{}' }
       ];
 
       metadataFiles.forEach(({ file, content }) => {
@@ -212,12 +212,12 @@ class DockerSetup extends EventEmitter {
   getPythonBackendInfo() {
     return {
       dataPath: this.pythonBackendDataPath,
-      mountPoint: '/home/clara',
-      description: 'All Python backend data is stored in a dedicated folder and mounted as the clara user home directory',
+      mountPoint: '/home/angela',
+      description: 'All Python backend data is stored in a dedicated folder and mounted as the angela user home directory',
       structure: {
-        '.clara/': 'Clara configuration and storage',
-        '.clara/lightrag_storage/': 'RAG system data and embeddings',
-        '.clara/lightrag_storage/metadata/': 'Notebook and document metadata',
+        '.angela/': 'angela configuration and storage',
+        '.angela/lightrag_storage/': 'RAG system data and embeddings',
+        '.angela/lightrag_storage/metadata/': 'Notebook and document metadata',
         '.cache/': 'Python package cache and temporary files',
         'uploads/': 'User uploaded files',
         'temp/': 'Temporary processing files'
@@ -358,7 +358,7 @@ class DockerSetup extends EventEmitter {
 
       console.log('🚀 Optimizing ComfyUI container for GPU performance...');
       
-      const container = this.docker.getContainer('clara_comfyui');
+      const container = this.docker.getContainer('angela_comfyui');
       
       // Check if container is running
       const containerInfo = await container.inspect();
@@ -422,7 +422,7 @@ class DockerSetup extends EventEmitter {
     const os = require('os');
     
     // Create persistent data directory for ComfyUI
-    const comfyUIDataDir = path.join(os.homedir(), '.clara', 'comfyui-data');
+    const comfyUIDataDir = path.join(os.homedir(), '.angela', 'comfyui-data');
     
     // Ensure directory exists
     if (!fs.existsSync(comfyUIDataDir)) {
@@ -1031,12 +1031,12 @@ class DockerSetup extends EventEmitter {
    * Get architecture-specific image name
    */
   getArchSpecificImage(baseImage, tag) {
-    // Special handling for clara-backend images which have architecture-specific tags
-    if (baseImage === 'clara17verse/clara-backend') {
+    // Special handling for angela-backend images which have architecture-specific tags
+    if (baseImage === 'angela17verse/angela-backend') {
       const arch = os.arch();
       const platform = os.platform();
       
-      console.log(`Getting clara-backend image for platform: ${platform}, arch: ${arch}`);
+      console.log(`Getting angela-backend image for platform: ${platform}, arch: ${arch}`);
       
       // For ARM64 systems (Mac ARM64 and Linux ARM64), use the default tag without suffix
       if (arch === 'arm64') {
@@ -1371,15 +1371,15 @@ class DockerSetup extends EventEmitter {
             if (fallbackErr) {
               console.error('Error pulling image (fallback):', fallbackErr);
               
-              // Special fallback for clara-backend images: try base image without -amd64 suffix
-              if (imageName.includes('clara17verse/clara-backend') && imageName.includes('-amd64')) {
+              // Special fallback for angela-backend images: try base image without -amd64 suffix
+              if (imageName.includes('angela17verse/angela-backend') && imageName.includes('-amd64')) {
                 const baseImageName = imageName.replace('-amd64', '');
-                console.log(`Trying base clara-backend image: ${baseImageName}`);
-                statusCallback(`Trying base clara-backend image: ${baseImageName}`);
+                console.log(`Trying base angela-backend image: ${baseImageName}`);
+                statusCallback(`Trying base angela-backend image: ${baseImageName}`);
                 
                 this.docker.pull(baseImageName, {}, (baseErr, baseStream) => {
                   if (baseErr) {
-                    console.error('Error pulling base clara-backend image:', baseErr);
+                    console.error('Error pulling base angela-backend image:', baseErr);
                     reject(baseErr);
                     return;
                   }
@@ -1421,7 +1421,7 @@ class DockerSetup extends EventEmitter {
     // Show first-time setup message
     if (isFirstTimePull) {
       statusCallback(`🚀 First-time setup: Downloading AI services...`, 'info', { percentage: 0 });
-      statusCallback(`This may take 5-15 minutes depending on your internet speed. Clara is downloading essential AI components - please wait...`, 'info', { percentage: 5 });
+      statusCallback(`This may take 5-15 minutes depending on your internet speed. angela is downloading essential AI components - please wait...`, 'info', { percentage: 5 });
     }
 
     stream.on('data', (data) => {
@@ -1696,24 +1696,24 @@ class DockerSetup extends EventEmitter {
     try {
       // First check if the network already exists
       const networks = await this.docker.listNetworks();
-      const networkExists = networks.some(network => network.Name === 'clara_network');
+      const networkExists = networks.some(network => network.Name === 'angela_network');
       
       if (networkExists) {
-        console.log('Network clara_network already exists, skipping creation');
+        console.log('Network angela_network already exists, skipping creation');
         return;
       }
       
       // Create the network if it doesn't exist
       try {
-        console.log('Creating clara_network...');
+        console.log('Creating angela_network...');
         await this.docker.createNetwork({
-          Name: 'clara_network',
+          Name: 'angela_network',
           Driver: 'bridge',
           Attachable: true,
           Internal: false,
           Scope: 'local'
         });
-        console.log('Successfully created clara_network');
+        console.log('Successfully created angela_network');
       } catch (error) {
         // Special handling for conflict error (network created between our check and creation)
         if (error.statusCode === 409) {
@@ -1782,8 +1782,8 @@ class DockerSetup extends EventEmitter {
             Name: volumeInfo.name,
             Driver: 'local',
             Labels: {
-              'clara.service': volumeInfo.service,
-              'clara.managed': 'true'
+              'angela.service': volumeInfo.service,
+              'angela.managed': 'true'
             }
           });
           console.log(`✓ Created Docker volume: ${volumeInfo.name} for ${volumeInfo.service}`);
@@ -1884,9 +1884,9 @@ class DockerSetup extends EventEmitter {
         }
       }
 
-      // Ensure the Clara network exists before creating the container
+      // Ensure the angela network exists before creating the container
       try {
-        console.log('Ensuring clara_network exists...');
+        console.log('Ensuring angela_network exists...');
         
         // Send progress update if callback is available
         if (config.statusCallback) {
@@ -1921,14 +1921,14 @@ class DockerSetup extends EventEmitter {
       }
       
       // Create and start container
-      let networkMode = 'clara_network';
+      let networkMode = 'angela_network';
       
-      // Check if clara_network actually exists before using it
+      // Check if angela_network actually exists before using it
       try {
         const networks = await this.docker.listNetworks();
-        const networkExists = networks.some(network => network.Name === 'clara_network');
+        const networkExists = networks.some(network => network.Name === 'angela_network');
         if (!networkExists) {
-          console.warn('clara_network not found, falling back to bridge network');
+          console.warn('angela_network not found, falling back to bridge network');
           networkMode = 'bridge';
           if (config.statusCallback) {
             config.statusCallback('Using default bridge network (some features may be limited)', 'warning', { percentage: 15 });
@@ -1966,7 +1966,7 @@ class DockerSetup extends EventEmitter {
         },
         Env: [
           'PYTHONUNBUFFERED=1',
-          'OLLAMA_BASE_URL=http://clara_ollama:11434',
+          'OLLAMA_BASE_URL=http://angela_ollama:11434',
           // Add any environment variables from the container config
           ...(config.environment || []),
           // Add GPU-specific environment variables if GPU is available
@@ -2051,7 +2051,7 @@ class DockerSetup extends EventEmitter {
       }
 
       // Run optimization for ComfyUI container after it's healthy
-      if (config.name === 'clara_comfyui' && useGPURuntime) {
+      if (config.name === 'angela_comfyui' && useGPURuntime) {
         console.log('🚀 Running GPU optimizations for ComfyUI...');
         // Run optimization in background to not block startup
         setTimeout(() => {
@@ -2222,7 +2222,7 @@ class DockerSetup extends EventEmitter {
         statusCallback(`Setup timed out after ${setupDuration}s. This may indicate a network or Docker issue.`, 'error');
         
         // Provide recovery suggestions
-        statusCallback('💡 Try restarting Docker Desktop and Clara, or check your internet connection.', 'info');
+        statusCallback('💡 Try restarting Docker Desktop and angela, or check your internet connection.', 'info');
         
         // Attempt graceful cleanup
         try {
@@ -2304,7 +2304,7 @@ class DockerSetup extends EventEmitter {
         comfyUI: false,   // Conservative default - only start if explicitly selected
         n8n: false,       // Conservative default - only start if explicitly selected  
         ragAndTts: false, // Conservative default - prevent unwanted Python backend downloads
-        claraCore: true   // Always enable core functionality
+        angelaCore: true   // Always enable core functionality
       };
 
       statusCallback('Creating Docker network...');
@@ -2326,7 +2326,7 @@ class DockerSetup extends EventEmitter {
       const isFirstTimeSetup = Object.values(timestamps).every(timestamp => timestamp === 0);
       
       if (isFirstTimeSetup) {
-        statusCallback(`🎉 Welcome to Clara! Setting up your AI environment for the first time...`, 'info', { percentage: 5 });
+        statusCallback(`🎉 Welcome to angela! Setting up your AI environment for the first time...`, 'info', { percentage: 5 });
         statusCallback(`This initial setup will download several AI services (may require 1-3 GB). Subsequent startups will be much faster!`, 'info', { percentage: 10 });
       }
 
@@ -2486,7 +2486,7 @@ class DockerSetup extends EventEmitter {
 
       // Clean up network
       try {
-        const network = await this.docker.getNetwork('clara_network');
+        const network = await this.docker.getNetwork('angela_network');
         await network.remove();
       } catch (error) {
         // Ignore network removal errors
@@ -2499,7 +2499,7 @@ class DockerSetup extends EventEmitter {
 
   async cleanupDockerVolumes() {
     try {
-      console.log('Cleaning up Clara-managed Docker volumes...');
+      console.log('Cleaning up angela-managed Docker volumes...');
       
       // Get list of existing volumes
       const volumes = await this.docker.listVolumes();
@@ -2508,13 +2508,13 @@ class DockerSetup extends EventEmitter {
         return;
       }
       
-      // Find Clara-managed volumes
-      const claraVolumes = volumes.Volumes.filter(vol => 
-        vol.Labels && vol.Labels['clara.managed'] === 'true'
+      // Find angela-managed volumes
+      const angelaVolumes = volumes.Volumes.filter(vol => 
+        vol.Labels && vol.Labels['angela.managed'] === 'true'
       );
       
-      // Remove Clara-managed volumes
-      for (const volume of claraVolumes) {
+      // Remove angela-managed volumes
+      for (const volume of angelaVolumes) {
         try {
           const dockerVolume = this.docker.getVolume(volume.Name);
           await dockerVolume.remove();
@@ -2525,8 +2525,8 @@ class DockerSetup extends EventEmitter {
         }
       }
       
-      if (claraVolumes.length === 0) {
-        console.log('No Clara-managed volumes found to clean up');
+      if (angelaVolumes.length === 0) {
+        console.log('No angela-managed volumes found to clean up');
       }
       
     } catch (error) {
@@ -2799,8 +2799,8 @@ class DockerSetup extends EventEmitter {
    * Resolve the actual available image name by testing different variants
    */
   async resolveImageName(baseImage, tag) {
-    // For clara-backend, we need to test which variant is actually available
-    if (baseImage === 'clara17verse/clara-backend') {
+    // For angela-backend, we need to test which variant is actually available
+    if (baseImage === 'angela17verse/angela-backend') {
       const arch = os.arch();
       
       // List of image variants to try in order of preference

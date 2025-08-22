@@ -1,13 +1,13 @@
-# Clara Flow SDK v2.0 - Developer Guide 🚀
+# angela Flow SDK v2.0 - Developer Guide 🚀
 
 ## The EASIEST Way to Run AI Workflows
 
-**TL;DR:** Just 3 lines to run any Clara Studio workflow!
+**TL;DR:** Just 3 lines to run any angela Studio workflow!
 
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 const result = await runner.run(myWorkflow, { input: 'Hello!' });
 console.log(result); // Done! ✨
 ```
@@ -35,7 +35,7 @@ console.log(result); // Done! ✨
 ### **1. Analyze Any Workflow**
 
 ```javascript
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 
 // Get what inputs this workflow needs
 const inputs = runner.getRequiredInputs(workflow);
@@ -114,7 +114,7 @@ try {
 ## 🎨 **Custom Nodes Work Too**
 
 ```javascript
-// Your workflow exported from Clara Studio with custom nodes
+// Your workflow exported from angela Studio with custom nodes
 const workflowWithCustomNodes = {
   // ... your workflow JSON
   customNodes: [
@@ -135,13 +135,13 @@ const result = await runner.run(workflowWithCustomNodes, inputs);
 
 ```javascript
 import express from 'express';
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import myWorkflow from './my-workflow.json';
 
 const app = express();
 app.use(express.json());
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 
 // Auto-generate API endpoint
 app.post('/process', async (req, res) => {
@@ -225,7 +225,7 @@ console.log(result.description, result.tags);
 
 **For developers, it's incredibly simple:**
 
-1. **Export** your workflow from Clara Studio  
+1. **Export** your workflow from angela Studio  
 2. **Import** it into your app
 3. **Run** it with the SDK
 
@@ -247,13 +247,13 @@ The SDK handles:
 ## 🚀 **Get Started Now**
 
 ```bash
-npm install clara-flow-sdk
+npm install angela-flow-sdk
 ```
 
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 const result = await runner.run(workflow, inputs);
 // You're done! 🎉
 ```

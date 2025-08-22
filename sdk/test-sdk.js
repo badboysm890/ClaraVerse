@@ -1,8 +1,8 @@
-import { ClaraFlowRunner } from './dist/index.esm.js';
+import { angelaFlowRunner } from './dist/index.esm.js';
 
 // Test flow data (using the format from the original error)
 const testFlowData = {
-  format: "clara-sdk",
+  format: "angela-sdk",
   version: "1.0.0",
   flow: {
     id: "test-flow",
@@ -15,7 +15,7 @@ const testFlowData = {
         name: "Input",
         position: { x: 100, y: 100 },
         data: {
-          value: "You are Clara and you are the girl friend of the user and always act like one",
+          value: "You are angela and you are the girl friend of the user and always act like one",
           inputType: "text"
         },
         inputs: [],
@@ -98,11 +98,11 @@ const testFlowData = {
 };
 
 async function testSDK() {
-  console.log('[INFO] Testing Clara Flow SDK...');
+  console.log('[INFO] Testing angela Flow SDK...');
   
   try {
     // Create SDK instance
-    const runner = new ClaraFlowRunner({
+    const runner = new angelaFlowRunner({
       enableLogging: true,
       logLevel: 'info'
     });
@@ -123,7 +123,7 @@ async function testSDK() {
     
     try {
       const result = await runner.executeFlow(testFlowData, {
-        user: "Hello Clara!"
+        user: "Hello angela!"
       });
       
       console.log('[SUCCESS] Flow executed successfully:', result);

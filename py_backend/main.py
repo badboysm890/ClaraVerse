@@ -46,13 +46,13 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[logging.StreamHandler()]
 )
-logger = logging.getLogger("clara-backend")
+logger = logging.getLogger("angela-backend")
 
 # Store start time
 START_TIME = datetime.now().isoformat()
 
 # Parse command line arguments
-parser = argparse.ArgumentParser(description='Clara Backend Server')
+parser = argparse.ArgumentParser(description='angela Backend Server')
 parser.add_argument('--host', type=str, default='127.0.0.1', help='Host to bind to')
 parser.add_argument('--port', type=int, default=5000, help='Port to bind to')
 args = parser.parse_args()
@@ -64,7 +64,7 @@ PORT = args.port
 logger.info(f"Starting server on {HOST}:{PORT}")
 
 # Setup FastAPI
-app = FastAPI(title="Clara Backend API", version="1.0.0")
+app = FastAPI(title="angela Backend API", version="1.0.0")
 
 # Import and include the diffusers API router
 # Add CORS middleware
@@ -92,7 +92,7 @@ async def catch_exceptions_middleware(request: Request, call_next):
 
 # Database path in user's home directory for persistence
 home_dir = os.path.expanduser("~")
-data_dir = os.path.join(home_dir, ".clara")
+data_dir = os.path.join(home_dir, ".angela")
 os.makedirs(data_dir, exist_ok=True)
 
 # LightRAG Configuration and Storage
@@ -395,22 +395,22 @@ if LIGHTRAG_AVAILABLE:
             if embedding_provider_type == 'ollama' and embedding_base_url.endswith('/v1'):
                 embedding_base_url = embedding_base_url[:-3]
             
-            # Validate API keys for non-Ollama providers (except Clara Core on port 8091)
-            is_clara_core_llm = ':8091' in llm_base_url or llm_base_url.endswith(':8091')
-            is_clara_core_embedding = ':8091' in embedding_base_url or embedding_base_url.endswith(':8091')
+            # Validate API keys for non-Ollama providers (except angela Core on port 8091)
+            is_angela_core_llm = ':8091' in llm_base_url or llm_base_url.endswith(':8091')
+            is_angela_core_embedding = ':8091' in embedding_base_url or embedding_base_url.endswith(':8091')
             
-            if llm_provider_type != 'ollama' and not is_clara_core_llm and (not llm_api_key or llm_api_key.strip() == 'your-api-key'):
+            if llm_provider_type != 'ollama' and not is_angela_core_llm and (not llm_api_key or llm_api_key.strip() == 'your-api-key'):
                 raise ValueError(f"Invalid or missing LLM API key for provider type: {llm_provider_type}")
-            if embedding_provider_type != 'ollama' and not is_clara_core_embedding and (not embedding_api_key or embedding_api_key.strip() == 'your-api-key'):
+            if embedding_provider_type != 'ollama' and not is_angela_core_embedding and (not embedding_api_key or embedding_api_key.strip() == 'your-api-key'):
                 raise ValueError(f"Invalid or missing embedding API key for provider type: {embedding_provider_type}")
             
-            # Set Clara Core API key if needed
-            if is_clara_core_llm and (not llm_api_key or llm_api_key.strip() == 'your-api-key'):
-                llm_api_key = 'claracore'
-                logger.info("Using Clara Core LLM - no API key required")
-            if is_clara_core_embedding and (not embedding_api_key or embedding_api_key.strip() == 'your-api-key'):
-                embedding_api_key = 'claracore'
-                logger.info("Using Clara Core embedding - no API key required")
+            # Set angela Core API key if needed
+            if is_angela_core_llm and (not llm_api_key or llm_api_key.strip() == 'your-api-key'):
+                llm_api_key = 'angelacore'
+                logger.info("Using angela Core LLM - no API key required")
+            if is_angela_core_embedding and (not embedding_api_key or embedding_api_key.strip() == 'your-api-key'):
+                embedding_api_key = 'angelacore'
+                logger.info("Using angela Core embedding - no API key required")
             
             # Determine embedding dimensions based on the embedding model
             embedding_dim = 1536  # Default for OpenAI ada-002
@@ -543,14 +543,14 @@ if LIGHTRAG_AVAILABLE:
                     return await batch_embed_texts(texts, batch_size, base_openai_embed)
                     
             elif embedding_provider_type == 'openai_compatible':
-                # Special handling for Clara Core embedding models
+                # Special handling for angela Core embedding models
                 model_to_use = embedding_model_name
                 
                 async def base_openai_compatible_embed(texts: list[str]):
-                    # Retry logic for Clara Core (models need time to load into RAM)
-                    max_retries = 5 if is_clara_core_embedding else 2
-                    retry_delay = 10 if is_clara_core_embedding else 3  # seconds
-                    request_timeout = 180 if is_clara_core_embedding else 60  # seconds
+                    # Retry logic for angela Core (models need time to load into RAM)
+                    max_retries = 5 if is_angela_core_embedding else 2
+                    retry_delay = 10 if is_angela_core_embedding else 3  # seconds
+                    request_timeout = 180 if is_angela_core_embedding else 60  # seconds
                     
                     for attempt in range(max_retries):
                         try:
@@ -576,7 +576,7 @@ if LIGHTRAG_AVAILABLE:
                                 await asyncio.sleep(retry_delay)
                                 continue
                             else:
-                                error_msg = f"Embedding request timed out after {max_retries} attempts. Clara Core server may need more time to load the model."
+                                error_msg = f"Embedding request timed out after {max_retries} attempts. angela Core server may need more time to load the model."
                                 logger.error(error_msg)
                                 raise Exception(error_msg)
                         except Exception as e:
@@ -585,7 +585,7 @@ if LIGHTRAG_AVAILABLE:
                                 # Retry for certain types of errors that might resolve with time
                                 if any(keyword in error_str for keyword in ['connection', 'timeout', 'loading', 'model']):
                                     logger.warning(f"Embedding failed (attempt {attempt + 1}/{max_retries}): {e}")
-                                    logger.info(f"Retrying in {retry_delay}s... (Clara Core may be loading model)")
+                                    logger.info(f"Retrying in {retry_delay}s... (angela Core may be loading model)")
                                     await asyncio.sleep(retry_delay)
                                     continue
                                 else:
@@ -600,17 +600,17 @@ if LIGHTRAG_AVAILABLE:
                                 raise e
 
                 async def embedding_func_lambda(texts: list[str]):
-                    # Use very conservative batch size for Clara Core based on testing
-                    # Clara Core with e5-large-v2-q4-0 has strict limits ~500 chars per text
-                    if is_clara_core_embedding:
-                        # For Clara Core, process each text individually and aggregate chunks
+                    # Use very conservative batch size for angela Core based on testing
+                    # angela Core with e5-large-v2-q4-0 has strict limits ~500 chars per text
+                    if is_angela_core_embedding:
+                        # For angela Core, process each text individually and aggregate chunks
                         final_embeddings = []
                         
                         for text in texts:
-                            if len(text) > 400:  # Conservative limit for Clara Core
+                            if len(text) > 400:  # Conservative limit for angela Core
                                 # Split large texts into smaller chunks
                                 chunks = [text[i:i+400] for i in range(0, len(text), 350)]  # 50 char overlap
-                                logger.info(f"Split large text ({len(text)} chars) into {len(chunks)} chunks for Clara Core")
+                                logger.info(f"Split large text ({len(text)} chars) into {len(chunks)} chunks for angela Core")
                                 
                                 # Get embeddings for all chunks
                                 chunk_embeddings = await batch_embed_texts(chunks, 1, base_openai_compatible_embed)
@@ -940,7 +940,7 @@ def read_root():
     """Root endpoint for basic health check"""
     return {
         "status": "ok", 
-        "service": "Clara Backend", 
+        "service": "angela Backend", 
         "port": PORT,
         "uptime": str(datetime.now() - datetime.fromisoformat(START_TIME)),
         "start_time": START_TIME

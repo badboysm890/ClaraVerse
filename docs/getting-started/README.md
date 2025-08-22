@@ -1,21 +1,21 @@
 ---
-title: "Getting Started with ClaraVerse"
-description: "Quick start guide to set up ClaraVerse"
+title: "Getting Started with angelaVerse"
+description: "Quick start guide to set up angelaVerse"
 category: "getting-started"
 order: 1
 lastUpdated: "2024-01-15"
 contributors: ["badboysm890"]
 ---
 
-# 🚀 Getting Started with ClaraVerse
+# 🚀 Getting Started with angelaVerse
 
-Welcome to ClaraVerse! This guide will help you get up and running with your complete AI development suite in just a few minutes.
+Welcome to angelaVerse! This guide will help you get up and running with your complete AI development suite in just a few minutes.
 
 ## 🎯 What You'll Learn
 
-- How to download and install ClaraVerse
+- How to download and install angelaVerse
 - Initial setup and configuration
-- Your first AI conversation with Clara
+- Your first AI conversation with angela
 - Creating your first web project with LumaUI
 - Overview of all available features
 
@@ -38,19 +38,19 @@ Welcome to ClaraVerse! This guide will help you get up and running with your com
 ### Option 1: Download Pre-built Release (Recommended)
 
 1. **Visit the Releases Page**
-   - Go to [GitHub Releases](https://github.com/badboysm890/claraverse/releases)
+   - Go to [GitHub Releases](https://github.com/badboysm890/angelaverse/releases)
    - Download the latest version for your platform:
-     - `ClaraVerse-win-x64.exe` (Windows)
-     - `ClaraVerse-mac-universal.dmg` (macOS)
-     - `ClaraVerse-linux-x64.AppImage` (Linux)
+     - `angelaVerse-win-x64.exe` (Windows)
+     - `angelaVerse-mac-universal.dmg` (macOS)
+     - `angelaVerse-linux-x64.AppImage` (Linux)
 
 2. **Install the Application**
    - **Windows**: Run the `.exe` installer and follow the setup wizard
-   - **macOS**: Open the `.dmg` file and drag ClaraVerse to Applications
+   - **macOS**: Open the `.dmg` file and drag angelaVerse to Applications
    - **Linux**: Make the `.AppImage` executable and run it
 
-3. **Launch ClaraVerse**
-   - Find ClaraVerse in your applications menu
+3. **Launch angelaVerse**
+   - Find angelaVerse in your applications menu
    - On first launch, you'll see the onboarding screen
 
 ### Option 2: Build from Source
@@ -59,8 +59,8 @@ If you prefer to build from source or want to contribute:
 
 ```bash
 # Clone the repository
-git clone https://github.com/badboysm890/claraverse.git
-cd claraverse
+git clone https://github.com/badboysm890/angelaverse.git
+cd angelaverse
 
 # Install dependencies
 npm install
@@ -82,20 +82,20 @@ npm run electron:build
 
 ### 1. Welcome & Onboarding
 
-When you first launch ClaraVerse, you'll be greeted with an onboarding flow:
+When you first launch angelaVerse, you'll be greeted with an onboarding flow:
 
-1. **Welcome Screen**: Introduction to ClaraVerse capabilities
+1. **Welcome Screen**: Introduction to angelaVerse capabilities
 2. **Personal Information**: Enter your name for personalization
 3. **Privacy Preferences**: Configure your privacy settings
 4. **AI Provider Setup**: Configure your preferred AI services (optional)
 
 ### 2. Configure AI Providers (Optional)
 
-ClaraVerse works great out of the box, but you can enhance it with AI providers:
+angelaVerse works great out of the box, but you can enhance it with AI providers:
 
 **For Local AI (Recommended):**
 - Install [Ollama](https://ollama.ai) for local LLM inference
-- ClaraVerse will auto-detect Ollama if installed
+- angelaVerse will auto-detect Ollama if installed
 
 **For Cloud AI (Optional):**
 - OpenAI API key for GPT models
@@ -123,17 +123,17 @@ After setup, you'll land on the Dashboard - your command center:
 - **Rearrange**: Drag widgets to reorder
 - **Remove**: Right-click widgets for context menu options
 
-## 🤖 Your First Chat with Clara
+## 🤖 Your First Chat with angela
 
 Let's start with a simple conversation:
 
-1. **Navigate to Clara Assistant**
+1. **Navigate to angela Assistant**
    - Click **"Chat"** in the sidebar
    - Or use the Quick Chat widget on the Dashboard
 
 2. **Start a Conversation**
    ```
-   Hello Clara! Can you explain what you can help me with?
+   Hello angela! Can you explain what you can help me with?
    ```
 
 3. **Try Some Commands**
@@ -246,7 +246,7 @@ Now that you're set up, explore these advanced features:
 
 ### Tips for Success
 1. **Start Simple**: Begin with basic features and gradually explore advanced capabilities
-2. **Experiment Freely**: ClaraVerse runs locally - feel free to try anything!
+2. **Experiment Freely**: angelaVerse runs locally - feel free to try anything!
 3. **Join the Community**: Connect with other users for tips and inspiration
 4. **Stay Updated**: Check for updates regularly for new features
 
@@ -254,11 +254,11 @@ Now that you're set up, explore these advanced features:
 
 ## 🎉 You're Ready!
 
-Congratulations! You now have ClaraVerse set up and ready for your AI-powered development journey. Whether you're coding, creating, or automating, ClaraVerse has the tools you need.
+Congratulations! You now have angelaVerse set up and ready for your AI-powered development journey. Whether you're coding, creating, or automating, angelaVerse has the tools you need.
 
 **Ready to dive deeper?** Check out our detailed feature guides:
 - [LumaUI Web Development](../features/lumaui.md)
-- [Clara Assistant Guide](../features/clara-assistant.md)
+- [angela Assistant Guide](../features/angela-assistant.md)
 - [AI Features Overview](../ai-features/README.md)
 
-*Happy creating with ClaraVerse! 🚀* 
+*Happy creating with angelaVerse! 🚀* 

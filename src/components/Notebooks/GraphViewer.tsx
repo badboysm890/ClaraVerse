@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Network, ZoomIn, ZoomOut, RefreshCw, AlertCircle, Eye, EyeOff, Globe, Grid3X3 } from 'lucide-react';
-import { claraNotebookService, GraphData } from '../../services/claraNotebookService';
+import { angelaNotebookService, GraphData } from '../../services/angelaNotebookService';
 
 interface GraphViewerProps {
   notebookId: string;
@@ -35,7 +35,7 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ notebookId, onClose }) => {
 
   // Subscribe to backend health changes
   useEffect(() => {
-    const unsubscribe = claraNotebookService.onHealthChange(setIsBackendHealthy);
+    const unsubscribe = angelaNotebookService.onHealthChange(setIsBackendHealthy);
     return unsubscribe;
   }, []);
 
@@ -61,7 +61,7 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ notebookId, onClose }) => {
 
     setIsLoadingHtml(true);
     try {
-      const response = await fetch(claraNotebookService.getGraphHtmlUrl(notebookId));
+      const response = await fetch(angelaNotebookService.getGraphHtmlUrl(notebookId));
       if (!response.ok) {
         throw new Error(`Failed to load HTML graph: ${response.statusText}`);
       }
@@ -86,7 +86,7 @@ const GraphViewer: React.FC<GraphViewerProps> = ({ notebookId, onClose }) => {
     setError(null);
 
     try {
-      const data = await claraNotebookService.getGraphData(notebookId);
+      const data = await angelaNotebookService.getGraphData(notebookId);
       setGraphData(data);
     } catch (err) {
       console.error('Failed to load graph data:', err);

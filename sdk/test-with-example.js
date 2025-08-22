@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
 /**
- * Test Clara Flow SDK with Example JSON
+ * Test angela Flow SDK with Example JSON
  * 
  * This script tests the SDK using the provided example JSON file.
  */
 
-import { ClaraFlowRunner } from './dist/index.esm.js';
+import { angelaFlowRunner } from './dist/index.esm.js';
 import fs from 'fs';
 import path from 'path';
 
 async function testWithExampleJSON() {
-  console.log('🚀 Testing Clara Flow SDK with Example JSON\n');
+  console.log('🚀 Testing angela Flow SDK with Example JSON\n');
 
   try {
     // Initialize the flow runner with logging enabled
-    const runner = new ClaraFlowRunner({
+    const runner = new angelaFlowRunner({
       enableLogging: true,
       logLevel: 'info',
       timeout: 30000

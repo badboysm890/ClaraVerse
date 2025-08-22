@@ -103,8 +103,8 @@ const MermaidDiagram: React.FC<{ code: string; id: string }> = ({ code, id }) =>
   const isValidMermaid = (code: string): boolean => {
     const lines = code.split('\n').filter(line => line.trim());
     
-    // Must have at least one diagram type declaration
-    const hasDeclaration = lines.some(line => 
+    // Must have at least one diagram type deangelation
+    const hasDeangelation = lines.some(line => 
       line.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gitgraph|pie|quadrantChart|timeline|mindmap|sankey|c4Context|c4Container|c4Component|c4Dynamic|c4Deployment)\s/)
     );
     
@@ -119,7 +119,7 @@ const MermaidDiagram: React.FC<{ code: string; id: string }> = ({ code, id }) =>
       line.match(/^\s*[A-Za-z0-9_]+\s*\[/) // flowchart node
     );
     
-    return hasDeclaration || hasConnections;
+    return hasDeangelation || hasConnections;
   };
 
   useEffect(() => {
@@ -148,9 +148,9 @@ const MermaidDiagram: React.FC<{ code: string; id: string }> = ({ code, id }) =>
 
         let cleanCode = code.trim();
         
-        // Ensure diagram has a proper declaration first
+        // Ensure diagram has a proper deangelation first
         if (!cleanCode.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gitgraph|pie|quadrantChart|timeline|mindmap|sankey|c4Context|c4Container|c4Component|c4Dynamic|c4Deployment)/m)) {
-          // Add a graph declaration if missing
+          // Add a graph deangelation if missing
           cleanCode = `graph TD\n${cleanCode}`;
         }
 
@@ -188,7 +188,7 @@ const MermaidDiagram: React.FC<{ code: string; id: string }> = ({ code, id }) =>
         }
 
         try {
-          // First try to render the original code (with declaration if needed)
+          // First try to render the original code (with deangelation if needed)
           const result = await mermaid.render(uniqueId, cleanCode);
           setSvg(result.svg);
         } catch (originalError) {
@@ -198,7 +198,7 @@ const MermaidDiagram: React.FC<{ code: string; id: string }> = ({ code, id }) =>
           const fixedCode = fixMermaidSyntax(cleanCode);
           
           if (!isValidMermaid(fixedCode)) {
-            throw new Error('Invalid Mermaid syntax - missing diagram declaration or connections');
+            throw new Error('Invalid Mermaid syntax - missing diagram deangelation or connections');
           }
           
           const fixedResult = await mermaid.render(`${uniqueId}-fixed`, fixedCode);

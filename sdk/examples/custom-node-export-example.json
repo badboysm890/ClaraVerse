@@ -1,5 +1,5 @@
 {
-  "format": "clara-sdk",
+  "format": "angela-sdk",
   "version": "1.0.0",
   "flow": {
     "id": "custom-flow-123",
@@ -135,7 +135,7 @@
       ],
       "executionCode": "\n            async function execute(inputs, properties, context) {\n              const text = inputs.text || '';\n              const operation = properties.operation || 'uppercase';\n              \n              context.log('Transforming text:', text);\n              context.log('Operation:', operation);\n              \n              let result;\n              switch (operation.toLowerCase()) {\n                case 'uppercase':\n                  result = text.toUpperCase();\n                  break;\n                case 'lowercase':\n                  result = text.toLowerCase();\n                  break;\n                case 'reverse':\n                  result = text.split('').reverse().join('');\n                  break;\n                default:\n                  result = text;\n              }\n              \n              context.log('Result:', result);\n              return { result };\n            }\n          ",
       "metadata": {
-        "author": "Clara Agent Studio",
+        "author": "angela Agent Studio",
         "version": "1.0.0",
         "tags": [
           "text",

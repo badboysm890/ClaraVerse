@@ -8,7 +8,7 @@ bash build-comfyui.sh
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ✅ ComfyUI image rebuilt successfully!
-    echo 🔄 You can now restart Clara to use the new image
+    echo 🔄 You can now restart angela to use the new image
     echo.
     pause
 ) else (

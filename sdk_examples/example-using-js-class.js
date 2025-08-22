@@ -4,7 +4,7 @@
  * This is for when you want MORE POWER and CONTROL! 💪
  * 
  * Think of it like this:
- * 1. You build a workflow in Clara Agent Studio 🎨
+ * 1. You build a workflow in angela Agent Studio 🎨
  * 2. You export it as a JavaScript class (like a reusable tool) 🔧
  * 3. You can use it like any other JavaScript module! ⚡
  * 
@@ -137,7 +137,7 @@ async function runAdvancedSentimentAnalysis() {
     console.log('- Check if the workflow class file exists');
     console.log('- Verify API keys are configured');
     console.log('- Make sure input names match what the workflow expects');
-    console.log('- Check the Clara SDK is properly installed');
+    console.log('- Check the angela SDK is properly installed');
   }
 }
 
@@ -175,5 +175,5 @@ runAdvancedSentimentAnalysis();
  * - Want better IDE support and debugging
  * - Integrating with existing JavaScript/TypeScript projects
  * 
- * 🎉 Both formats work with the same Clara Agent Studio workflows!
+ * 🎉 Both formats work with the same angela Agent Studio workflows!
  */ 

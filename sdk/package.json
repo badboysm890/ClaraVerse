@@ -1,24 +1,24 @@
 {
-  "name": "clara-flow-sdk",
+  "name": "angela-flow-sdk",
   "version": "2.0.0",
   "type": "module",
-  "description": "Modern JavaScript SDK for executing Clara AI agent workflows with zero configuration",
+  "description": "Modern JavaScript SDK for executing angela AI agent workflows with zero configuration",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
-  "browser": "dist/clara-flow-sdk.umd.js",
+  "browser": "dist/angela-flow-sdk.umd.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
-      "browser": "./dist/clara-flow-sdk.umd.js",
+      "browser": "./dist/angela-flow-sdk.umd.js",
       "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
     "build": "npm run build:node && npm run build:browser",
     "build:node": "esbuild src/index.js --bundle --platform=node --format=esm --outfile=dist/index.js && esbuild src/index.js --bundle --platform=node --format=cjs --outfile=dist/index.cjs",
-    "build:browser": "esbuild src/index.js --bundle --platform=browser --format=iife --global-name=ClaraFlowSDK --outfile=dist/clara-flow-sdk.umd.js && esbuild src/index.js --bundle --platform=browser --format=iife --global-name=ClaraFlowSDK --minify --outfile=dist/clara-flow-sdk.umd.min.js",
+    "build:browser": "esbuild src/index.js --bundle --platform=browser --format=iife --global-name=angelaFlowSDK --outfile=dist/angela-flow-sdk.umd.js && esbuild src/index.js --bundle --platform=browser --format=iife --global-name=angelaFlowSDK --minify --outfile=dist/angela-flow-sdk.umd.min.js",
     "test": "node test/basic.test.js",
     "test:all": "node test/basic.test.js && node test/nodes.test.js && node test/export.test.js",
     "dev": "npm run build && npm run test"
@@ -31,7 +31,7 @@
     "CHANGELOG.md"
   ],
   "keywords": [
-    "clara",
+    "angela",
     "ai",
     "workflow",
     "automation",
@@ -43,16 +43,16 @@
     "javascript",
     "typescript"
   ],
-  "author": "Clara Team",
+  "author": "angela Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/clara-ai/clara-flow-sdk"
+    "url": "https://github.com/angela-ai/angela-flow-sdk"
   },
   "bugs": {
-    "url": "https://github.com/clara-ai/clara-flow-sdk/issues"
+    "url": "https://github.com/angela-ai/angela-flow-sdk/issues"
   },
-  "homepage": "https://github.com/clara-ai/clara-flow-sdk#readme",
+  "homepage": "https://github.com/angela-ai/angela-flow-sdk#readme",
   "devDependencies": {
     "esbuild": "^0.19.0"
   },

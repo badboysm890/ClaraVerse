@@ -2,12 +2,12 @@
 set -e
 
 # Configuration
-IMAGE_NAME="clara17verse/clara-interpreter"
+IMAGE_NAME="angela17verse/angela-interpreter"
 TAG="latest"
-DOCKERFILE_PATH="./clara_interpreter_dockerstuff/Dockerfile"  # Updated path to Dockerfile
+DOCKERFILE_PATH="./angela_interpreter_dockerstuff/Dockerfile"  # Updated path to Dockerfile
 
 # Login to Docker Hub - uncomment and run manually if not logged in
-# docker login -u clara17verse
+# docker login -u angela17verse
 
 # Clean up any existing builder instances
 docker buildx ls | grep -q multiarch-builder && docker buildx rm multiarch-builder || true

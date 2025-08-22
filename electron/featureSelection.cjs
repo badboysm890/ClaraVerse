@@ -6,7 +6,7 @@ const yaml = require('js-yaml');
 class FeatureSelectionScreen {
   constructor() {
     this.window = null;
-    this.configPath = path.join(app.getPath('userData'), 'clara-features.yaml');
+    this.configPath = path.join(app.getPath('userData'), 'angela-features.yaml');
     
     // Default feature configuration
     this.defaultConfig = {
@@ -16,7 +16,7 @@ class FeatureSelectionScreen {
         comfyUI: true,
         n8n: true,
         ragAndTts: true,
-        claraCore: true // Always enabled
+        angelaCore: true // Always enabled
       },
       setupTimestamp: null
     };
@@ -149,7 +149,7 @@ class FeatureSelectionScreen {
               ...currentConfig,
               firstTimeSetup: false,
               selectedFeatures: {
-                claraCore: true, // Always enabled
+                angelaCore: true, // Always enabled
                 ...selectedFeatures
               },
               setupTimestamp: new Date().toISOString()
@@ -254,7 +254,7 @@ class FeatureSelectionScreen {
    * Get the current feature configuration (for use by main process)
    */
   static getCurrentConfig() {
-    const configPath = path.join(app.getPath('userData'), 'clara-features.yaml');
+    const configPath = path.join(app.getPath('userData'), 'angela-features.yaml');
     
     try {
       if (!fs.existsSync(configPath)) {

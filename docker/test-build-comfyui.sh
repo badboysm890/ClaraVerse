@@ -16,14 +16,14 @@ echo ""
 # Build the container locally for testing
 docker build \
   -f Dockerfile.comfyui \
-  -t clara-comfyui-test:latest \
+  -t angela-comfyui-test:latest \
   .
 
 if [ $? -eq 0 ]; then
   echo "✅ Test build successful!"
   echo ""
   echo "🚀 You can test it with:"
-  echo "   docker run -p 8188:8188 clara-comfyui-test:latest"
+  echo "   docker run -p 8188:8188 angela-comfyui-test:latest"
   echo ""
   echo "📦 Included Custom Nodes:"
   echo "   ✅ ComfyUI Manager"

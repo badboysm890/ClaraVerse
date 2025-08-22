@@ -205,7 +205,7 @@ export class LumauiProjectStorage {
     try {
       // Access the database directly to check available stores
       const dbPromise = new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('clara_db');
+        const request = indexedDB.open('angela_db');
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });

@@ -9,7 +9,7 @@ import {
 import { CustomNodeDefinition, NodePort, NodePropertyDefinition } from '../../../types/agent/types';
 import Monaco from '@monaco-editor/react';
 import { useProviders } from '../../../contexts/ProvidersContext';
-import { claraProviderService } from '../../../services/claraProviderService';
+import { angelaProviderService } from '../../../services/angelaProviderService';
 
 interface NodeCreatorProps {
   isOpen: boolean;
@@ -221,7 +221,7 @@ async function execute(inputs, properties, context) {
           updateState({ selectedProvider: primaryProvider.id });
           
           // Load models for the primary provider
-          const models = await claraProviderService.getModels(primaryProvider.id);
+          const models = await angelaProviderService.getModels(primaryProvider.id);
           setAvailableModels(models);
           
           // Select a default text model
@@ -244,7 +244,7 @@ async function execute(inputs, properties, context) {
   const handleProviderChange = async (providerId: string) => {
     updateState({ selectedProvider: providerId, selectedModel: '' });
     try {
-      const models = await claraProviderService.getModels(providerId);
+      const models = await angelaProviderService.getModels(providerId);
       setAvailableModels(models);
       
       // Select first available text model
@@ -463,12 +463,12 @@ Requirements:
         throw new Error(`Provider ${state.selectedProvider} not found or not enabled`);
       }
 
-      // Use claraProviderService to make the structured output request
+      // Use angelaProviderService to make the structured output request
       // First, ensure the provider is set correctly
-      const currentProvider = claraProviderService.getCurrentProvider();
+      const currentProvider = angelaProviderService.getCurrentProvider();
       if (!currentProvider || currentProvider.id !== state.selectedProvider) {
         // Update the provider if needed
-        claraProviderService.updateProvider(selectedProviderData);
+        angelaProviderService.updateProvider(selectedProviderData);
       }
 
       // Create the request body for structured output
@@ -491,8 +491,8 @@ Requirements:
         }
       };
 
-      // Make the request using claraProviderService's current client
-      const client = claraProviderService.getCurrentClient();
+      // Make the request using angelaProviderService's current client
+      const client = angelaProviderService.getCurrentClient();
       if (!client) {
         throw new Error('No API client available');
       }

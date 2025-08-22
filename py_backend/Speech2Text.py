@@ -3,7 +3,7 @@ import logging
 from faster_whisper import WhisperModel
 import tempfile
 
-logger = logging.getLogger("clara-speech2text")
+logger = logging.getLogger("angela-speech2text")
 
 class Speech2Text:
     def __init__(self, model_size="tiny", device="cpu", compute_type="int8"):
@@ -17,7 +17,7 @@ class Speech2Text:
         """
         logger.info(f"Initializing Speech2Text with model_size={model_size}, device={device}, compute_type={compute_type}")
         try:
-            self.model = WhisperModel(model_size, device=device, compute_type=compute_type, download_root=os.path.join(os.path.expanduser("~"), ".clara", "models"))
+            self.model = WhisperModel(model_size, device=device, compute_type=compute_type, download_root=os.path.join(os.path.expanduser("~"), ".angela", "models"))
             logger.info(f"Successfully loaded Whisper model: {model_size}")
         except Exception as e:
             logger.error(f"Failed to load Whisper model: {e}")

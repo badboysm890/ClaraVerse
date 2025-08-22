@@ -933,7 +933,7 @@ export class NodeExecutor {
         
         // Build headers
         const headers = {
-          'User-Agent': 'Clara-SDK/1.0',
+          'User-Agent': 'angela-SDK/1.0',
           ...additionalHeaders
         };
         

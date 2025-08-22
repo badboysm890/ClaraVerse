@@ -1,19 +1,19 @@
 # SDK Integration Guide
 
-Learn how to integrate Clara Flow SDK v2.0 into your applications. Execute AI workflows with just a few lines of code, with automatic input detection and error handling.
+Learn how to integrate angela Flow SDK v2.0 into your applications. Execute AI workflows with just a few lines of code, with automatic input detection and error handling.
 
 ## 🚀 Quick Start
 
 ### **Installation**
 ```bash
-npm install clara-flow-sdk
+npm install angela-flow-sdk
 ```
 
 ### **Basic Usage (3 Lines)**
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 const result = await runner.run(workflow, { input: 'Hello World!' });
 console.log(result);
 ```
@@ -26,11 +26,11 @@ That's it! The SDK automatically handles:
 
 ## 📖 Complete API Reference
 
-### **ClaraFlowRunner Class**
+### **angelaFlowRunner Class**
 
 **Constructor:**
 ```javascript
-const runner = new ClaraFlowRunner(options);
+const runner = new angelaFlowRunner(options);
 ```
 
 **Options:**
@@ -54,7 +54,7 @@ const result = await runner.run(workflow, inputs);
 ```
 
 **Parameters:**
-- `workflow` (Object): Exported workflow from Clara Studio
+- `workflow` (Object): Exported workflow from angela Studio
 - `inputs` (Object): Input values for the workflow
 
 **Returns:** Object with workflow outputs
@@ -62,7 +62,7 @@ const result = await runner.run(workflow, inputs);
 **Example:**
 ```javascript
 const workflow = {
-  "format": "clara-sdk",
+  "format": "angela-sdk",
   "flow": {
     "nodes": [...],
     "connections": [...]
@@ -170,10 +170,10 @@ runner.clearLogs();
 For straightforward workflows with known inputs:
 
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import workflow from './my-workflow.json';
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 
 async function processText(text) {
   const result = await runner.run(workflow, {
@@ -192,7 +192,7 @@ For workflows with unknown input requirements:
 
 ```javascript
 async function executeWorkflow(workflow, userInputs = {}) {
-  const runner = new ClaraFlowRunner();
+  const runner = new angelaFlowRunner();
   
   // Discover what inputs are needed
   const requiredInputs = runner.getRequiredInputs(workflow);
@@ -220,7 +220,7 @@ Robust execution with comprehensive error handling:
 
 ```javascript
 async function executeWithRetry(workflow, inputs, maxRetries = 3) {
-  const runner = new ClaraFlowRunner({
+  const runner = new angelaFlowRunner({
     enableLogging: true,
     timeout: 60000
   });
@@ -255,7 +255,7 @@ Process multiple inputs efficiently:
 
 ```javascript
 async function processBatch(workflow, inputsArray) {
-  const runner = new ClaraFlowRunner();
+  const runner = new angelaFlowRunner();
   const results = [];
   
   // Process in parallel (be mindful of rate limits)
@@ -359,7 +359,7 @@ await tracker.executeWithProgress(workflow, inputs, (progress) => {
 
 ### **Custom Node Integration**
 ```javascript
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 
 // Register multiple custom nodes
 const customNodes = [
@@ -443,7 +443,7 @@ export function createRunner(environment = 'development') {
     }
   };
   
-  return new ClaraFlowRunner(configs[environment]);
+  return new angelaFlowRunner(configs[environment]);
 }
 
 // Usage
@@ -457,10 +457,10 @@ const runner = createRunner(process.env.NODE_ENV);
 ### **Express.js Middleware**
 ```javascript
 import express from 'express';
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
 function createWorkflowMiddleware(workflow) {
-  const runner = new ClaraFlowRunner({
+  const runner = new angelaFlowRunner({
     enableLogging: true,
     timeout: 30000
   });
@@ -509,10 +509,10 @@ app.post('/analyze',
 ### **React Integration**
 ```javascript
 import React, { useState, useCallback } from 'react';
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
 function WorkflowExecutor({ workflow }) {
-  const [runner] = useState(() => new ClaraFlowRunner());
+  const [runner] = useState(() => new angelaFlowRunner());
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -577,10 +577,10 @@ function WorkflowExecutor({ workflow }) {
 ### **Next.js API Route**
 ```javascript
 // pages/api/workflow/[id].js
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import workflows from '../../../workflows/index.js';
 
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,
   timeout: 60000
 });
@@ -630,9 +630,9 @@ export const config = {
 
 ### **Connection Pooling for AI APIs**
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
-class OptimizedRunner extends ClaraFlowRunner {
+class OptimizedRunner extends angelaFlowRunner {
   constructor(options = {}) {
     super({
       ...options,
@@ -656,7 +656,7 @@ import NodeCache from 'node-cache';
 
 class CachedRunner {
   constructor() {
-    this.runner = new ClaraFlowRunner();
+    this.runner = new angelaFlowRunner();
     this.cache = new NodeCache({ 
       stdTTL: 600, // 10 minutes
       checkperiod: 120 
@@ -692,11 +692,11 @@ class CachedRunner {
 
 ### **Test Utilities**
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
 export class WorkflowTester {
   constructor() {
-    this.runner = new ClaraFlowRunner({
+    this.runner = new angelaFlowRunner({
       enableLogging: true,
       logLevel: 'debug'
     });
@@ -767,7 +767,7 @@ console.log(`Tests passed: ${testResults.filter(r => r.passed).length}/${testRes
 ### **Debugging Workflow Execution**
 ```javascript
 function debugWorkflow(workflow, inputs) {
-  const runner = new ClaraFlowRunner({
+  const runner = new angelaFlowRunner({
     enableLogging: true,
     logLevel: 'debug'
   });
@@ -824,11 +824,11 @@ function debugWorkflow(workflow, inputs) {
 ### **Content Analysis Workflow**
 ```javascript
 // content-analyzer.js
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import contentWorkflow from './workflows/content-analyzer.json';
 
 export async function analyzeContent(text, options = {}) {
-  const runner = new ClaraFlowRunner();
+  const runner = new angelaFlowRunner();
   
   const result = await runner.run(contentWorkflow, {
     'content-input': text,
@@ -854,12 +854,12 @@ const analysis = await analyzeContent(
 ### **Document Processing Pipeline**
 ```javascript
 // document-processor.js
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import documentWorkflow from './workflows/document-processor.json';
 
 export class DocumentProcessor {
   constructor() {
-    this.runner = new ClaraFlowRunner({
+    this.runner = new angelaFlowRunner({
       timeout: 120000, // 2 minutes for large documents
       enableLogging: true
     });
@@ -901,7 +901,7 @@ export class DocumentProcessor {
 1. **"Missing required inputs"** - Use `getRequiredInputs()` to check what's needed
 2. **"Custom node not found"** - Ensure custom nodes are registered before execution
 3. **"Execution timeout"** - Increase timeout or optimize workflow
-4. **"Invalid workflow format"** - Check workflow was exported correctly from Clara Studio
+4. **"Invalid workflow format"** - Check workflow was exported correctly from angela Studio
 
 **Getting Help:**
 - Check execution logs with `runner.getLogs()`
@@ -910,4 +910,4 @@ export class DocumentProcessor {
 
 ---
 
-**Ready to integrate Clara Flow SDK?** Start with the basic examples and gradually add advanced features! 🚀 
+**Ready to integrate angela Flow SDK?** Start with the basic examples and gradually add advanced features! 🚀 

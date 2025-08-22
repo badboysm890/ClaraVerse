@@ -1,6 +1,6 @@
-# Audio to Text Examples - Clara Flow SDK
+# Audio to Text Examples - angela Flow SDK
 
-This directory contains complete HTML applications that demonstrate how to use the Clara Flow SDK for audio transcription and analysis using OpenAI's Whisper API.
+This directory contains complete HTML applications that demonstrate how to use the angela Flow SDK for audio transcription and analysis using OpenAI's Whisper API.
 
 ## 📁 Files
 
@@ -66,7 +66,7 @@ A simplified version for testing and debugging:
 
 ## 🔄 How It Works
 
-The applications implement a complete audio-to-text workflow using the Clara Flow SDK:
+The applications implement a complete audio-to-text workflow using the angela Flow SDK:
 
 ```
 Audio File → File Upload Node → Whisper Transcription → Text Combination → LLM Analysis → Results
@@ -83,11 +83,11 @@ Audio File → File Upload Node → Whisper Transcription → Text Combination �
 
 ### SDK Integration
 ```javascript
-// Initialize Clara Flow SDK
-const { ClaraFlowRunner, BrowserUtils } = ClaraFlowSDK;
+// Initialize angela Flow SDK
+const { angelaFlowRunner, BrowserUtils } = angelaFlowSDK;
 
 // Create flow runner
-const flowRunner = new ClaraFlowRunner();
+const flowRunner = new angelaFlowRunner();
 
 // Convert file to binary
 const fileData = await convertFileToArrayBuffer(selectedFile);
@@ -225,7 +225,7 @@ Use the simple test version for debugging:
 
 ## 📚 Additional Resources
 
-- [Clara Flow SDK Documentation](../README.md)
+- [angela Flow SDK Documentation](../README.md)
 - [OpenAI Whisper API Docs](https://platform.openai.com/docs/guides/speech-to-text)
 - [Browser File API Guide](https://developer.mozilla.org/en-US/docs/Web/API/File)
 - [Audio Format Conversion Tools](https://www.ffmpeg.org/)
@@ -240,7 +240,7 @@ Found a bug or want to add features?
 
 ## 📄 License
 
-These examples are part of the Clara Flow SDK and follow the same license terms.
+These examples are part of the angela Flow SDK and follow the same license terms.
 
 ---
 

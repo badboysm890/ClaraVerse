@@ -289,7 +289,7 @@ export function useAssistantChat({
             }
             setMessages((prev) =>
               prev.map((msg) =>
-                msg.id === assistantMessage.id ? { ...msg, content: `Clara is using tool - ${selectedTool.name}...` } : msg
+                msg.id === assistantMessage.id ? { ...msg, content: `angela is using tool - ${selectedTool.name}...` } : msg
               )
             );
             let toolResult: any = await executeToolImplementation(selectedTool, toolArgs);
@@ -302,7 +302,7 @@ export function useAssistantChat({
 
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === assistantMessage.id ? { ...msg, content: `Clara is working on summarizing the results...` } : msg
+              msg.id === assistantMessage.id ? { ...msg, content: `angela is working on summarizing the results...` } : msg
             )
           );
 

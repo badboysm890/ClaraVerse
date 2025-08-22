@@ -10,13 +10,13 @@ echo    - Jags111's Efficiency Nodes
 echo.
 
 REM Build the container locally for testing
-docker build -f Dockerfile.comfyui -t clara-comfyui-test:latest .
+docker build -f Dockerfile.comfyui -t angela-comfyui-test:latest .
 
 if %errorlevel% equ 0 (
     echo ✅ Test build successful!
     echo.
     echo 🚀 You can test it with:
-    echo    docker run -p 8188:8188 clara-comfyui-test:latest
+    echo    docker run -p 8188:8188 angela-comfyui-test:latest
     echo.
     echo 📦 Included Custom Nodes:
     echo    ✅ ComfyUI Manager

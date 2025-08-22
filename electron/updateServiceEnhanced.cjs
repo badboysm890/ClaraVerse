@@ -52,7 +52,7 @@ const UPDATE_CONSTANTS = {
 };
 
 // Update preferences management
-const UPDATE_PREFERENCES_KEY = 'clara-update-preferences';
+const UPDATE_PREFERENCES_KEY = 'angela-update-preferences';
 const DEFAULT_UPDATE_PREFERENCES = {
   autoCheck: true,
   checkFrequency: 'daily', // 'daily', 'weekly', 'monthly', 'manual'
@@ -306,7 +306,7 @@ async function makeRobustRequest(url, options = {}) {
     ...options,
     signal: controller?.signal,
     headers: {
-      'User-Agent': 'Clara-App-Updater',
+      'User-Agent': 'angela-App-Updater',
       'Accept': 'application/vnd.github.v3+json',
       ...options.headers
     }
@@ -392,7 +392,7 @@ class EnhancedPlatformUpdateService {
   constructor() {
     this.platform = process.platform;
     this.currentVersion = getSafeCurrentVersion();
-    this.githubRepo = 'badboysm890/ClaraVerse';
+    this.githubRepo = 'badboysm890/angelaVerse';
     this.isChecking = false; // Prevent concurrent checks
     this.downloadProgress = null; // Track download progress
     this.backgroundDownload = null; // Background download state
@@ -477,8 +477,8 @@ class EnhancedPlatformUpdateService {
       
       if (Notification.isSupported()) {
         const notification = new Notification({
-          title: `Clara ${updateInfo.latestVersion} Available`,
-          body: `A new version of Clara is ready to download. Click to view details.`,
+          title: `angela ${updateInfo.latestVersion} Available`,
+          body: `A new version of angela is ready to download. Click to view details.`,
           icon: path.join(__dirname, '../assets/icons/icon.png'), // Adjust path as needed
           silent: false
         });
@@ -778,15 +778,15 @@ class EnhancedPlatformUpdateService {
         return await dialog.showMessageBox({
           type: 'info',
           title: '✅ You\'re Up to Date!',
-          message: 'Clara is current',
-          detail: `You're running Clara ${this.currentVersion}, which is the latest version available.`,
+          message: 'angela is current',
+          detail: `You're running angela ${this.currentVersion}, which is the latest version available.`,
           buttons: ['Perfect!'],
           defaultId: 0
         });
       }
 
       // Build enhanced message with categorized release notes
-      let detailMessage = `Current version: Clara ${this.currentVersion}\nNew version: Clara ${latestVersion}\n\n`;
+      let detailMessage = `Current version: angela ${this.currentVersion}\nNew version: angela ${latestVersion}\n\n`;
       
       if (hasBreakingChanges) {
         detailMessage += `⚠️ This update contains breaking changes. Please review the release notes.\n\n`;
@@ -812,7 +812,7 @@ class EnhancedPlatformUpdateService {
         return await dialog.showMessageBox({
           type: 'info',
           title: hasBreakingChanges ? '⚠️ Important Update Available' : '🎉 Update Available',
-          message: `Clara ${latestVersion} is ready to install`,
+          message: `angela ${latestVersion} is ready to install`,
           detail: detailMessage,
           buttons: ['Download & Install Now', 'View Release Notes', 'Remind Me Later', 'Skip This Version'],
           defaultId: 0,
@@ -851,7 +851,7 @@ class EnhancedPlatformUpdateService {
         return await dialog.showMessageBox({
           type: 'info',
           title: hasBreakingChanges ? '⚠️ Important Update Available' : '📦 Update Available',
-          message: `Clara ${latestVersion} is ready to download`,
+          message: `angela ${latestVersion} is ready to download`,
           detail: detailMessage,
           buttons: ['Download Now', 'View Release Notes', 'Remind Me Later', 'Skip This Version'],
           defaultId: 0,
@@ -978,8 +978,8 @@ function setupEnhancedAutoUpdater(mainWindow) {
         dialog.showMessageBox({
           type: 'info',
           title: '🎉 Update Ready!',
-          message: 'Clara has been updated successfully',
-          detail: 'The update has been downloaded and verified. Clara will restart to complete the installation.',
+          message: 'angela has been updated successfully',
+          detail: 'The update has been downloaded and verified. angela will restart to complete the installation.',
           buttons: ['Restart Now', 'Restart Later'],
           defaultId: 0,
           cancelId: 1

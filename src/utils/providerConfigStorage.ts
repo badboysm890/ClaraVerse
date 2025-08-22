@@ -1,22 +1,22 @@
-const STORAGE_KEY = 'clara_provider_configs';
+const STORAGE_KEY = 'angela_provider_configs';
 
-import type { ClaraAIConfig } from '../types/clara_assistant_types';
+import type { angelaAIConfig } from '../types/angela_assistant_types';
 
-export function saveProviderConfig(providerId: string, config: ClaraAIConfig) {
+export function saveProviderConfig(providerId: string, config: angelaAIConfig) {
   const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
   all[providerId] = config;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   console.log(`Saved config for provider ${providerId}:`, config);
 }
 
-export function loadProviderConfig(providerId: string): ClaraAIConfig | null {
+export function loadProviderConfig(providerId: string): angelaAIConfig | null {
   const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
   const config = all[providerId] || null;
   console.log(`Loaded config for provider ${providerId}:`, config);
   return config;
 }
 
-export function getAllProviderConfigs(): Record<string, ClaraAIConfig> {
+export function getAllProviderConfigs(): Record<string, angelaAIConfig> {
   return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
 }
 
@@ -65,7 +65,7 @@ export function cleanInvalidProviderConfigs(validProviderIds: string[]): void {
 }
 
 // Utility to validate provider config
-export function validateProviderConfig(providerId: string, config: ClaraAIConfig, availableModels: string[]): ClaraAIConfig {
+export function validateProviderConfig(providerId: string, config: angelaAIConfig, availableModels: string[]): angelaAIConfig {
   const cleanConfig = {
     ...config,
     provider: providerId, // Ensure provider ID is correct

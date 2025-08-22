@@ -1,5 +1,5 @@
 // Global error handler for unhandled promise rejections and other JS errors
-import errorClaraMascot from '../assets/mascot/Error_Clara.png';
+import errorangelaMascot from '../assets/mascot/Error_angela.png';
 
 export const setupGlobalErrorHandlers = () => {
   // Handle unhandled promise rejections
@@ -30,7 +30,7 @@ export const setupGlobalErrorHandlers = () => {
   });
 };
 
-// Show a global error message overlay with Clara's theme
+// Show a global error message overlay with angela's theme
 const showGlobalErrorMessage = (message: string) => {
   // Check if an error overlay already exists
   if (document.getElementById('global-error-overlay')) {
@@ -70,7 +70,7 @@ const showGlobalErrorMessage = (message: string) => {
     animation: slideUp 0.4s ease-out;
   `;
 
-  // Clara's mini avatar with actual image
+  // angela's mini avatar with actual image
   const avatar = document.createElement('div');
   avatar.style.cssText = `
     width: 120px;
@@ -82,10 +82,10 @@ const showGlobalErrorMessage = (message: string) => {
     justify-content: center;
   `;
 
-  const claraImg = document.createElement('img');
-  claraImg.src = errorClaraMascot;
-  claraImg.alt = 'Clara Error Mascot';
-  claraImg.style.cssText = `
+  const angelaImg = document.createElement('img');
+  angelaImg.src = errorangelaMascot;
+  angelaImg.alt = 'angela Error Mascot';
+  angelaImg.style.cssText = `
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -93,9 +93,9 @@ const showGlobalErrorMessage = (message: string) => {
   `;
 
   // Add error fallback for image loading
-  claraImg.onerror = () => {
+  angelaImg.onerror = () => {
     // Log warning if mascot fails to load
-    console.warn('Failed to load Clara mascot in global error handler');
+    console.warn('Failed to load angela mascot in global error handler');
   };
 
   // Alert indicator
@@ -119,7 +119,7 @@ const showGlobalErrorMessage = (message: string) => {
   `;
   alertBadge.innerHTML = '!';
 
-  avatar.appendChild(claraImg);
+  avatar.appendChild(angelaImg);
   avatar.appendChild(alertBadge);
 
   const title = document.createElement('h2');
@@ -133,7 +133,7 @@ const showGlobalErrorMessage = (message: string) => {
     -webkit-text-fill-color: transparent;
     background-clip: text;
   `;
-  title.textContent = 'Clara needs your help!';
+  title.textContent = 'angela needs your help!';
 
   const messageEl = document.createElement('p');
   messageEl.style.cssText = `
@@ -165,7 +165,7 @@ const showGlobalErrorMessage = (message: string) => {
     gap: 0.5rem;
     margin: 0 auto;
   `;
-  button.innerHTML = '✨ Clara\'s Magic Refresh';
+  button.innerHTML = '✨ angela\'s Magic Refresh';
   
   button.onmouseover = () => {
     button.style.transform = 'translateY(-2px) scale(1.05)';

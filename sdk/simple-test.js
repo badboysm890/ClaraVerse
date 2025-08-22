@@ -1,13 +1,13 @@
 /**
- * Clara Flow SDK v2.0 - Simple Developer Test
+ * angela Flow SDK v2.0 - Simple Developer Test
  * Shows the EASIEST way to use workflows
  */
 
-import { ClaraFlowRunner } from './dist/index.js';
+import { angelaFlowRunner } from './dist/index.js';
 
-console.log('🚀 Clara Flow SDK v2.0 - Developer Test\n');
+console.log('🚀 angela Flow SDK v2.0 - Developer Test\n');
 
-// Simple workflow JSON (exported from Clara Studio)
+// Simple workflow JSON (exported from angela Studio)
 const workflow = {
   "name": "Text Processor",
   "nodes": [
@@ -54,7 +54,7 @@ const workflow = {
 };
 
 async function testDeveloperExperience() {
-  const runner = new ClaraFlowRunner({ enableLogging: true });
+  const runner = new angelaFlowRunner({ enableLogging: true });
 
   console.log('📋 STEP 1: Analyze what this workflow needs');
   console.log('=' .repeat(50));
@@ -120,7 +120,7 @@ async function testDeveloperExperience() {
   console.log('💡 SUMMARY: Super Easy for Developers!');
   console.log('=' .repeat(50));
   console.log('✨ Just 3 lines of code:');
-  console.log('   const runner = new ClaraFlowRunner();');
+  console.log('   const runner = new angelaFlowRunner();');
   console.log('   const inputs = runner.getRequiredInputs(workflow);');
   console.log('   const result = await runner.run(workflow, myInputs);');
   console.log();

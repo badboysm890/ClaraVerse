@@ -13,7 +13,7 @@ function testAllServices(simulateProduction = false) {
   // Simulate production environment
   const originalResourcesPath = process.resourcesPath;
   if (simulateProduction) {
-    process.resourcesPath = 'C:\\Users\\Admin\\AppData\\Local\\Programs\\Clara\\resources';
+    process.resourcesPath = 'C:\\Users\\Admin\\AppData\\Local\\Programs\\angela\\resources';
   } else {
     delete process.resourcesPath;
   }

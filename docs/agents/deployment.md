@@ -11,7 +11,7 @@ Transform your visual AI workflows into production-ready APIs and applications. 
 - **Container Deployment**: Docker-ready packages (coming soon)
 
 ### **2. Integration Methods**
-- **Clara Flow SDK**: JavaScript/TypeScript library
+- **angela Flow SDK**: JavaScript/TypeScript library
 - **REST API**: HTTP endpoints for any language
 - **WebSocket**: Real-time streaming connections
 - **Webhook**: Event-driven processing
@@ -36,7 +36,7 @@ Transform your visual AI workflows into production-ready APIs and applications. 
 **JSON Format:**
 ```json
 {
-  "format": "clara-sdk",
+  "format": "angela-sdk",
   "version": "1.0.0",
   "flow": {
     "id": "workflow-123",
@@ -48,7 +48,7 @@ Transform your visual AI workflows into production-ready APIs and applications. 
   "customNodes": [...],
   "metadata": {
     "exportedAt": "2024-01-26T10:00:00Z",
-    "exportedBy": "Clara Agent Studio",
+    "exportedBy": "angela Agent Studio",
     "hasCustomNodes": false
   }
 }
@@ -57,7 +57,7 @@ Transform your visual AI workflows into production-ready APIs and applications. 
 **SDK Format:**
 ```json
 {
-  "format": "clara-sdk",
+  "format": "angela-sdk",
   "flow": {...},
   "customNodes": [...],
   "documentation": {
@@ -74,15 +74,15 @@ Transform your visual AI workflows into production-ready APIs and applications. 
 
 ### **Installation**
 ```bash
-npm install clara-flow-sdk
+npm install angela-flow-sdk
 ```
 
 ### **Basic Usage**
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import workflow from './my-workflow.json';
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 const result = await runner.run(workflow, {
   input: 'Your text here'
 });
@@ -92,7 +92,7 @@ console.log(result);
 
 ### **Advanced Configuration**
 ```javascript
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,
   timeout: 30000,
   maxRetries: 3,
@@ -130,7 +130,7 @@ try {
 ```javascript
 import express from 'express';
 import cors from 'cors';
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import workflow from './workflow.json';
 
 const app = express();
@@ -141,7 +141,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // Initialize runner
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,
   timeout: 60000
 });
@@ -150,7 +150,7 @@ const runner = new ClaraFlowRunner({
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
-    service: 'Clara Flow API',
+    service: 'angela Flow API',
     workflow: workflow.flow.name,
     timestamp: new Date().toISOString()
   });
@@ -382,10 +382,10 @@ spec:
 ### **Vercel (Serverless)**
 ```javascript
 // api/execute.js
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import workflow from '../workflow.json';
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -414,10 +414,10 @@ export default async function handler(req, res) {
 
 ### **AWS Lambda**
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import workflow from './workflow.json';
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 
 export const handler = async (event) => {
   try {
@@ -454,10 +454,10 @@ export const handler = async (event) => {
 ### **Google Cloud Functions**
 ```javascript
 import functions from '@google-cloud/functions-framework';
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import workflow from './workflow.json';
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 
 functions.http('executeWorkflow', async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');

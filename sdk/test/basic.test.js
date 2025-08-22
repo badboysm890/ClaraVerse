@@ -1,15 +1,15 @@
 /**
- * Basic test for Clara Flow SDK v2.0
+ * Basic test for angela Flow SDK v2.0
  */
 
-import { ClaraFlowRunner, BrowserUtils } from '../src/index.js';
+import { angelaFlowRunner, BrowserUtils } from '../src/index.js';
 
-console.log('🧪 Testing Clara Flow SDK v2.0...\n');
+console.log('🧪 Testing angela Flow SDK v2.0...\n');
 
 // Test 1: SDK Initialization
 console.log('Test 1: SDK Initialization');
 try {
-  const runner = new ClaraFlowRunner({
+  const runner = new angelaFlowRunner({
     enableLogging: true,
     timeout: 5000
   });
@@ -22,7 +22,7 @@ try {
 // Test 2: Simple workflow execution
 console.log('\nTest 2: Simple Workflow Execution');
 try {
-  const runner = new ClaraFlowRunner({ enableLogging: true });
+  const runner = new angelaFlowRunner({ enableLogging: true });
   
   // Simple workflow: Input -> Static Text -> Output
   const simpleFlow = {
@@ -31,7 +31,7 @@ try {
         id: 'input-1',
         type: 'input',
         name: 'User Input',
-        data: { value: 'Hello from Clara SDK!' },
+        data: { value: 'Hello from angela SDK!' },
         inputs: [],
         outputs: [{ id: 'output', name: 'Output', dataType: 'string' }]
       },
@@ -102,7 +102,7 @@ try {
 // Test 3: JSON parsing workflow
 console.log('\nTest 3: JSON Parsing Workflow');
 try {
-  const runner = new ClaraFlowRunner({ enableLogging: false });
+  const runner = new angelaFlowRunner({ enableLogging: false });
   
   const jsonFlow = {
     nodes: [
@@ -160,7 +160,7 @@ try {
 // Test 4: If/Else conditional workflow
 console.log('\nTest 4: If/Else Conditional Workflow');
 try {
-  const runner = new ClaraFlowRunner({ enableLogging: false });
+  const runner = new angelaFlowRunner({ enableLogging: false });
   
   const conditionalFlow = {
     nodes: [
@@ -226,7 +226,7 @@ try {
 // Test 5: Custom node registration and execution
 console.log('\nTest 5: Custom Node Registration');
 try {
-  const runner = new ClaraFlowRunner({ enableLogging: false });
+  const runner = new angelaFlowRunner({ enableLogging: false });
   
   // Register a custom node
   runner.registerCustomNode({
@@ -315,14 +315,14 @@ try {
   process.exit(1);
 }
 
-// Test 6: Clara Studio export format compatibility
-console.log('\nTest 6: Clara Studio Export Format');
+// Test 6: angela Studio export format compatibility
+console.log('\nTest 6: angela Studio Export Format');
 try {
-  const runner = new ClaraFlowRunner({ enableLogging: false });
+  const runner = new angelaFlowRunner({ enableLogging: false });
   
-  // Simulate Clara Studio export format
+  // Simulate angela Studio export format
   const studioExport = {
-    format: 'clara-sdk',
+    format: 'angela-sdk',
     version: '1.0.0',
     flow: {
       id: 'test-flow',
@@ -332,7 +332,7 @@ try {
           id: 'input-1',
           type: 'input',
           name: 'Test Input',
-          data: { value: 'Clara Studio Export Test' },
+          data: { value: 'angela Studio Export Test' },
           inputs: [],
           outputs: [{ id: 'output', name: 'Output', dataType: 'string' }]
         },
@@ -357,32 +357,32 @@ try {
     customNodes: [],
     metadata: {
       exportedAt: new Date().toISOString(),
-      exportedBy: 'Clara Agent Studio'
+      exportedBy: 'angela Agent Studio'
     }
   };
   
   const result = await runner.execute(studioExport);
-  console.log('✅ Clara Studio export format handled successfully');
+  console.log('✅ angela Studio export format handled successfully');
   console.log('📤 Result:', result['output-1']?.output);
   
 } catch (error) {
-  console.error('❌ Clara Studio export format failed:', error.message);
+  console.error('❌ angela Studio export format failed:', error.message);
   process.exit(1);
 }
 
-console.log('\n🎉 All tests passed! Clara Flow SDK v2.0 is working correctly.');
+console.log('\n🎉 All tests passed! angela Flow SDK v2.0 is working correctly.');
 console.log('\n📋 SDK Features Verified:');
 console.log('✅ Basic workflow execution');
 console.log('✅ JSON parsing with dot notation');
 console.log('✅ Conditional logic (if/else)');
 console.log('✅ Custom node registration and execution');
-console.log('✅ Clara Studio export format compatibility');
+console.log('✅ angela Studio export format compatibility');
 console.log('✅ Built-in nodes: input, output, static-text, combine-text, json-parse, if-else');
 console.log('✅ Topological sorting for execution order');
 console.log('✅ Error handling and logging');
 
 // Show execution logs example
 console.log('\n📝 Sample Execution Logs:');
-const runner = new ClaraFlowRunner({ enableLogging: true });
+const runner = new angelaFlowRunner({ enableLogging: true });
 const logs = runner.getLogs();
 console.log('Logs count:', logs.length); 

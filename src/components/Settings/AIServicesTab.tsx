@@ -38,7 +38,7 @@ const AIServicesTab: React.FC<AIServicesTabProps> = ({
 
   const getProviderIcon = (type: Provider['type']) => {
     switch (type) {
-      case 'claras-pocket':
+      case 'angelas-pocket':
         return Bot;
       case 'openai':
         return Zap;
@@ -59,8 +59,8 @@ const AIServicesTab: React.FC<AIServicesTabProps> = ({
         return { baseUrl: 'https://openrouter.ai/api/v1', name: 'OpenAI Compatible' };
       case 'ollama':
         return { baseUrl: 'http://localhost:11434/v1', name: 'Ollama' };
-      case 'claras-pocket':
-        return { baseUrl: 'http://localhost:8091/v1', name: "Clara's Core" };
+      case 'angelas-pocket':
+        return { baseUrl: 'http://localhost:8091/v1', name: "angela's Core" };
       default:
         return { baseUrl: '', name: '' };
     }
@@ -110,8 +110,8 @@ const AIServicesTab: React.FC<AIServicesTabProps> = ({
       });
     } catch (error) {
       console.error('Error adding provider:', error);
-      if (error instanceof Error && error.message.includes("Clara's Pocket provider already exists")) {
-        alert("⚠️ Clara's Pocket provider already exists. Only one instance is allowed.");
+      if (error instanceof Error && error.message.includes("angela's Pocket provider already exists")) {
+        alert("⚠️ angela's Pocket provider already exists. Only one instance is allowed.");
       } else {
         alert('❌ Failed to add provider. Please try again.');
       }
@@ -351,7 +351,7 @@ const AIServicesTab: React.FC<AIServicesTabProps> = ({
                           <Edit3 className="w-4 h-4" />
                         </button>
 
-                        {provider.type !== 'claras-pocket' && (
+                        {provider.type !== 'angelas-pocket' && (
                           <button
                             onClick={() => setShowDeleteConfirm(provider.id)}
                             className="p-2.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-red-50/50 dark:hover:bg-red-900/20"

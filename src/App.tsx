@@ -18,7 +18,7 @@ import LumaUILite from './components/LumaUILite';
 import Notebooks from './components/Notebooks';
 import { db } from './db';
 import { ProvidersProvider } from './contexts/ProvidersContext';
-import ClaraAssistant from './components/ClaraAssistant';
+import angelaAssistant from './components/angelaAssistant';
 import { StartupService } from './services/startupService';
 import { initializeUIPreferences, applyUIPreferences } from './utils/uiPreferences';
 
@@ -88,12 +88,12 @@ function App() {
     return () => clearTimeout(timeoutId);
   }, [showOnboarding]);
 
-  // Listen for global shortcut trigger to navigate to Clara chat
+  // Listen for global shortcut trigger to navigate to angela chat
   useEffect(() => {
     let lastTriggerTime = 0;
     const debounceDelay = 300; // 300ms debounce
     
-    const handleGlobalClaraShortcut = () => {
+    const handleGlobalangelaShortcut = () => {
       const now = Date.now();
       
       // Check if we're within the debounce period
@@ -103,19 +103,19 @@ function App() {
       }
       
       lastTriggerTime = now;
-      console.log('Global shortcut triggered - navigating to Clara chat');
-      setActivePage('clara');
+      console.log('Global shortcut triggered - navigating to angela chat');
+      setActivePage('angela');
     };
 
     // Add listener for the trigger-new-chat event
     if (window.electron && window.electron.receive) {
-      window.electron.receive('trigger-new-chat', handleGlobalClaraShortcut);
+      window.electron.receive('trigger-new-chat', handleGlobalangelaShortcut);
     }
 
     // Cleanup listener on unmount
     return () => {
       if (window.electron && window.electron.removeListener) {
-        window.electron.removeListener('trigger-new-chat', handleGlobalClaraShortcut);
+        window.electron.removeListener('trigger-new-chat', handleGlobalangelaShortcut);
       }
     };
   }, []);
@@ -141,10 +141,10 @@ function App() {
 
   const renderContent = () => {
     if (activePage === 'assistant') {
-      return <ClaraAssistant onPageChange={setActivePage} />;
+      return <angelaAssistant onPageChange={setActivePage} />;
     }
     
-    // Clara is now always mounted but conditionally visible
+    // angela is now always mounted but conditionally visible
     // This allows it to run in the background
     
     if (activePage === 'agents') {
@@ -255,13 +255,13 @@ function App() {
           <Onboarding onComplete={handleOnboardingComplete} />
         ) : (
           <>
-            {/* Always render Clara in background - visible when activePage is 'clara' */}
-            <div className={activePage === 'clara' ? 'block' : 'hidden'} data-clara-container>
-              <ClaraAssistant onPageChange={setActivePage} />
+            {/* Always render angela in background - visible when activePage is 'angela' */}
+            <div className={activePage === 'angela' ? 'block' : 'hidden'} data-angela-container>
+              <angelaAssistant onPageChange={setActivePage} />
             </div>
             
-            {/* Render other content when not on Clara page */}
-            {activePage !== 'clara' && renderContent()}
+            {/* Render other content when not on angela page */}
+            {activePage !== 'angela' && renderContent()}
           </>
         )}
       </div>

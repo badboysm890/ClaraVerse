@@ -22,7 +22,7 @@ async function testAPIFixed() {
       body: JSON.stringify({
         model: 'gemma3:4b',
         messages: [
-          { role: 'user', content: 'Hello! This is a test from Clara Flow SDK.' }
+          { role: 'user', content: 'Hello! This is a test from angela Flow SDK.' }
         ],
         temperature: 0.7,
         max_tokens: 100

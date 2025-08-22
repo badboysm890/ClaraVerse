@@ -1,5 +1,5 @@
 @echo off
-echo 🎨 Building and Pushing ComfyUI Docker Container for Clara...
+echo 🎨 Building and Pushing ComfyUI Docker Container for angela...
 
 REM Change to the docker directory
 cd /d "%~dp0"
@@ -10,7 +10,7 @@ set "DATE_TAG=%dt:~0,8%"
 set "LATEST_TAG=latest"
 
 REM Docker Hub repository name
-set "REPO_NAME=clara17verse/clara-comfyui"
+set "REPO_NAME=angela17verse/angela-comfyui"
 
 echo 🔨 Building ComfyUI container with custom nodes...
 echo    - Acly's ComfyUI Tooling Nodes
@@ -72,7 +72,7 @@ if %errorlevel% equ 0 (
     echo    - %REPO_NAME%:%DATE_TAG%
     echo    - %REPO_NAME%:with-custom-nodes
     echo.
-    echo 🔗 Docker Hub: https://hub.docker.com/r/clara17verse/clara-comfyui
+    echo 🔗 Docker Hub: https://hub.docker.com/r/angela17verse/angela-comfyui
     echo.
     echo 🚀 Users can now pull with:
     echo    docker pull %REPO_NAME%:latest

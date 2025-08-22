@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Clara will be documented in this file.
+All notable changes to angela will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.3] - 2024-12-22
 
 ### 🎉 Major Milestone: Complete Docker Transformation
-ClaraVerse has undergone a **revolutionary transformation** from an Electron desktop application to a **Docker-powered web application** similar to OpenWebUI, while maintaining complete privacy and local execution.
+angelaVerse has undergone a **revolutionary transformation** from an Electron desktop application to a **Docker-powered web application** similar to OpenWebUI, while maintaining complete privacy and local execution.
 
 ### 🚀 Major Features Added
 - **🐳 Docker-First Architecture**: Complete Docker Compose setup with 7 integrated services
@@ -27,7 +27,7 @@ ClaraVerse has undergone a **revolutionary transformation** from an Electron des
 - **🎨 Advanced Preview System**: Dual preview modes with console integration
 
 ### ✨ New Features
-- **Docker Services Stack**: Clara Web UI, Backend API, LlamaSwap, N8N, ComfyUI, Redis, PostgreSQL
+- **Docker Services Stack**: angela Web UI, Backend API, LlamaSwap, N8N, ComfyUI, Redis, PostgreSQL
 - **LumaUI Development**: Project templates, AI code generation, terminal integration, file management
 - **Smart AI Integration**: Precision editing modes, tool call limits, error recovery
 
@@ -53,7 +53,7 @@ ClaraVerse has undergone a **revolutionary transformation** from an Electron des
 ### 🚀 Major Features Added
 - **Custom Model Path Management**: Added support for custom download paths for model downloads
 - **Enhanced Local Storage Management**: Improved storage handling and configuration
-- **SDK for Users**: Added comprehensive SDK for developers to build on Clara
+- **SDK for Users**: Added comprehensive SDK for developers to build on angela
 - **Granular Configuration System**: Enhanced settings with more detailed configuration options
 - **Multi-Platform Optimizations**: Tested and optimized for Linux, improved Windows compatibility
 - **Server Management Integration**: Moved servers to settings for better organization
@@ -154,8 +154,8 @@ ClaraVerse has undergone a **revolutionary transformation** from an Electron des
 ### Fresh Installation
 ```bash
 # Clone the repository
-git clone https://github.com/badboysm890/ClaraVerse.git
-cd ClaraVerse
+git clone https://github.com/badboysm890/angelaVerse.git
+cd angelaVerse
 
 # Install dependencies
 npm install
@@ -182,7 +182,7 @@ npm run build
 ### Docker Installation
 ```bash
 # Run with Docker
-docker run -p 8069:8069 clara-ollama:latest
+docker run -p 8069:8069 angela-ollama:latest
 ```
 
 ---
@@ -228,8 +228,8 @@ docker run -p 8069:8069 clara-ollama:latest
 ## Support & Feedback
 
 - **Email**: [praveensm890@gmail.com](mailto:praveensm890@gmail.com)
-- **GitHub Issues**: [Report bugs and request features](https://github.com/badboysm890/ClaraVerse/issues)
-- **Discussions**: [Join community discussions](https://github.com/badboysm890/ClaraVerse/discussions)
+- **GitHub Issues**: [Report bugs and request features](https://github.com/badboysm890/angelaVerse/issues)
+- **Discussions**: [Join community discussions](https://github.com/badboysm890/angelaVerse/discussions)
 
 ---
 
@@ -243,4 +243,4 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ---
 
-*For more information, visit the [Clara Documentation](https://github.com/badboysm890/ClaraVerse) or join our community discussions.* 
+*For more information, visit the [angela Documentation](https://github.com/badboysm890/angelaVerse) or join our community discussions.* 

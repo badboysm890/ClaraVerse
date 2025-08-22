@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting Guide"
-description: "Common issues and solutions for ClaraVerse"
+description: "Common issues and solutions for angelaVerse"
 category: "troubleshooting"
 order: 6
 lastUpdated: "2024-01-15"
@@ -9,13 +9,13 @@ contributors: ["badboysm890"]
 
 # 🔧 Troubleshooting Guide
 
-Having issues with ClaraVerse? This comprehensive guide covers common problems and their solutions to get you back up and running quickly.
+Having issues with angelaVerse? This comprehensive guide covers common problems and their solutions to get you back up and running quickly.
 
 ## 🚨 Quick Fixes
 
 ### Application Won't Start
 
-**Symptoms:** ClaraVerse doesn't launch or crashes immediately
+**Symptoms:** angelaVerse doesn't launch or crashes immediately
 
 **Solutions:**
 ```bash
@@ -27,20 +27,20 @@ Having issues with ClaraVerse? This comprehensive guide covers common problems a
 
 # macOS
 1. Right-click → Open (don't double-click)
-2. Remove quarantine: sudo xattr -r -d com.apple.quarantine /Applications/ClaraVerse.app
+2. Remove quarantine: sudo xattr -r -d com.apple.quarantine /Applications/angelaVerse.app
 3. Check Console app for crash logs
 4. Grant necessary permissions in System Preferences
 
 # Linux
-1. Make AppImage executable: chmod +x ClaraVerse.AppImage
+1. Make AppImage executable: chmod +x angelaVerse.AppImage
 2. Install FUSE: sudo apt install fuse libfuse2
-3. Try: ./ClaraVerse.AppImage --no-sandbox
-4. Check dependencies: ldd ClaraVerse.AppImage
+3. Try: ./angelaVerse.AppImage --no-sandbox
+4. Check dependencies: ldd angelaVerse.AppImage
 ```
 
 ### AI Features Not Working
 
-**Symptoms:** Clara doesn't respond or gives errors
+**Symptoms:** angela doesn't respond or gives errors
 
 **Solutions:**
 1. **Check Provider Configuration**
@@ -74,7 +74,7 @@ Alternative: Add to antivirus exclusions
 
 **High Memory Usage**
 ```bash
-Problem: ClaraVerse uses excessive RAM
+Problem: angelaVerse uses excessive RAM
 Solutions:
 - Close unused browser tabs
 - Reduce image generation settings
@@ -89,7 +89,7 @@ Solutions:
 - Run installer as Administrator
 - Temporarily disable antivirus
 - Clear Windows temp files
-- Use Windows Package Manager: winget install ClaraVerse
+- Use Windows Package Manager: winget install angelaVerse
 ```
 
 ### macOS Issues
@@ -97,7 +97,7 @@ Solutions:
 **"App is damaged" Error**
 ```bash
 Problem: Gatekeeper prevents app launch
-Solution: sudo xattr -r -d com.apple.quarantine /Applications/ClaraVerse.app
+Solution: sudo xattr -r -d com.apple.quarantine /Applications/angelaVerse.app
 ```
 
 **Permission Denied Errors**
@@ -105,7 +105,7 @@ Solution: sudo xattr -r -d com.apple.quarantine /Applications/ClaraVerse.app
 Problem: Can't access files or folders
 Solutions:
 - System Preferences → Security & Privacy → Privacy
-- Grant Full Disk Access to ClaraVerse
+- Grant Full Disk Access to angelaVerse
 - Allow Files and Folders access
 - Enable Accessibility if using shortcuts
 ```
@@ -124,12 +124,12 @@ Solutions:
 
 **AppImage Won't Run**
 ```bash
-Problem: ./ClaraVerse.AppImage fails to start
+Problem: ./angelaVerse.AppImage fails to start
 Solutions:
 - Install FUSE: sudo apt install fuse libfuse2
-- Make executable: chmod +x ClaraVerse.AppImage
-- Try: ./ClaraVerse.AppImage --appimage-extract-and-run
-- Check permissions: ls -la ClaraVerse.AppImage
+- Make executable: chmod +x angelaVerse.AppImage
+- Try: ./angelaVerse.AppImage --appimage-extract-and-run
+- Check permissions: ls -la angelaVerse.AppImage
 ```
 
 **Missing Dependencies**
@@ -185,12 +185,12 @@ Solutions:
 
 **Ollama Not Detected**
 ```bash
-Problem: ClaraVerse can't connect to Ollama
+Problem: angelaVerse can't connect to Ollama
 Solutions:
 - Install Ollama: https://ollama.ai
 - Start Ollama service: ollama serve
 - Check if running: curl http://localhost:11434
-- Verify port in ClaraVerse settings
+- Verify port in angelaVerse settings
 ```
 
 **Model Loading Fails**
@@ -362,7 +362,7 @@ Solutions:
 **Solutions:**
 ```typescript
 // Quick fixes
-- Restart ClaraVerse
+- Restart angelaVerse
 - Clear browser cache
 - Close old project tabs
 - Garbage collect in dev tools
@@ -420,7 +420,7 @@ df -h (Linux/Mac) or dir (Windows)
 ```bash
 # Windows Firewall
 - Windows Security → Firewall
-- Allow ClaraVerse through firewall
+- Allow angelaVerse through firewall
 - Add exceptions for ports 8000, 11434
 
 # Corporate Firewalls
@@ -459,11 +459,11 @@ df -h (Linux/Mac) or dir (Windows)
 **Solutions:**
 ```bash
 # Reset settings
-1. Close ClaraVerse
+1. Close angelaVerse
 2. Clear application data:
-   - Windows: %APPDATA%/ClaraVerse
-   - macOS: ~/Library/Application Support/ClaraVerse
-   - Linux: ~/.config/ClaraVerse
+   - Windows: %APPDATA%/angelaVerse
+   - macOS: ~/Library/Application Support/angelaVerse
+   - Linux: ~/.config/angelaVerse
 3. Restart application
 4. Reconfigure settings
 ```
@@ -474,7 +474,7 @@ df -h (Linux/Mac) or dir (Windows)
 
 **Access Debug Information:**
 ```typescript
-// In ClaraVerse
+// In angelaVerse
 1. Settings → Debug
 2. View system information
 3. Check component status
@@ -492,13 +492,13 @@ df -h (Linux/Mac) or dir (Windows)
 **Find Log Files:**
 ```bash
 # Windows
-%APPDATA%/ClaraVerse/logs/
+%APPDATA%/angelaVerse/logs/
 
 # macOS
-~/Library/Logs/ClaraVerse/
+~/Library/Logs/angelaVerse/
 
 # Linux
-~/.local/share/ClaraVerse/logs/
+~/.local/share/angelaVerse/logs/
 ```
 
 ### System Information
@@ -532,7 +532,7 @@ df -h (Linux/Mac) or dir (Windows)
 - Browse common issues and solutions
 - Post detailed problem descriptions
 - Search previous discussions
-- Visit: https://www.reddit.com/r/claraverse/
+- Visit: https://www.reddit.com/r/angelaverse/
 
 ### Official Support
 
@@ -540,13 +540,13 @@ df -h (Linux/Mac) or dir (Windows)
 - Report bugs with detailed information
 - Request new features
 - Check known issues
-- Visit: https://github.com/badboysm890/claraverse/issues
+- Visit: https://github.com/badboysm890/angelaverse/issues
 
 **Documentation:**
 - Search comprehensive guides
 - Follow step-by-step tutorials
 - Check configuration examples
-- Visit: https://docs.claraverse.space
+- Visit: https://docs.angelaverse.space
 
 ### Creating Effective Bug Reports
 
@@ -554,7 +554,7 @@ df -h (Linux/Mac) or dir (Windows)
 ```markdown
 ## Environment
 - OS: Windows 11 / macOS 13 / Ubuntu 22.04
-- ClaraVerse Version: 0.1.3
+- angelaVerse Version: 0.1.3
 - Browser: Chrome 120 (if applicable)
 
 ## Problem Description
@@ -582,7 +582,7 @@ Any other relevant information
 ### Regular Maintenance
 
 **Weekly Tasks:**
-- [ ] Restart ClaraVerse
+- [ ] Restart angelaVerse
 - [ ] Clear browser cache
 - [ ] Check for updates
 - [ ] Backup important projects
@@ -596,7 +596,7 @@ Any other relevant information
 ### Best Practices
 
 **Stable Operation:**
-- Keep ClaraVerse updated
+- Keep angelaVerse updated
 - Use supported browsers
 - Maintain adequate free disk space
 - Regular system restarts
@@ -610,4 +610,4 @@ Any other relevant information
 
 ---
 
-**Still having issues?** Join our [Discord community](https://discord.gg/j633fsrAne) for real-time help or create a [GitHub issue](https://github.com/badboysm890/claraverse/issues) with detailed information about your problem. 
+**Still having issues?** Join our [Discord community](https://discord.gg/j633fsrAne) for real-time help or create a [GitHub issue](https://github.com/badboysm890/angelaverse/issues) with detailed information about your problem. 

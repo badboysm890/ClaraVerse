@@ -1,5 +1,5 @@
 {
-  "format": "clara-sdk",
+  "format": "angela-sdk",
   "version": "1.0.0",
   "flow": {
     "id": "1753607449754-7hbvo17ai",
@@ -246,7 +246,7 @@
   "customNodes": [],
   "metadata": {
     "exportedAt": "2025-07-27T09:12:16.635Z",
-    "exportedBy": "Clara Agent Studio",
+    "exportedBy": "angela Agent Studio",
     "hasCustomNodes": false
   }
 }

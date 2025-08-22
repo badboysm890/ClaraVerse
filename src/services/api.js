@@ -118,7 +118,7 @@ class PythonApi {
         
         if (response.ok) {
           const data = await response.json();
-          if (data && data.service === 'Clara Backend') {
+          if (data && data.service === 'angela Backend') {
             this.port = port;
             this.baseUrl = `http://localhost:${port}`;
             this.initialized = true;

@@ -117,7 +117,7 @@ llama-server \
 
 ## Integration with Your Existing Setup
 
-This testing suite is completely isolated and won't affect your current Clara setup:
+This testing suite is completely isolated and won't affect your current angela setup:
 
 - **Separate Directory**: All files are in `test-configs/`
 - **Different Ports**: Uses port 8080 (your current setup uses 9999)

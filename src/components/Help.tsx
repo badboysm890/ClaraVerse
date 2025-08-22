@@ -75,9 +75,9 @@ interface CacheData {
 }
 
 // Cache utilities
-const CACHE_KEY = 'claraverse_docs_cache';
+const CACHE_KEY = 'angelaverse_docs_cache';
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/badboysm890/ClaraVerse/main/docs';
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/badboysm890/angelaVerse/main/docs';
 
 // GitHub API helpers
 const fetchGitHubFile = async (path: string): Promise<string> => {
@@ -528,7 +528,7 @@ const Help = () => {
                   <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                     Documentation
                   </h1>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">ClaraVerse Guide</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">angelaVerse Guide</p>
                 </div>
               </div>
               <button
@@ -787,10 +787,10 @@ const Help = () => {
                     <BookOpen className="h-16 w-16 text-sakura-600 dark:text-sakura-400" />
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                    Welcome to ClaraVerse Documentation
+                    Welcome to angelaVerse Documentation
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                    Select a topic from the sidebar to get started, or use the search to find specific information about ClaraVerse features and capabilities.
+                    Select a topic from the sidebar to get started, or use the search to find specific information about angelaVerse features and capabilities.
                   </p>
                 </div>
               </div>
@@ -808,7 +808,7 @@ const Help = () => {
                 <BookOpen className="h-6 w-6 text-sakura-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">ClaraVerse Documentation</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white">angelaVerse Documentation</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Join our community</p>
               </div>
             </div>
@@ -825,7 +825,7 @@ const Help = () => {
               </a>
 
               <a
-                href="https://github.com/badboysm890/ClaraVerse"
+                href="https://github.com/badboysm890/angelaVerse"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-3 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors group"
@@ -835,7 +835,7 @@ const Help = () => {
               </a>
 
               <a
-                href="https://reddit.com/r/claraverse"
+                href="https://reddit.com/r/angelaverse"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-3 rounded-lg bg-orange-600 hover:bg-orange-700 transition-colors group"
@@ -845,7 +845,7 @@ const Help = () => {
               </a>
 
               <a
-                href="https://youtube.com/@claraverseai"
+                href="https://youtube.com/@angelaverseai"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors group"
@@ -858,7 +858,7 @@ const Help = () => {
             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
               <span>Made with</span>
               <Heart size={14} className="text-sakura-400 fill-current" />
-              <span>by ClaraVerse Team</span>
+              <span>by angelaVerse Team</span>
             </div>
           </div>
         </div>

@@ -57,7 +57,7 @@ certificate.p12
 
 ./Support
 python-env
-.clara
+.angela
 
 ./py_backend/__pycache__
 ./py_backend/cache
@@ -71,7 +71,7 @@ python-env
 # any files in tools
 tools/*
 
-/clara_interpreter_dockerstuff
+/angela_interpreter_dockerstuff
 
 electron/llamacpp-binaries/models/*
 
@@ -79,7 +79,7 @@ testing_sdk/*
 
 sdk/node_modules/*
 
-clara-sdk-docs/*
+angela-sdk-docs/*
 
 electron/llamacpp-binaries/config.yaml
 
@@ -141,5 +141,5 @@ electron/llamacpp-binaries/*
 .vscode
 web-bundles
 docs-internal-agents
-searXNG-Clara
+searXNG-angela
 searxng-config

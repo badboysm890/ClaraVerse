@@ -27,7 +27,7 @@ const TourModal = ({ open, onClose, tourUrl, title }: TourModalProps) => {
           <iframe
             src={tourUrl}
             loading="lazy"
-            title={title || "Clara Tour"}
+            title={title || "angela Tour"}
             allow="clipboard-write"
             frameBorder="0"
             webkitallowfullscreen="true"

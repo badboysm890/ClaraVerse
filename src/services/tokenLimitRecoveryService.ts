@@ -68,7 +68,7 @@ interface ExecutionTrace {
 
 class TokenLimitRecoveryService {
   private static instance: TokenLimitRecoveryService;
-  private dbName = 'clara_execution_traces';
+  private dbName = 'angela_execution_traces';
   private db: IDBDatabase | null = null;
   private apiClient: any; // Will be injected
 
@@ -369,7 +369,7 @@ class TokenLimitRecoveryService {
   // Reconstruct context with compressed history
   private async reconstructContext(recovery: RecoveryData): Promise<ChatMessage[]> {
     const newSystemPrompt = `
-    You are Clara, continuing an autonomous agent task after intelligent context compression.
+    You are angela, continuing an autonomous agent task after intelligent context compression.
     
     ORIGINAL USER REQUEST: ${recovery.originalUserQuery}
     

@@ -863,7 +863,7 @@ const EnhancedModelDiscovery: React.FC<EnhancedModelDiscoveryProps> = ({
   };
 
   // Cache management functions
-  const CACHE_KEY = 'clara_recommended_models_cache';
+  const CACHE_KEY = 'angela_recommended_models_cache';
   const CACHE_TTL = 24 * 60 * 60 * 1000; // 1 day in milliseconds
 
   const getCachedRecommendedModels = (): EnhancedModel[] | null => {

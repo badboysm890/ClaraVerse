@@ -52,7 +52,7 @@ export const searchDocuments = async (
           .slice(0, 8)
       };
     }
-    // If RAG is enabled and no temp docs, use only clara-assistant collection
+    // If RAG is enabled and no temp docs, use only angela-assistant collection
     if (ragEnabled) {
       try {
         const response = await fetch(`http://0.0.0.0:${pythonPort}/documents/search`, {
@@ -60,7 +60,7 @@ export const searchDocuments = async (
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query,
-            collection_name: 'clara-assistant',
+            collection_name: 'angela-assistant',
             k: 8,
           }),
         });
@@ -74,11 +74,11 @@ export const searchDocuments = async (
             results: filteredResults.slice(0, 8)
           };
         } else {
-          console.warn('Clara Assistant collection search failed:', response.status);
+          console.warn('angela Assistant collection search failed:', response.status);
           return { results: [] };
         }
       } catch (error) {
-        console.warn('Clara Assistant collection search error:', error);
+        console.warn('angela Assistant collection search error:', error);
         return { results: [] };
       }
     }

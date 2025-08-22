@@ -111,19 +111,19 @@ function createAppMenu(mainWindow) {
         {
           label: 'Learn More',
           click: async () => {
-            await shell.openExternal('https://github.com/badboysm890/ClaraVerse');
+            await shell.openExternal('https://github.com/badboysm890/angelaVerse');
           }
         },
         {
           label: 'Documentation',
           click: async () => {
-            await shell.openExternal('https://github.com/badboysm890/ClaraVerse#readme');
+            await shell.openExternal('https://github.com/badboysm890/angelaVerse#readme');
           }
         },
         {
           label: 'Report an Issue',
           click: async () => {
-            await shell.openExternal('https://github.com/badboysm890/ClaraVerse/issues');
+            await shell.openExternal('https://github.com/badboysm890/angelaVerse/issues');
           }
         },
         { type: 'separator' },
@@ -132,17 +132,17 @@ function createAppMenu(mainWindow) {
           click: () => checkForUpdates()
         },
         {
-          label: 'About Clara',
+          label: 'About angela',
           click: () => {
             const version = app.getVersion();
             const electronVersion = process.versions.electron;
             const nodeVersion = process.versions.node;
-            const message = `Clara Version: ${version}\nElectron: ${electronVersion}\nNode.js: ${nodeVersion}`;
+            const message = `angela Version: ${version}\nElectron: ${electronVersion}\nNode.js: ${nodeVersion}`;
             
             const { dialog } = require('electron');
             dialog.showMessageBox(mainWindow, {
-              title: 'About Clara',
-              message: 'Clara - Privacy-first, client-side AI assistant',
+              title: 'About angela',
+              message: 'angela - Privacy-first, client-side AI assistant',
               detail: message,
               buttons: ['OK']
             });

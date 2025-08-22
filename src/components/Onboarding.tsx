@@ -41,15 +41,15 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         theme_preference: 'dark' as 'light' | 'dark' | 'system', // Default to dark mode
         avatar_url: '',
-        clara_core_url: 'http://localhost:8091',
+        angela_core_url: 'http://localhost:8091',
         comfyui_url: 'http://localhost:8188',
         model_folder_path: '',
         openai_api_key: '',
         openai_base_url: 'https://api.openai.com/v1',
-        api_type: 'clara_core' as 'clara_core' | 'openai'
+        api_type: 'angela_core' as 'angela_core' | 'openai'
     });
     const [loading, setLoading] = useState(false);
-    const [claraStatus, setClaraStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [angelaStatus, setangelaStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [animationClass, setAnimationClass] = useState('animate-fadeIn');
     const [logoError, setLogoError] = useState(false);
     const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -61,7 +61,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
     // Provider management state
     const [providers, setProviders] = useState<Provider[]>([]);
     const [showAddProviderModal, setShowAddProviderModal] = useState(false);
-    const [setupMethod, setSetupMethod] = useState<'clara-core' | 'external-provider'>('clara-core');
+    const [setupMethod, setSetupMethod] = useState<'angela-core' | 'external-provider'>('angela-core');
     const [newProviderForm, setNewProviderForm] = useState({
         name: '',
         type: 'openai' as Provider['type'],
@@ -78,7 +78,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
     });
     const [serviceModes, setServiceModes] = useState<{[key: string]: 'docker' | 'manual'}>({
         comfyui: 'docker',
-        tts: 'docker', // Always docker for Clara's service
+        tts: 'docker', // Always docker for angela's service
         n8n: 'docker'
     });
     const [serviceUrls, setServiceUrls] = useState({
@@ -92,7 +92,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
         comfyUI: true,
         n8n: true,
         ragAndTts: true,
-        claraCore: true
+        angelaCore: true
     });
     
     // Custom model path management - reuse from CustomModelPathManager logic
@@ -100,8 +100,8 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
     const [isSettingCustomPath, setIsSettingCustomPath] = useState(false);
     const [folderPickerMessage, setFolderPickerMessage] = useState<string | null>(null);
 
-    // Use claraStatus to avoid lint warning
-    console.log('Clara status:', claraStatus);
+    // Use angelaStatus to avoid lint warning
+    console.log('angela status:', angelaStatus);
 
     // Apply theme immediately when selected
     useEffect(() => {
@@ -113,10 +113,10 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
         }
     }, [formData.theme_preference]);
 
-    // Auto-check Clara Core status when reaching step 4
+    // Auto-check angela Core status when reaching step 4
     useEffect(() => {
         if (step === 4) {
-            checkClaraCore();
+            checkangelaCore();
         }
     }, [step]);
 
@@ -242,8 +242,8 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
         }
     };
 
-    const checkClaraCore = async () => {
-        setClaraStatus('success'); // Clara Core is always available
+    const checkangelaCore = async () => {
+        setangelaStatus('success'); // angela Core is always available
         setCheckingModels(true);
         setDownloadError(null);
         
@@ -540,7 +540,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
 
         // Initialize API config with Ollama URL, ComfyUI URL, and OpenAI settings
         await db.updateAPIConfig({
-            ollama_base_url: formData.clara_core_url,
+            ollama_base_url: formData.angela_core_url,
             comfyui_base_url: formData.comfyui_url,
             openai_api_key: formData.openai_api_key,
             openai_base_url: formData.openai_base_url,
@@ -554,7 +554,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                     comfyUI: selectedServices.comfyui,
                     ragAndTts: false, // Don't auto-enable during onboarding to prevent downloads
                     n8n: selectedServices.n8n,
-                    claraCore: true, // Always enabled
+                    angelaCore: true, // Always enabled
                     userConsentGiven: true, // Flag to indicate user has completed onboarding
                     onboardingMode: true, // Flag to indicate this is during onboarding
                     servicePreferences: {
@@ -562,7 +562,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                         comfyUI: selectedServices.comfyui,
                         ragAndTts: selectedServices.tts,
                         n8n: selectedServices.n8n,
-                        claraCore: true
+                        angelaCore: true
                     }
                 };
                 await (window as any).featureConfig.updateFeatureConfig(newConfig);
@@ -588,14 +588,14 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                         comfyui: selectedServices.comfyui,
                         python: false, // Don't auto-start Python backend during onboarding
                         n8n: selectedServices.n8n,
-                        'clara-core': true // Always enabled
+                        'angela-core': true // Always enabled
                     },
                     servicePreferences: {
                         // Store user preferences separately from auto-start decisions
                         comfyui: selectedServices.comfyui,
                         tts: selectedServices.tts,
                         n8n: selectedServices.n8n,
-                        'clara-core': true
+                        'angela-core': true
                     },
                     timestamp: new Date().toISOString(),
                     onboardingVersion: '1.0'
@@ -737,7 +737,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
     // Provider management functions
     const getProviderIcon = (type: Provider['type']) => {
         switch (type) {
-            case 'claras-pocket':
+            case 'angelas-pocket':
                 return Bot;
             case 'openai':
                 return Zap;
@@ -813,7 +813,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
 
     // Check if user has configured something to proceed
     const hasValidSetup = () => {
-        if (setupMethod === 'clara-core') {
+        if (setupMethod === 'angela-core') {
             return availableModels.length > 0 || formData.model_folder_path;
         } else {
             const enabledProviders = providers.filter(p => p.isEnabled);
@@ -821,7 +821,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
         }
     };
 
-    // Features of Clara
+    // Features of angela
     const features = [
         {
             title: "Privacy First",
@@ -830,7 +830,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
         },
         {
             title: "Powerful AI",
-            description: "Access state-of-the-art AI models through Clara Core with built-in model management and optimization.",
+            description: "Access state-of-the-art AI models through angela Core with built-in model management and optimization.",
             icon: <Brain className="w-8 h-8 text-sakura-500"/>
         },
         {
@@ -887,7 +887,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                                 {!logoError ? (
                                                     <img
                                                         src={logoImage}
-                                                        alt="Clara Logo"
+                                                        alt="angela Logo"
                                                         className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
                                                         onError={() => setLogoError(true)}
                                                     />
@@ -899,7 +899,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                     </div>
 
                                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white animate-fadeIn leading-tight">
-                                        Welcome to <span className="text-sakura-500">Clara</span>
+                                        Welcome to <span className="text-sakura-500">angela</span>
                                     </h1>
 
                                     <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto lg:mx-0 animate-fadeInUp delay-200 leading-relaxed">
@@ -955,13 +955,13 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                 className={`glassmorphic rounded-2xl p-6 sm:p-8 max-w-md w-full mx-4 space-y-4 sm:space-y-6 shadow-2xl ${animationClass}`}>
                 <div className="text-center space-y-2">
                     <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                        Let's Set Up Clara
+                        Let's Set Up angela
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
                         {step === 1 ? "First, tell us a bit about yourself" :
                             step === 2 ? "How can we reach you?" :
                                 step === 3 ? "Choose your preferred theme" :
-                                    step === 4 ? "Let's connect to Clara Core" :
+                                    step === 4 ? "Let's connect to angela Core" :
                                         step === 5 ? "Set up your AI service" :
                                             step === 6 ? "Choose additional services" :
                                                 step === 7 ? "Configure your services" :
@@ -993,7 +993,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                 </h3>
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Your name helps personalize your experience with Clara.
+                                Your name helps personalize your experience with angela.
                             </p>
                             <input
                                 type="text"
@@ -1125,21 +1125,21 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                     <Bot className="w-6 h-6 text-sakura-500"/>
                                 </div>
                                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                                    Connect to Clara Core
+                                    Connect to angela Core
                                 </h3>
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Clara Core is your local AI engine that processes everything privately on your device.
+                                angela Core is your local AI engine that processes everything privately on your device.
                             </p>
 
-                            {/* Clara Core Connection Status */}
+                            {/* angela Core Connection Status */}
                             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                                 <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-2">
                                     <Check className="w-5 h-5"/>
-                                    <span className="font-medium">Clara Core is ready and running!</span>
+                                    <span className="font-medium">angela Core is ready and running!</span>
                                 </div>
                                 <p className="text-sm text-green-600 dark:text-green-400">
-                                    Connected to Clara Core at {formData.clara_core_url}
+                                    Connected to angela Core at {formData.angela_core_url}
                                 </p>
                             </div>
                         </div>
@@ -1163,25 +1163,25 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                             {/* Setup Method Selection - Compact Cards */}
                             <div className="grid gap-3">
                                 <button
-                                    onClick={() => setSetupMethod('clara-core')}
+                                    onClick={() => setSetupMethod('angela-core')}
                                     className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                                        setupMethod === 'clara-core'
+                                        setupMethod === 'angela-core'
                                             ? 'border-sakura-500 bg-sakura-50 dark:bg-sakura-900/20 shadow-sm'
                                             : 'border-gray-200 dark:border-gray-700 hover:border-sakura-300'
                                     }`}
                                 >
                                     <div className={`p-2 rounded-full ${
-                                        setupMethod === 'clara-core' 
+                                        setupMethod === 'angela-core' 
                                             ? 'bg-sakura-100 text-sakura-500' 
                                             : 'bg-gray-100 dark:bg-gray-800 text-gray-500'
                                     }`}>
                                         <HardDrive className="w-5 h-5"/>
                                     </div>
                                     <div className="flex-1 text-left">
-                                        <h4 className="font-medium text-gray-900 dark:text-white">Clara Core (Recommended)</h4>
+                                        <h4 className="font-medium text-gray-900 dark:text-white">angela Core (Recommended)</h4>
                                         <p className="text-xs text-gray-600 dark:text-gray-400">Private, local AI models</p>
                                     </div>
-                                    {setupMethod === 'clara-core' && <Check className="w-4 h-4 text-sakura-500"/>}
+                                    {setupMethod === 'angela-core' && <Check className="w-4 h-4 text-sakura-500"/>}
                                 </button>
                                 
                                 <button
@@ -1207,8 +1207,8 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                 </button>
                             </div>
                             
-                            {/* Clara Core Setup - Condensed */}
-                            {setupMethod === 'clara-core' && (
+                            {/* angela Core Setup - Condensed */}
+                            {setupMethod === 'angela-core' && (
                                 <div className="mt-4 space-y-3">
                                     {checkingModels ? (
                                         <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -1323,7 +1323,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                                 </span>
                                             </div>
                                             <p className="text-xs text-green-600 dark:text-green-400">
-                                                You're all set to start using Clara
+                                                You're all set to start using angela
                                             </p>
                                         </div>
                                     )}
@@ -1533,7 +1533,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                     You can manually start them when needed from the main application.
                                 </p>
                                 <p className="text-xs text-blue-500 dark:text-blue-300 mt-2">
-                                    Note: Clara Core will always be managed automatically as it's essential for the app to function.
+                                    Note: angela Core will always be managed automatically as it's essential for the app to function.
                                 </p>
                             </div>
                         </div>
@@ -1663,7 +1663,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                         Your Timezone
                                     </label>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                                        Clara uses your timezone for time-aware responses.
+                                        angela uses your timezone for time-aware responses.
                                     </p>
                                     <select
                                         value={formData.timezone}
@@ -1803,11 +1803,11 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                         <div className="flex items-center gap-2 mb-1">
                                             <Loader className="w-4 h-4 animate-spin text-blue-500"/>
                                             <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                                                Launching Clara... (I will take a min to download Llama.cpp Binaries)
+                                                Launching angela... (I will take a min to download Llama.cpp Binaries)
                                             </span>
                                         </div>
                                         <p className="text-xs text-blue-600 dark:text-blue-400">
-                                            Saving your preferences. Clara will initialize your selected services after startup.
+                                            Saving your preferences. angela will initialize your selected services after startup.
                                         </p>
                                     </div>
                                 )}
@@ -1817,7 +1817,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                         🎉 You're almost ready!
                                     </h4>
                                     <p className="text-sm text-sakura-700 dark:text-sakura-300">
-                                        Clara is configured and ready to go. Click "Launch Clara" to start your AI-powered journey!
+                                        angela is configured and ready to go. Click "Launch angela" to start your AI-powered journey!
                                     </p>
                                 </div>
                             </div>
@@ -1849,7 +1849,7 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                     if (step < 8) {
                                         setStep(step + 1);
                                     } else {
-                                        // Launch Clara - just save preferences, don't start services
+                                        // Launch angela - just save preferences, don't start services
                                         setLoading(true);
                                         try {
                                             // Only save preferences during onboarding
@@ -1880,9 +1880,9 @@ const Onboarding = ({onComplete}: OnboardingProps) => {
                                     loading ? (
                                         <span className="flex items-center justify-center gap-2">
                                             <Loader className="w-4 h-4 animate-spin"/>
-                                            Launching Clara... (I will take a min to download Llama.cpp Binaries)
+                                            Launching angela... (I will take a min to download Llama.cpp Binaries)
                                         </span>
-                                    ) : 'Launch Clara'
+                                    ) : 'Launch angela'
                                 ) : 'Continue'}
                             </button>
                         </>

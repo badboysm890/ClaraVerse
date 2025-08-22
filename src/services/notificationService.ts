@@ -1,9 +1,9 @@
 /**
- * Notification Service for Clara
+ * Notification Service for angela
  * Handles completion notifications, sound alerts, and notification management
  */
 
-export interface ClaraNotification {
+export interface angelaNotification {
   id: string;
   type: 'completion' | 'error' | 'info' | 'warning';
   title: string;
@@ -14,10 +14,10 @@ export interface ClaraNotification {
   sound?: boolean; // Whether to play sound
 }
 
-export type NotificationListener = (notifications: ClaraNotification[]) => void;
+export type NotificationListener = (notifications: angelaNotification[]) => void;
 
 class NotificationService {
-  private notifications: ClaraNotification[] = [];
+  private notifications: angelaNotification[] = [];
   private listeners: Set<NotificationListener> = new Set();
   private audioContext: AudioContext | null = null;
   private soundEnabled: boolean = true;
@@ -123,10 +123,10 @@ class NotificationService {
   /**
    * Add a new notification
    */
-  public addNotification(notification: Omit<ClaraNotification, 'id' | 'timestamp' | 'isRead'>): string {
+  public addNotification(notification: Omit<angelaNotification, 'id' | 'timestamp' | 'isRead'>): string {
     const id = `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    const newNotification: ClaraNotification = {
+    const newNotification: angelaNotification = {
       id,
       timestamp: new Date(),
       isRead: false,
@@ -268,7 +268,7 @@ class NotificationService {
   /**
    * Get all notifications
    */
-  public getNotifications(): ClaraNotification[] {
+  public getNotifications(): angelaNotification[] {
     return [...this.notifications];
   }
 
@@ -292,7 +292,7 @@ class NotificationService {
    */
   public setSoundEnabled(enabled: boolean): void {
     this.soundEnabled = enabled;
-    localStorage.setItem('clara-notifications-sound', JSON.stringify(enabled));
+    localStorage.setItem('angela-notifications-sound', JSON.stringify(enabled));
   }
 
   /**
@@ -336,7 +336,7 @@ class NotificationService {
     try {
       // Only save last 20 notifications to localStorage
       const toSave = this.notifications.slice(0, 20);
-      localStorage.setItem('clara-notifications', JSON.stringify(toSave));
+      localStorage.setItem('angela-notifications', JSON.stringify(toSave));
     } catch (error) {
       console.warn('Failed to save notifications to localStorage:', error);
     }
@@ -347,7 +347,7 @@ class NotificationService {
    */
   private loadNotifications(): void {
     try {
-      const saved = localStorage.getItem('clara-notifications');
+      const saved = localStorage.getItem('angela-notifications');
       if (saved) {
         const parsed = JSON.parse(saved);
         this.notifications = parsed.map((n: any) => ({
@@ -357,7 +357,7 @@ class NotificationService {
       }
 
       // Load sound preference
-      const soundPref = localStorage.getItem('clara-notifications-sound');
+      const soundPref = localStorage.getItem('angela-notifications-sound');
       if (soundPref !== null) {
         this.soundEnabled = JSON.parse(soundPref);
       }

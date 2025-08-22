@@ -88,7 +88,7 @@ const WhatsNewWidget: React.FC<WhatsNewWidgetProps> = ({ id, onRemove }) => {
               </div>
               <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-0.5">Enhanced Workflows</h4>
               <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-1">
-                Connect Clara to your tools for seamless automation.
+                Connect angela to your tools for seamless automation.
               </p>
             </div>
           </div>

@@ -1020,7 +1020,7 @@ class MCPService {
             resources: {}
           },
           clientInfo: {
-            name: 'ClaraVerse',
+            name: 'angelaVerse',
             version: '1.0.0'
           }
         }

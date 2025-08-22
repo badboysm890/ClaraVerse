@@ -65,8 +65,8 @@ const getComfyUIConfig = () => {
   if (!comfyuiConfig) {
     log.info('ComfyUI configuration not found in enabled containers, creating configuration...');
     comfyuiConfig = {
-      name: 'clara_comfyui',
-      image: dockerSetup.getArchSpecificImage('clara17verse/clara-comfyui', 'with-custom-nodes'),
+      name: 'angela_comfyui',
+      image: dockerSetup.getArchSpecificImage('angela17verse/angela-comfyui', 'with-custom-nodes'),
       port: 8188,
       internalPort: 8188,
       healthCheck: dockerSetup.isComfyUIRunning.bind(dockerSetup),
@@ -109,13 +109,13 @@ const getN8NConfig = () => {
   if (!n8nConfig) {
     log.info('N8N configuration not found in enabled containers, creating configuration...');
     n8nConfig = {
-      name: 'clara_n8n',
+      name: 'angela_n8n',
       image: dockerSetup.getArchSpecificImage('n8nio/n8n', 'latest'),
       port: 5678,
       internalPort: 5678,
       healthCheck: dockerSetup.checkN8NHealth.bind(dockerSetup),
       volumes: [
-        `${require('path').join(require('os').homedir(), '.clara', 'n8n')}:/home/node/.n8n`
+        `${require('path').join(require('os').homedir(), '.angela', 'n8n')}:/home/node/.n8n`
       ]
     };
     
@@ -139,18 +139,18 @@ const getPythonConfig = () => {
   if (!pythonConfig) {
     log.info('Python backend configuration not found in enabled containers, creating configuration...');
     pythonConfig = {
-      name: 'clara_python',
-      image: dockerSetup.getArchSpecificImage('clara17verse/clara-backend', 'latest'),
+      name: 'angela_python',
+      image: dockerSetup.getArchSpecificImage('angela17verse/angela-backend', 'latest'),
       port: 5001,
       internalPort: 5000,
       healthCheck: dockerSetup.isPythonRunning.bind(dockerSetup),
       volumes: [
-        // Mount the python_backend_data folder as the clara user's home directory
-        `${dockerSetup.pythonBackendDataPath}:/home/clara`,
+        // Mount the python_backend_data folder as the angela user's home directory
+        `${dockerSetup.pythonBackendDataPath}:/home/angela`,
         // Keep backward compatibility for existing data paths
-        'clara_python_models:/app/models'
+        'angela_python_models:/app/models'
       ],
-      volumeNames: ['clara_python_models']
+      volumeNames: ['angela_python_models']
     };
     
     // Add the Python config back to the containers object
@@ -408,7 +408,7 @@ function registerDockerContainerHandlers() {
         HostConfig: {
           PortBindings: portBindings,
           Binds: binds,
-          NetworkMode: 'clara_network'
+          NetworkMode: 'angela_network'
         }
       });
       
@@ -802,7 +802,7 @@ function registerLlamaSwapHandlers() {
       
       // Save to file-based storage for persistence across app restarts
       try {
-        const settingsPath = path.join(app.getPath('userData'), 'clara-settings.json');
+        const settingsPath = path.join(app.getPath('userData'), 'angela-settings.json');
         let settings = {};
         
         // Load existing settings if file exists
@@ -959,7 +959,7 @@ function registerLlamaSwapHandlers() {
       // If no paths in service, try to load from file storage
       if (paths.length === 0) {
         try {
-          const settingsPath = path.join(app.getPath('userData'), 'clara-settings.json');
+          const settingsPath = path.join(app.getPath('userData'), 'angela-settings.json');
           if (fsSync.existsSync(settingsPath)) {
             const settings = JSON.parse(fsSync.readFileSync(settingsPath, 'utf8'));
             if (settings.customModelPath) {
@@ -1915,7 +1915,7 @@ function registerModelManagerHandlers() {
       const os = require('os');
       
       // Use custom download path if provided, otherwise use default
-      const modelsDir = downloadPath || path.join(os.homedir(), '.clara', 'llama-models');
+      const modelsDir = downloadPath || path.join(os.homedir(), '.angela', 'llama-models');
       if (!fs.existsSync(modelsDir)) {
         fs.mkdirSync(modelsDir, { recursive: true });
       }
@@ -2072,7 +2072,7 @@ function registerModelManagerHandlers() {
       const os = require('os');
       
       // Use custom download path if provided, otherwise use default
-      const modelsDir = downloadPath || path.join(os.homedir(), '.clara', 'llama-models');
+      const modelsDir = downloadPath || path.join(os.homedir(), '.angela', 'llama-models');
       if (!fs.existsSync(modelsDir)) {
         fs.mkdirSync(modelsDir, { recursive: true });
       }
@@ -2291,7 +2291,7 @@ function registerModelManagerHandlers() {
       const os = require('os');
       
       // Use custom download path if provided, otherwise use default
-      const modelsDir = downloadPath || path.join(os.homedir(), '.clara', 'llama-models');
+      const modelsDir = downloadPath || path.join(os.homedir(), '.angela', 'llama-models');
       if (!fs.existsSync(modelsDir)) {
         fs.mkdirSync(modelsDir, { recursive: true });
       }
@@ -2387,7 +2387,7 @@ function registerModelManagerHandlers() {
       const os = require('os');
       
       // Security check - ensure file is in a valid model directory
-      const defaultModelsDir = path.join(os.homedir(), '.clara', 'llama-models');
+      const defaultModelsDir = path.join(os.homedir(), '.angela', 'llama-models');
       const normalizedPath = path.resolve(filePath);
       const normalizedDefaultDir = path.resolve(defaultModelsDir);
       
@@ -3648,7 +3648,7 @@ function registerHandlers() {
         const response = await dialog.showMessageBox(mainWindow, {
           type: 'info',
           title: '✅ Download Complete!',
-          message: `Clara ${updateInfo.latestVersion} has been downloaded`,
+          message: `angela ${updateInfo.latestVersion} has been downloaded`,
           detail: `The installer has been saved to:\n${result.filePath}\n\nWould you like to open it now?`,
           buttons: ['Open Installer', 'Open Downloads Folder', 'Later'],
           defaultId: 0
@@ -3904,7 +3904,7 @@ function registerHandlers() {
       return {
         running: isRunning,
         port: dockerSetup.ports.comfyui || 8188,
-        containerName: 'clara_comfyui',
+        containerName: 'angela_comfyui',
         mode: 'docker'
       };
     } catch (error) {
@@ -3936,7 +3936,7 @@ function registerHandlers() {
         throw new Error('Docker not initialized');
       }
       
-      const container = await dockerSetup.docker.getContainer('clara_comfyui');
+      const container = await dockerSetup.docker.getContainer('angela_comfyui');
       await container.stop();
       return { success: true };
     } catch (error) {
@@ -3951,7 +3951,7 @@ function registerHandlers() {
         throw new Error('Docker not initialized');
       }
       
-      const container = await dockerSetup.docker.getContainer('clara_comfyui');
+      const container = await dockerSetup.docker.getContainer('angela_comfyui');
       await container.restart();
       return { success: true };
     } catch (error) {
@@ -3966,7 +3966,7 @@ function registerHandlers() {
         throw new Error('Docker not initialized');
       }
       
-      const container = await dockerSetup.docker.getContainer('clara_comfyui');
+      const container = await dockerSetup.docker.getContainer('angela_comfyui');
       const logs = await container.logs({
         stdout: true,
         stderr: true,
@@ -4636,7 +4636,7 @@ function registerHandlers() {
         throw new Error('Docker setup not initialized');
       }
 
-      const containerName = `clara_${serviceName}`;
+      const containerName = `angela_${serviceName}`;
       const container = await dockerSetup.docker.getContainer(containerName);
       await container.stop();
 
@@ -4653,7 +4653,7 @@ function registerHandlers() {
         throw new Error('Docker setup not initialized');
       }
 
-      const containerName = `clara_${serviceName}`;
+      const containerName = `angela_${serviceName}`;
       const container = await dockerSetup.docker.getContainer(containerName);
       await container.restart();
 
@@ -5046,7 +5046,7 @@ async function askToStartDockerDesktop(loadingScreen) {
           loadingScreen,
           'info',
           'Docker Installation',
-          'Docker Desktop download page has been opened in your browser.\n\nAfter installing Docker Desktop, please restart Clara to enable all features.',
+          'Docker Desktop download page has been opened in your browser.\n\nAfter installing Docker Desktop, please restart angela to enable all features.',
           ['OK']
         );
         
@@ -5168,7 +5168,7 @@ async function initialize() {
         comfyUI: false,
         n8n: false,
         ragAndTts: false,
-        claraCore: true // Only Clara Core is always enabled
+        angelaCore: true // Only angela Core is always enabled
       };
       // Mark that we need to show onboarding in the main app
       global.needsFeatureSelection = true;
@@ -5245,7 +5245,7 @@ async function initializeInBackground(selectedFeatures) {
         log.error('🚨 Critical OS compatibility issue detected');
         systemConfig.performanceMode = 'core-only';
         systemConfig.enabledFeatures = {
-          claraCore: true,
+          angelaCore: true,
           dockerServices: false,
           comfyUI: false,
           advancedFeatures: false
@@ -5414,7 +5414,7 @@ async function initializeWithDocker() {
       comfyUI: false,  // Conservative default - only start if explicitly selected
       n8n: false,      // Conservative default - only start if explicitly selected
       ragAndTts: false, // Conservative default - prevent unwanted Python backend downloads
-      claraCore: true  // Always enable core functionality
+      angelaCore: true  // Always enable core functionality
     };
     const systemConfig = global.systemConfig;
     
@@ -5543,7 +5543,7 @@ async function initializeWithoutDocker() {
 
 async function loadCustomModelPath() {
   try {
-    const settingsPath = path.join(app.getPath('userData'), 'clara-settings.json');
+    const settingsPath = path.join(app.getPath('userData'), 'angela-settings.json');
     
     if (fsSync.existsSync(settingsPath)) {
       const settingsData = JSON.parse(fsSync.readFileSync(settingsPath, 'utf8'));
@@ -5799,7 +5799,7 @@ async function createMainWindow() {
   let shouldStartMinimized = false;
   
   try {
-    const settingsPath = path.join(app.getPath('userData'), 'clara-settings.json');
+    const settingsPath = path.join(app.getPath('userData'), 'angela-settings.json');
     if (fs.existsSync(settingsPath)) {
       const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
       // Check both startup.fullscreen and fullscreen_startup for backward compatibility
@@ -5849,8 +5849,8 @@ async function createMainWindow() {
         try {
           tray.displayBalloon({
             iconType: 'info',
-            title: 'ClaraVerse',
-            content: 'ClaraVerse is still running in the background. Click the tray icon to restore.'
+            title: 'angelaVerse',
+            content: 'angelaVerse is still running in the background. Click the tray icon to restore.'
           });
         } catch (error) {
           log.warn('Failed to show balloon notification:', error);
@@ -5870,8 +5870,8 @@ async function createMainWindow() {
         try {
           tray.displayBalloon({
             iconType: 'info',
-            title: 'ClaraVerse',
-            content: 'ClaraVerse is still running in the background. Click the tray icon to restore.'
+            title: 'angelaVerse',
+            content: 'angelaVerse is still running in the background. Click the tray icon to restore.'
           });
         } catch (error) {
           log.warn('Failed to show balloon notification:', error);
@@ -5888,9 +5888,9 @@ async function createMainWindow() {
     const url = webContents.getURL();
     const n8nPort = dockerSetup?.ports?.n8n; // Get the determined n8n port
     
-    // Allow ALL permissions for the main Clara application (development and production)
+    // Allow ALL permissions for the main angela application (development and production)
     if (url.startsWith('http://localhost:5173') || url.startsWith('file://')) {
-      log.info(`Granted '${permission}' permission for Clara app URL: ${url}`);
+      log.info(`Granted '${permission}' permission for angela app URL: ${url}`);
       callback(true);
       return;
     }
@@ -6082,7 +6082,7 @@ app.on('activate', async () => {
 ipcMain.handle('set-startup-settings', async (event, settings) => {
   try {
     const userDataPath = app.getPath('userData');
-    const settingsPath = path.join(userDataPath, 'clara-settings.json');
+    const settingsPath = path.join(userDataPath, 'angela-settings.json');
     
     // Read current settings
     let currentSettings = {};
@@ -6140,7 +6140,7 @@ ipcMain.handle('set-startup-settings', async (event, settings) => {
 
 ipcMain.handle('get-startup-settings', async () => {
   try {
-    const settingsPath = path.join(app.getPath('userData'), 'clara-settings.json');
+    const settingsPath = path.join(app.getPath('userData'), 'angela-settings.json');
     const isDevelopment = process.env.NODE_ENV === 'development' || !app.isPackaged;
     
     let startupSettings = {};
@@ -6185,7 +6185,7 @@ ipcMain.handle('update-feature-config', async (event, newConfig) => {
     const updatedConfig = {
       ...currentConfig,
       selectedFeatures: {
-        claraCore: true, // Always enabled
+        angelaCore: true, // Always enabled
         ...newConfig
       },
       firstTimeSetup: false, // Mark onboarding as complete
@@ -6238,7 +6238,7 @@ ipcMain.handle('update-feature-config', async (event, newConfig) => {
 
 ipcMain.handle('reset-feature-config', async () => {
   try {
-    const configPath = path.join(app.getPath('userData'), 'clara-features.yaml');
+    const configPath = path.join(app.getPath('userData'), 'angela-features.yaml');
     if (fs.existsSync(configPath)) {
       fs.unlinkSync(configPath);
       log.info('Feature configuration reset successfully');
@@ -6298,7 +6298,7 @@ ipcMain.handle('model-manager:search-civitai', async (event, { query, types, sor
 
     // Add API key for authenticated requests if available
     const headers = {
-      'User-Agent': 'Clara-AI-Assistant/1.0',
+      'User-Agent': 'angela-AI-Assistant/1.0',
       'Content-Type': 'application/json'
     };
     if (apiKey) {
@@ -6404,7 +6404,7 @@ ipcMain.handle('model-manager:download-model', async (event, { url, filename, mo
       const headers = {};
       if (source === 'huggingface') {
         // For Hugging Face, we might need auth headers
-        headers['User-Agent'] = 'Clara-AI-Assistant/1.0';
+        headers['User-Agent'] = 'angela-AI-Assistant/1.0';
       }
 
       const request = client.get(url, { headers }, (response) => {
@@ -6603,7 +6603,7 @@ ipcMain.handle('comfyui-model-manager:download-model', async (event, { url, file
 
       // Add headers for different sources
       const headers = {
-        'User-Agent': 'Clara-AI-Assistant/1.0',
+        'User-Agent': 'angela-AI-Assistant/1.0',
         'Accept': '*/*',
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive'
@@ -6849,7 +6849,7 @@ ipcMain.handle('comfyui-model-manager:get-models-dir', async () => {
 ipcMain.handle('comfyui:list-output-images', async () => {
   try {
     const os = require('os');
-    const outputDir = path.join(os.homedir(), '.clara', 'comfyui-data', 'outputs');
+    const outputDir = path.join(os.homedir(), '.angela', 'comfyui-data', 'outputs');
     
     if (!fs.existsSync(outputDir)) {
       log.info('ComfyUI outputs directory does not exist:', outputDir);
@@ -6924,7 +6924,7 @@ ipcMain.handle('comfyui:start-output-watcher', async (event) => {
     }
     
     const os = require('os');
-    const outputDir = path.join(os.homedir(), '.clara', 'comfyui-data', 'outputs');
+    const outputDir = path.join(os.homedir(), '.angela', 'comfyui-data', 'outputs');
     
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
@@ -7532,7 +7532,7 @@ async function updateCentralServiceManagerWithDockerStatus() {
     
     for (const serviceName of containerServices) {
       try {
-        const containerName = `clara_${serviceName.replace('-backend', '')}`;
+        const containerName = `angela_${serviceName.replace('-backend', '')}`;
         const container = dockerSetup.docker.getContainer(containerName);
         const containerInfo = await container.inspect();
         
@@ -7684,7 +7684,7 @@ function registerGlobalShortcuts() {
         }
         
         lastTriggerTime = now;
-        log.info(`Global shortcut ${shortcut} pressed - bringing Clara to foreground`);
+        log.info(`Global shortcut ${shortcut} pressed - bringing angela to foreground`);
         
         // Bring window to foreground
         if (mainWindow) {
@@ -7778,7 +7778,7 @@ function createTray() {
         trayIcon = nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(canvas).toString('base64')}`);
         trayIcon.setTemplateImage(true);
       } else {
-        // For Windows/Linux, create a colored icon matching ClaraVerse brand colors
+        // For Windows/Linux, create a colored icon matching angelaVerse brand colors
         const canvas = `
           <svg width="${iconSize}" height="${iconSize}" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -7799,12 +7799,12 @@ function createTray() {
     tray = new Tray(trayIcon);
     
     // Set tooltip
-    tray.setToolTip('ClaraVerse');
+    tray.setToolTip('angelaVerse');
     
     // Create context menu
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: 'Show ClaraVerse',
+        label: 'Show angelaVerse',
         click: () => {
           if (mainWindow) {
             if (mainWindow.isMinimized()) {
@@ -7818,7 +7818,7 @@ function createTray() {
         }
       },
       {
-        label: 'Hide ClaraVerse',
+        label: 'Hide angelaVerse',
         click: () => {
           if (mainWindow) {
             mainWindow.hide();

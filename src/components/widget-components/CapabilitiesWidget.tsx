@@ -32,7 +32,7 @@ const CapabilitiesWidget: React.FC<CapabilitiesWidgetProps> = ({ id, onRemove })
             What You Can Do
           </h2>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            Explore Clara's capabilities
+            Explore angela's capabilities
           </p>
         </div>
       </div>

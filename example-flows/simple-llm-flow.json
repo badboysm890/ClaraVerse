@@ -1,5 +1,5 @@
 {
-  "format": "clara-native",
+  "format": "angela-native",
   "version": "1.0.0",
   "name": "Simple LLM Chat Flow",
   "description": "A basic flow that takes user input and processes it through an LLM to generate a response",
@@ -55,7 +55,7 @@
   ],
   "metadata": {
     "createdAt": "2024-01-15T10:00:00Z",
-    "exportedBy": "Clara Agent Studio",
+    "exportedBy": "angela Agent Studio",
     "hasCustomNodes": false
   }
 } 

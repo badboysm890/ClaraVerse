@@ -811,7 +811,7 @@ const LumaUILiteChatWindow: React.FC<LumaUILiteChatWindowProps> = ({
   };
 
   // Enhanced system prompt for auto mode planning - matches main LumaUI
-  const INITIAL_PLANNING_SYSTEM_PROMPT = `You are Clara's strategic planning module. Before executing any tools, you must analyze the project structure and create a comprehensive execution plan.
+  const INITIAL_PLANNING_SYSTEM_PROMPT = `You are angela's strategic planning module. Before executing any tools, you must analyze the project structure and create a comprehensive execution plan.
 
 Your response must be a JSON object with this exact structure:
 {
@@ -1264,7 +1264,7 @@ Now executing plan systematically...`,
       });
 
       // Build system prompt for auto mode with function calling
-      const baseAutoPrompt = customSystemPrompt || `You are Clara, an expert AI coding assistant with comprehensive tool access. Execute the user's request systematically using your available functions.`;
+      const baseAutoPrompt = customSystemPrompt || `You are angela, an expert AI coding assistant with comprehensive tool access. Execute the user's request systematically using your available functions.`;
       const systemPrompt = baseAutoPrompt + `
 
 **CURRENT PROJECT CONTEXT:**

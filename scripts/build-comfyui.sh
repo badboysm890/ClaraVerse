@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# ComfyUI Docker Build Script for Clara
+# ComfyUI Docker Build Script for angela
 set -e
 
-echo "🎨 Building Clara ComfyUI Docker Image..."
+echo "🎨 Building angela ComfyUI Docker Image..."
 
 # Get the directory of this script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,7 +26,7 @@ fi
 echo "🔧 Detected architecture: $ARCH (Docker: $DOCKER_ARCH)"
 
 # Set image name with architecture tag
-IMAGE_NAME="clara17verse/clara-comfyui"
+IMAGE_NAME="angela17verse/angela-comfyui"
 TAG="latest-$DOCKER_ARCH"
 FULL_IMAGE_NAME="$IMAGE_NAME:$TAG"
 
@@ -49,7 +49,7 @@ if [ $? -eq 0 ]; then
     docker images "$IMAGE_NAME" | head -2
     
     echo ""
-    echo "🚀 You can now start Clara and use the bundled ComfyUI!"
+    echo "🚀 You can now start angela and use the bundled ComfyUI!"
     echo "   • ComfyUI will be available at http://localhost:8188"
     echo "   • Access ComfyUI Manager through the Image Generation page"
     echo "   • First startup may take a few minutes to download models"
@@ -64,13 +64,13 @@ if [[ "$test_image" =~ ^[Yy]$ ]]; then
     echo "🧪 Testing ComfyUI container..."
     
     # Stop any existing container
-    docker stop clara_comfyui_test 2>/dev/null || true
-    docker rm clara_comfyui_test 2>/dev/null || true
+    docker stop angela_comfyui_test 2>/dev/null || true
+    docker rm angela_comfyui_test 2>/dev/null || true
     
     # Run test container
     echo "🔄 Starting test container..."
     docker run -d \
-        --name clara_comfyui_test \
+        --name angela_comfyui_test \
         --platform linux/$DOCKER_ARCH \
         -p 8188:8188 \
         --gpus all \
@@ -85,9 +85,9 @@ if [[ "$test_image" =~ ^[Yy]$ ]]; then
         echo "🌐 Access it at: http://localhost:8188"
         echo ""
         echo "🛑 To stop the test container:"
-        echo "   docker stop clara_comfyui_test && docker rm clara_comfyui_test"
+        echo "   docker stop angela_comfyui_test && docker rm angela_comfyui_test"
     else
         echo "❌ ComfyUI test failed - container may still be starting"
-        echo "📋 Check logs with: docker logs clara_comfyui_test"
+        echo "📋 Check logs with: docker logs angela_comfyui_test"
     fi
 fi 

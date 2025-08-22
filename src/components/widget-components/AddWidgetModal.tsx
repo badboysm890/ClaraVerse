@@ -23,14 +23,14 @@ const AVAILABLE_WIDGETS: WidgetOption[] = [
     id: 'welcome',
     type: 'welcome',
     name: 'Welcome',
-    description: 'Introduction and quick actions for Clara',
+    description: 'Introduction and quick actions for angela',
     icon: <Bot className="w-5 h-5" />,
     category: 'system',
     preview: (
       <div className="p-3 bg-gray-500/5 dark:bg-gray-300/5 rounded-lg">
         <div className="flex items-center gap-2">
           <Bot className="w-4 h-4 text-sakura-500" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white">Welcome to Clara</h3>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-white">Welcome to angela</h3>
         </div>
         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5">Your AI assistant powered by Ollama...</p>
       </div>
@@ -40,7 +40,7 @@ const AVAILABLE_WIDGETS: WidgetOption[] = [
     id: 'privacy',
     type: 'privacy',
     name: 'Privacy Notice',
-    description: 'Information about Clara\'s privacy and security',
+    description: 'Information about angela\'s privacy and security',
     icon: <Info className="w-5 h-5" />,
     category: 'system',
     preview: (
@@ -49,7 +49,7 @@ const AVAILABLE_WIDGETS: WidgetOption[] = [
           <Info className="w-4 h-4 text-sakura-500" />
           <h3 className="text-sm font-medium text-gray-900 dark:text-white">Private & Secure</h3>
         </div>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5">Clara runs locally on your machine...</p>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5">angela runs locally on your machine...</p>
       </div>
     )
   },
@@ -57,14 +57,14 @@ const AVAILABLE_WIDGETS: WidgetOption[] = [
     id: 'whats-new',
     type: 'whats-new',
     name: 'What\'s New',
-    description: 'Latest updates and features in Clara',
+    description: 'Latest updates and features in angela',
     icon: <Star className="w-5 h-5" />,
     category: 'system',
     preview: (
       <div className="p-3 bg-gray-500/5 dark:bg-gray-300/5 rounded-lg">
         <div className="flex items-center gap-2">
           <Star className="w-4 h-4 text-sakura-500" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white">What's New in Clara</h3>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-white">What's New in angela</h3>
         </div>
         <p className="text-xs text-gray-600 dark:text-gray-400 mt-1.5">Latest updates and improvements...</p>
       </div>

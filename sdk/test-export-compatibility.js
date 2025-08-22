@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 
 /**
- * Test Clara Flow SDK with Agent Studio Export Format
+ * Test angela Flow SDK with Agent Studio Export Format
  * 
  * This script creates a mock export from Agent Studio and tests it with the SDK
  * to ensure compatibility between the export format and SDK expectations.
  */
 
-import { ClaraFlowRunner } from './dist/index.esm.js';
+import { angelaFlowRunner } from './dist/index.esm.js';
 import fs from 'fs';
 
 async function testExportCompatibility() {
   console.log('🔄 Testing Agent Studio Export Compatibility with SDK\n');
 
   try {
-    // Create a mock Agent Studio export in the clara-sdk format
+    // Create a mock Agent Studio export in the angela-sdk format
     const mockAgentStudioExport = {
-      format: 'clara-sdk',
+      format: 'angela-sdk',
       version: '1.0.0',
       flow: {
         id: 'test-flow-123',
@@ -82,7 +82,7 @@ async function testExportCompatibility() {
       },
       customNodes: [],
       exportedAt: new Date().toISOString(),
-      exportedBy: 'Clara Agent Studio'
+      exportedBy: 'angela Agent Studio'
     };
 
     console.log('✅ Mock Agent Studio export created');
@@ -91,7 +91,7 @@ async function testExportCompatibility() {
     console.log(`🔗 Connections: ${mockAgentStudioExport.flow.connections.length}`);
 
     // Initialize the flow runner
-    const runner = new ClaraFlowRunner({
+    const runner = new angelaFlowRunner({
       enableLogging: true,
       logLevel: 'info',
       timeout: 30000
@@ -138,7 +138,7 @@ async function testExportCompatibility() {
     console.log('\n🧪 Test 3: Testing with custom nodes...');
     
     const customNodeExport = {
-      format: 'clara-sdk',
+      format: 'angela-sdk',
       version: '1.0.0',
       flow: {
         id: 'custom-flow-123',
@@ -291,7 +291,7 @@ async function testExportCompatibility() {
             }
           `,
           metadata: {
-            author: 'Clara Agent Studio',
+            author: 'angela Agent Studio',
             version: '1.0.0',
             tags: ['text', 'transform']
           }
@@ -337,7 +337,7 @@ async function testExportCompatibility() {
 async function testInputMapping() {
   console.log('\n🔄 Testing Input Mapping Strategies\n');
 
-  const runner = new ClaraFlowRunner({
+  const runner = new angelaFlowRunner({
     enableLogging: false,
     logLevel: 'error'
   });

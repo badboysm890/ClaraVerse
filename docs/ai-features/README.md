@@ -1,6 +1,6 @@
 ---
 title: "AI Features Overview"
-description: "Explore ClaraVerse's comprehensive AI capabilities"
+description: "Explore angelaVerse's comprehensive AI capabilities"
 category: "ai-features"
 order: 5
 lastUpdated: "2024-01-15"
@@ -9,7 +9,7 @@ contributors: ["badboysm890"]
 
 # 🤖 AI Features Overview
 
-ClaraVerse brings together the most advanced AI technologies in a single, privacy-first platform. From intelligent code generation to autonomous agents, discover how AI can transform your development workflow.
+angelaVerse brings together the most advanced AI technologies in a single, privacy-first platform. From intelligent code generation to autonomous agents, discover how AI can transform your development workflow.
 
 ## 🌟 Core AI Technologies
 
@@ -67,7 +67,7 @@ ClaraVerse brings together the most advanced AI technologies in a single, privac
 ### 💻 Smart Code Generation
 
 **Intelligent Scaffolding:**
-Clara can generate complete applications from descriptions:
+angela can generate complete applications from descriptions:
 
 ```typescript
 User: "Create a todo app with React, TypeScript, and dark mode"
@@ -124,7 +124,7 @@ AI generates:
 ### 📊 Data Analysis & Visualization
 
 **Automatic Chart Generation:**
-Clara creates interactive visualizations from data:
+angela creates interactive visualizations from data:
 
 ```javascript
 // Sales Data Analysis
@@ -384,7 +384,7 @@ Output: Coverage heatmaps, progress charts, recommendations
 
 ### 🌟 Vision
 
-ClaraVerse aims to democratize AI development by providing enterprise-grade AI capabilities that run locally, ensuring privacy while delivering cutting-edge performance.
+angelaVerse aims to democratize AI development by providing enterprise-grade AI capabilities that run locally, ensuring privacy while delivering cutting-edge performance.
 
 ---
 
@@ -412,6 +412,6 @@ ClaraVerse aims to democratize AI development by providing enterprise-grade AI c
    - [ ] Design a workflow
    - [ ] Test autonomous execution
 
-**Ready to harness the power of AI?** Start with Clara Assistant and explore the endless possibilities!
+**Ready to harness the power of AI?** Start with angela Assistant and explore the endless possibilities!
 
 *Join our [Discord community](https://discord.gg/j633fsrAne) to share your AI creations and learn from other users.* 

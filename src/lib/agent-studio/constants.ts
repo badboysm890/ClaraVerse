@@ -1,5 +1,5 @@
 /**
- * Clara Agent Studio - Constants
+ * angela Agent Studio - Constants
  * 
  * This file contains all the constants used throughout the Agent Studio framework.
  */
@@ -180,7 +180,7 @@ export const VALIDATION_RULES = {
 // ========================================
 
 export const EXPORT_FORMATS = {
-  CLARA_NATIVE: 'clara-native',
+  angela_NATIVE: 'angela-native',
   JSON: 'json',
   YAML: 'yaml',
   DOCKER: 'docker',
@@ -242,7 +242,7 @@ export const DEFAULT_CONFIG = {
   autoSaveInterval: 30000, // 30 seconds
   hotReload: true,
   debugMode: false,
-  pluginDirectories: ['./plugins', './node_modules/@clara/agent-studio-*'],
+  pluginDirectories: ['./plugins', './node_modules/@angela/agent-studio-*'],
   allowRemotePlugins: false,
   defaultTimeout: 30000,
   maxConcurrency: 10,
@@ -271,10 +271,10 @@ export const API_ENDPOINTS = {
 // ========================================
 
 export const FILE_EXTENSIONS = {
-  FLOW: '.clara-flow',
-  PLUGIN: '.clara-plugin',
-  TEMPLATE: '.clara-template',
-  NODE: '.clara-node'
+  FLOW: '.angela-flow',
+  PLUGIN: '.angela-plugin',
+  TEMPLATE: '.angela-template',
+  NODE: '.angela-node'
 } as const;
 
 // ========================================

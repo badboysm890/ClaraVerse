@@ -24,8 +24,8 @@ export interface ToolBlacklistAttempt {
 }
 
 export class ToolSuccessRegistry {
-  private static readonly STORAGE_KEY = 'clara-tool-success-registry';
-  private static readonly BLACKLIST_ATTEMPTS_KEY = 'clara-blacklist-attempts';
+  private static readonly STORAGE_KEY = 'angela-tool-success-registry';
+  private static readonly BLACKLIST_ATTEMPTS_KEY = 'angela-blacklist-attempts';
   private static readonly MIN_SUCCESS_COUNT = 1; // Minimum successes to protect from blacklisting
   
   private static successRegistry: Map<string, ToolSuccessRecord> = new Map();
@@ -284,7 +284,7 @@ export class ToolSuccessRegistry {
       const keysToCheck: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('clara-problematic-tools-')) {
+        if (key && key.startsWith('angela-problematic-tools-')) {
           keysToCheck.push(key);
         }
       }

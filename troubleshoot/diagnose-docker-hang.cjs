@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Clara Docker Startup Diagnostic Tool
+ * angela Docker Startup Diagnostic Tool
  * 
  * This script helps diagnose and resolve Docker startup hang issues.
- * Run this when Clara gets stuck after "Update check complete" message.
+ * Run this when angela gets stuck after "Update check complete" message.
  */
 
 const { exec } = require('child_process');
@@ -18,7 +18,7 @@ class DockerDiagnostic {
   }
 
   async run() {
-    console.log('🔍 Clara Docker Startup Diagnostic Tool');
+    console.log('🔍 angela Docker Startup Diagnostic Tool');
     console.log('=====================================\n');
 
     try {
@@ -61,15 +61,15 @@ class DockerDiagnostic {
   }
 
   async checkDockerImages() {
-    console.log('\n📦 Checking Clara Docker Images...');
+    console.log('\n📦 Checking angela Docker Images...');
     
-    const claraImages = [
-      'clara17verse/clara-backend',
-      'clara17verse/clara-comfyui',
+    const angelaImages = [
+      'angela17verse/angela-backend',
+      'angela17verse/angela-comfyui',
       'n8nio/n8n'
     ];
 
-    for (const imageName of claraImages) {
+    for (const imageName of angelaImages) {
       try {
         const { stdout } = await execAsync(`docker images ${imageName} --format "{{.Repository}}:{{.Tag}} {{.Size}}"`);
         if (stdout.trim()) {
@@ -84,15 +84,15 @@ class DockerDiagnostic {
   }
 
   async checkRunningContainers() {
-    console.log('\n🔄 Checking Running Clara Containers...');
+    console.log('\n🔄 Checking Running angela Containers...');
     
-    const claraContainers = ['clara_python', 'clara_comfyui', 'clara_n8n'];
+    const angelaContainers = ['angela_python', 'angela_comfyui', 'angela_n8n'];
     
     try {
       const { stdout } = await execAsync('docker ps --format "{{.Names}} {{.Status}} {{.Ports}}"');
       const runningContainers = stdout.trim().split('\n').filter(line => line.trim());
       
-      for (const containerName of claraContainers) {
+      for (const containerName of angelaContainers) {
         const found = runningContainers.find(line => line.includes(containerName));
         if (found) {
           console.log(`✅ ${containerName}: ${found}`);
@@ -152,11 +152,11 @@ class DockerDiagnostic {
   }
 
   async checkDockerLogs() {
-    console.log('\n📋 Checking Clara Container Logs...');
+    console.log('\n📋 Checking angela Container Logs...');
     
-    const claraContainers = ['clara_python', 'clara_comfyui', 'clara_n8n'];
+    const angelaContainers = ['angela_python', 'angela_comfyui', 'angela_n8n'];
     
-    for (const containerName of claraContainers) {
+    for (const containerName of angelaContainers) {
       try {
         const { stdout } = await execAsync(`docker logs ${containerName} --tail 10`, { timeout: 5000 });
         if (stdout.trim()) {
@@ -205,19 +205,19 @@ class DockerDiagnostic {
     console.log('General troubleshooting steps:');
     console.log('   1. Restart Docker Desktop completely');
     console.log('   2. Clear Docker cache: docker system prune -af');
-    console.log('   3. Restart Clara application');
-    console.log('   4. If still stuck, check Clara logs in console');
-    console.log('   5. Try running Clara with: DEBUG=1 npm start');
+    console.log('   3. Restart angela application');
+    console.log('   4. If still stuck, check angela logs in console');
+    console.log('   5. Try running angela with: DEBUG=1 npm start');
     
     console.log('\n🔧 Emergency Recovery Commands:');
-    console.log('   # Stop all Clara containers');
-    console.log('   docker stop clara_python clara_comfyui clara_n8n 2>/dev/null || true');
+    console.log('   # Stop all angela containers');
+    console.log('   docker stop angela_python angela_comfyui angela_n8n 2>/dev/null || true');
     console.log('   ');
-    console.log('   # Remove all Clara containers');
-    console.log('   docker rm -f clara_python clara_comfyui clara_n8n 2>/dev/null || true');
+    console.log('   # Remove all angela containers');
+    console.log('   docker rm -f angela_python angela_comfyui angela_n8n 2>/dev/null || true');
     console.log('   ');
-    console.log('   # Clean up Clara network');
-    console.log('   docker network rm clara_network 2>/dev/null || true');
+    console.log('   # Clean up angela network');
+    console.log('   docker network rm angela_network 2>/dev/null || true');
     console.log('   ');
     console.log('   # Full Docker cleanup (use with caution)');
     console.log('   docker system prune -af --volumes');

@@ -25,13 +25,13 @@ import NotebookChat from './NotebookChat';
 import GraphViewer from './GraphViewer';
 import NotebookWorkspace from './NotebookWorkspace';
 import { 
-  claraNotebookService, 
+  angelaNotebookService, 
   NotebookResponse, 
   NotebookDocumentResponse 
-} from '../../services/claraNotebookService';
+} from '../../services/angelaNotebookService';
 import { useProviders } from '../../contexts/ProvidersContext';
-import { claraApiService } from '../../services/claraApiService';
-import { ClaraModel } from '../../types/clara_assistant_types';
+import { angelaApiService } from '../../services/angelaApiService';
+import { angelaModel } from '../../types/angela_assistant_types';
 
 interface NotebookDetailsProps {
   notebook: NotebookResponse;
@@ -56,7 +56,7 @@ const NotebookDetails: React.FC<NotebookDetailsProps> = ({
   const [isEditingLLM, setIsEditingLLM] = useState(false);
   const [selectedLLMProvider, setSelectedLLMProvider] = useState('');
   const [selectedLLMModel, setSelectedLLMModel] = useState('');
-  const [models, setModels] = useState<ClaraModel[]>([]);
+  const [models, setModels] = useState<angelaModel[]>([]);
   const [useWorkspaceView] = useState(true);
   
   // Get providers from context
@@ -96,7 +96,7 @@ const NotebookDetails: React.FC<NotebookDetailsProps> = ({
   }, [documents, notebook.id]);
 
   const loadDocuments = async () => {
-    if (!claraNotebookService.isBackendHealthy()) {
+    if (!angelaNotebookService.isBackendHealthy()) {
       setError('Notebook backend is not available');
       setIsLoading(false);
       return;
@@ -109,7 +109,7 @@ const NotebookDetails: React.FC<NotebookDetailsProps> = ({
     setError(null);
     
     try {
-      const data = await claraNotebookService.listDocuments(notebook.id);
+      const data = await angelaNotebookService.listDocuments(notebook.id);
       setDocuments(data);
     } catch (err) {
       console.error('Failed to load documents:', err);
@@ -122,7 +122,7 @@ const NotebookDetails: React.FC<NotebookDetailsProps> = ({
 
   const loadModels = async () => {
     try {
-      const allModels = await claraApiService.getModels();
+      const allModels = await angelaApiService.getModels();
       setModels(allModels);
     } catch (error) {
       console.error('Failed to load models:', error);
@@ -192,12 +192,12 @@ const NotebookDetails: React.FC<NotebookDetailsProps> = ({
   );
 
   const handleDocumentUpload = async (files: File[]) => {
-    if (!claraNotebookService.isBackendHealthy()) {
+    if (!angelaNotebookService.isBackendHealthy()) {
       throw new Error('Notebook backend is not available');
     }
 
     try {
-      const uploadedDocs = await claraNotebookService.uploadDocuments(notebook.id, files);
+      const uploadedDocs = await angelaNotebookService.uploadDocuments(notebook.id, files);
       
       // Add new documents to the list
       setDocuments(prev => [...uploadedDocs, ...prev]);
@@ -221,13 +221,13 @@ const NotebookDetails: React.FC<NotebookDetailsProps> = ({
       return;
     }
 
-    if (!claraNotebookService.isBackendHealthy()) {
+    if (!angelaNotebookService.isBackendHealthy()) {
       setError('Notebook backend is not available');
       return;
     }
 
     try {
-      await claraNotebookService.deleteDocument(notebook.id, documentId);
+      await angelaNotebookService.deleteDocument(notebook.id, documentId);
       
       // Remove from local state
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));
@@ -591,9 +591,9 @@ const NotebookDetails: React.FC<NotebookDetailsProps> = ({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-700 dark:text-gray-300">Backend Connection</span>
-                    <div className={`flex items-center gap-2 ${claraNotebookService.isBackendHealthy() ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      <div className={`w-2 h-2 rounded-full ${claraNotebookService.isBackendHealthy() ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                      {claraNotebookService.isBackendHealthy() ? 'Connected' : 'Disconnected'}
+                    <div className={`flex items-center gap-2 ${angelaNotebookService.isBackendHealthy() ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      <div className={`w-2 h-2 rounded-full ${angelaNotebookService.isBackendHealthy() ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                      {angelaNotebookService.isBackendHealthy() ? 'Connected' : 'Disconnected'}
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
@@ -609,7 +609,7 @@ const NotebookDetails: React.FC<NotebookDetailsProps> = ({
                 <div className="space-y-3">
                   <button
                     onClick={loadDocuments}
-                    disabled={!claraNotebookService.isBackendHealthy()}
+                    disabled={!angelaNotebookService.isBackendHealthy()}
                     className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                   >
                     Refresh All Documents

@@ -1,10 +1,10 @@
 /**
- * Browser-compatible entry point for Clara Flow SDK
+ * Browser-compatible entry point for angela Flow SDK
  * Excludes Node.js-specific modules and provides browser-safe functionality
  */
 
 // Import core functionality
-import { ClaraFlowRunner } from './index.js';
+import { angelaFlowRunner } from './index.js';
 
 // Browser-compatible logger (simplified)
 class BrowserLogger {
@@ -31,7 +31,7 @@ class BrowserLogger {
 }
 
 // Browser-compatible Flow Runner
-class BrowserClaraFlowRunner extends ClaraFlowRunner {
+class BrowserangelaFlowRunner extends angelaFlowRunner {
   constructor(options = {}) {
     // Override logger for browser compatibility
     const browserOptions = {
@@ -121,15 +121,15 @@ class BrowserClaraFlowRunner extends ClaraFlowRunner {
 }
 
 // Export for UMD build
-export { BrowserClaraFlowRunner as ClaraFlowRunner };
+export { BrowserangelaFlowRunner as angelaFlowRunner };
 
 // Also export utility functions
 export const createFlowRunner = (options = {}) => {
-  return new BrowserClaraFlowRunner(options);
+  return new BrowserangelaFlowRunner(options);
 };
 
 export const validateFlow = (flowData) => {
-  const runner = new BrowserClaraFlowRunner();
+  const runner = new BrowserangelaFlowRunner();
   return runner.validateFlow(flowData);
 };
 
@@ -188,4 +188,4 @@ export const BrowserUtils = {
 };
 
 // Default export
-export default BrowserClaraFlowRunner; 
+export default BrowserangelaFlowRunner; 

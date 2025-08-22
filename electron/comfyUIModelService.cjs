@@ -16,12 +16,12 @@ class ComfyUIModelService extends EventEmitter {
     console.log('🎨 Initializing ComfyUIModelService...');
     
     this.docker = new Docker();
-    this.containerName = 'clara_comfyui';
+    this.containerName = 'angela_comfyui';
     
     // Local download and persistent storage directories
     const os = require('os');
-    this.localDownloadDir = path.join(os.homedir(), '.clara', 'model-downloads');
-    this.persistentModelDir = path.join(os.homedir(), '.clara', 'comfyui-data', 'models');
+    this.localDownloadDir = path.join(os.homedir(), '.angela', 'model-downloads');
+    this.persistentModelDir = path.join(os.homedir(), '.angela', 'comfyui-data', 'models');
     
     console.log(`📁 Download dir: ${this.localDownloadDir}`);
     console.log(`📁 Persistent dir: ${this.persistentModelDir}`);
@@ -248,7 +248,7 @@ class ComfyUIModelService extends EventEmitter {
       
       // Prepare headers with API key if provided
       const headers = {
-        'User-Agent': 'Clara-AI-Assistant/1.0',
+        'User-Agent': 'angela-AI-Assistant/1.0',
         'Accept': '*/*',
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive'

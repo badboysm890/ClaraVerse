@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * Simple test for new Clara Flow SDK nodes
+ * Simple test for new angela Flow SDK nodes
  * Tests node executors directly without complex flow validation
  */
 
-import { ClaraFlowRunner } from './src/index.js';
+import { angelaFlowRunner } from './src/index.js';
 
-console.log('[INFO] Testing new Clara Flow SDK nodes (direct execution)...');
+console.log('[INFO] Testing new angela Flow SDK nodes (direct execution)...');
 
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,
   timeout: 30000
 });
@@ -220,7 +220,7 @@ async function runAllTests() {
     await testNodeAvailability();
     
     console.log('\n[SUCCESS] All new node tests completed successfully!');
-    console.log('[INFO] Clara Flow SDK v1.4.0 with new nodes is ready for release');
+    console.log('[INFO] angela Flow SDK v1.4.0 with new nodes is ready for release');
     console.log('\n📦 New Features Added:');
     console.log('  🔗 combine-text: Advanced text combination with multiple modes');
     console.log('  📁 file-upload: Universal file handling with format conversion');

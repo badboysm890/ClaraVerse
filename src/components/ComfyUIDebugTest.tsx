@@ -27,7 +27,7 @@ const ComfyUIDebugTest: React.FC = () => {
       
       // Find ComfyUI container
       const comfyuiContainer = containers?.find((c: any) => 
-        c.name === 'clara_comfyui' || c.name.includes('comfyui')
+        c.name === 'angela_comfyui' || c.name.includes('comfyui')
       );
       
       if (!comfyuiContainer) {

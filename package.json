@@ -1,8 +1,8 @@
 {
-  "name": "clara-verse",
+  "name": "angela-verse",
   "version": "0.1.31",
   "private": true,
-  "description": "Clara – A privacy-first, client-side AI assistant WebUI for LLMs. No backend, no data leaks. Keep your conversations completely yours, If you like it, Don't Forget to Give a Star 🌟",
+  "description": "angela – A privacy-first, client-side AI assistant WebUI for LLMs. No backend, no data leaks. Keep your conversations completely yours, If you like it, Don't Forget to Give a Star 🌟",
   "author": {
     "name": "badboysm890",
     "email": "praveensm890@gmail.com"
@@ -27,8 +27,8 @@
     "widgets:build": "cd widgets_service_app && go build -ldflags=\"-s -w\" -o widgets-service-windows.exe main.go enhanced_pdf_processor.go",
     "widgets:build-all": "cd widgets_service_app && chmod +x build.sh && ./build.sh",
     "widgets:test": "cd widgets_service_app && ./widgets-service-windows.exe",
-    "llama-optimizer:build": "cd clara-core-optimiser && go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-windows.exe llama_optimizer.go",
-    "llama-optimizer:build-all": "cd clara-core-optimiser && go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-windows.exe llama_optimizer.go && cross-env GOOS=darwin GOARCH=amd64 go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-darwin-amd64 llama_optimizer.go && cross-env GOOS=darwin GOARCH=arm64 go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-darwin-arm64 llama_optimizer.go && cross-env GOOS=linux GOARCH=amd64 go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-linux llama_optimizer.go",
+    "llama-optimizer:build": "cd angela-core-optimiser && go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-windows.exe llama_optimizer.go",
+    "llama-optimizer:build-all": "cd angela-core-optimiser && go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-windows.exe llama_optimizer.go && cross-env GOOS=darwin GOARCH=amd64 go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-darwin-amd64 llama_optimizer.go && cross-env GOOS=darwin GOARCH=arm64 go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-darwin-arm64 llama_optimizer.go && cross-env GOOS=linux GOARCH=amd64 go build -ldflags=\"-s -w\" -o ../electron/services/llama-optimizer-linux llama_optimizer.go",
     "llama-optimizer:test": "electron/services/llama-optimizer-windows.exe -specs",
     "electron:build-all": "npm run build && electron-builder --mac --win --linux",
     "electron:build": "npm run build && electron-builder",
@@ -46,10 +46,10 @@
     "package:mac-unsigned": "npm run build && electron-builder build -c.mac.identity=null --publish always",
     "electron:build-mac-publish": "npm run build && electron-builder --mac --universal --publish always",
     "docker:check-env": "node -e \"if(!process.env.DOCKER_USERNAME) { console.error('Error: DOCKER_USERNAME environment variable is not set.\\nPlease set it using: export DOCKER_USERNAME=your-username'); process.exit(1); }\"",
-    "docker:build": "if [ -z \"$DOCKER_USERNAME\" ]; then docker build -t clara-ollama:latest .; else docker build -t $DOCKER_USERNAME/clara-ollama:latest .; fi",
-    "docker:run": "if [ -z \"$DOCKER_USERNAME\" ]; then docker run -p 8069:8069 clara-ollama:latest; else docker run -p 8069:8069 $DOCKER_USERNAME/clara-ollama:latest; fi",
+    "docker:build": "if [ -z \"$DOCKER_USERNAME\" ]; then docker build -t angela-ollama:latest .; else docker build -t $DOCKER_USERNAME/angela-ollama:latest .; fi",
+    "docker:run": "if [ -z \"$DOCKER_USERNAME\" ]; then docker run -p 8069:8069 angela-ollama:latest; else docker run -p 8069:8069 $DOCKER_USERNAME/angela-ollama:latest; fi",
     "docker:login": "docker login",
-    "docker:push": "npm run docker:check-env && docker push $DOCKER_USERNAME/clara-ollama:latest",
+    "docker:push": "npm run docker:check-env && docker push $DOCKER_USERNAME/angela-ollama:latest",
     "docker:all": "npm run docker:check-env && npm run docker:login && npm run docker:build && npm run docker:push",
     "docker:publish": "chmod +x ./docker-publish.sh && ./docker-publish.sh",
     "docker:build-backend": "./scripts/build-backend-docker.sh",
@@ -119,7 +119,7 @@
     "chalk": "^5.3.0",
     "chart.js": "^4.4.9",
     "chokidar": "^3.5.0",
-    "clara-flow-sdk": "^1.3.0",
+    "angela-flow-sdk": "^1.3.0",
     "clsx": "^2.1.1",
     "commander": "^11.0.0",
     "crypto-js": "^4.2.0",
@@ -234,17 +234,17 @@
     "canvas": "npm:canvas-prebuilt@^2.11.2"
   },
   "build": {
-    "appId": "com.clara-ai.app",
-    "productName": "Clara",
+    "appId": "com.angela-ai.app",
+    "productName": "angela",
     "npmRebuild": false,
     "buildDependenciesFromSource": false,
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "!clara_interpreter",
-      "!clara_interpreter/**/*",
-      "!**/clara_interpreter",
-      "!**/clara_interpreter/**/*",
+      "!angela_interpreter",
+      "!angela_interpreter/**/*",
+      "!**/angela_interpreter",
+      "!**/angela_interpreter/**/*",
       "!**/**/venv/**/*",
       "!**/venv/**/*",
       "!venv",
@@ -288,7 +288,7 @@
     "publish": {
       "provider": "github",
       "owner": "badboysm890",
-      "repo": "ClaraVerse",
+      "repo": "angelaVerse",
       "releaseType": "release",
       "private": false
     },
@@ -312,7 +312,7 @@
       "artifactName": "${productName}-${version}-arm64.${ext}",
       "type": "distribution",
       "files": [
-        "!clara_interpreter/**/*",
+        "!angela_interpreter/**/*",
         "!**/**/venv/**/*",
         "!**/venv/**/*",
         "!venv",
@@ -344,7 +344,7 @@
       ],
       "extraFiles": [],
       "files": [
-        "!clara_interpreter/**/*",
+        "!angela_interpreter/**/*",
         "!**/**/venv/**/*",
         "!**/venv/**/*",
         "!venv",
@@ -361,11 +361,11 @@
       "desktop": {
         "StartupNotify": "false",
         "Encoding": "UTF-8",
-        "MimeType": "x-scheme-handler/clara"
+        "MimeType": "x-scheme-handler/angela"
       },
       "artifactName": "${productName}-${version}.${ext}",
       "files": [
-        "!clara_interpreter/**/*",
+        "!angela_interpreter/**/*",
         "!**/**/venv/**/*",
         "!**/venv/**/*",
         "!venv",
@@ -381,7 +381,7 @@
       "uninstallerIcon": "assets/icons/win/icon.ico",
       "installerHeaderIcon": "assets/icons/win/icon.ico",
       "createStartMenuShortcut": true,
-      "shortcutName": "Clara",
+      "shortcutName": "angela",
       "license": "LICENSE",
       "deleteAppDataOnUninstall": true
     },
@@ -406,7 +406,7 @@
     }
   },
   "bin": {
-    "clara-studio": "./src/lib/agent-studio/cli/clara-studio.js"
+    "angela-studio": "./src/lib/agent-studio/cli/angela-studio.js"
   },
   "eslintConfig": {
     "extends": [

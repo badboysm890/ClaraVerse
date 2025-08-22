@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * Test script for new Clara Flow SDK nodes
+ * Test script for new angela Flow SDK nodes
  * Tests: combine-text, file-upload, whisper-transcription
  */
 
-import { ClaraFlowRunner } from './src/index.js';
+import { angelaFlowRunner } from './src/index.js';
 
-console.log('[INFO] Testing new Clara Flow SDK nodes...');
+console.log('[INFO] Testing new angela Flow SDK nodes...');
 
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,
   timeout: 30000
 });

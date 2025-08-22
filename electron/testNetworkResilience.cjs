@@ -319,7 +319,7 @@ class NetworkResilienceTest {
       log.info('  ✅ LlamaSwap service startup optimized to reduce system impact');
       log.info('');
       log.info('🚀 NEXT STEPS:');
-      log.info('  1. Test the complete solution by starting ClaraVerse');
+      log.info('  1. Test the complete solution by starting angelaVerse');
       log.info('  2. Monitor the logs during llama-cpp startup');
       log.info('  3. Verify that UI no longer refreshes 3 times');
     } else {

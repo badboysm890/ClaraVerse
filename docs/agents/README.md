@@ -1,6 +1,6 @@
 # Agent Studio Overview
 
-**Agent Studio** is ClaraVerse's powerful visual workflow builder that lets you create, test, and deploy AI agents without writing code. Build complex AI workflows using a drag-and-drop interface with instant execution and real-time feedback.
+**Agent Studio** is angelaVerse's powerful visual workflow builder that lets you create, test, and deploy AI agents without writing code. Build complex AI workflows using a drag-and-drop interface with instant execution and real-time feedback.
 
 ![Agent Studio Interface](../assets/agent-studio-overview.png)
 
@@ -65,7 +65,7 @@ Input Nodes → Processing Nodes → AI Nodes → Output Nodes
 ## 🚀 Getting Started
 
 ### **1. Access Agent Studio**
-Navigate to the **Agents** section in ClaraVerse and click **"Create New Agent"**
+Navigate to the **Agents** section in angelaVerse and click **"Create New Agent"**
 
 ### **2. Understand the Interface**
 - **Canvas**: Central workspace for building workflows

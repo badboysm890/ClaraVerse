@@ -268,7 +268,7 @@ declare global {
       }>;
     };
     webContainerManager: any;
-    claraTTSService: any;
+    angelaTTSService: any;
     electronScreenShare?: {
       getDesktopSources: () => Promise<Array<{
         id: string;

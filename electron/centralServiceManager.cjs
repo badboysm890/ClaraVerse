@@ -3,7 +3,7 @@ const log = require('electron-log');
 
 /**
  * Central Service Manager
- * Single source of truth for all ClaraVerse services
+ * Single source of truth for all angelaVerse services
  * Supports both Docker and manual deployment modes
  * Replaces scattered service management across multiple files
  */
@@ -80,7 +80,7 @@ class CentralServiceManager extends EventEmitter {
 
   async _startServicesSequence() {
     try {
-      log.info('🚀 Starting all ClaraVerse services...');
+      log.info('🚀 Starting all angelaVerse services...');
       
       // Get services ordered by priority
       const orderedServices = this.getStartupOrder();
@@ -181,7 +181,7 @@ class CentralServiceManager extends EventEmitter {
     this.isShuttingDown = true;
     
     try {
-      log.info('🛑 Stopping all ClaraVerse services...');
+      log.info('🛑 Stopping all angelaVerse services...');
       
       // Get services in reverse startup order
       const orderedServices = this.getStartupOrder().reverse();

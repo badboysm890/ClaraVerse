@@ -1,14 +1,14 @@
 /**
  * useMemoryManager.ts
  * 
- * React hook for integrating with Clara's memory management system.
+ * React hook for integrating with angela's memory management system.
  * Provides reactive state management and event-driven updates.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { claraMemoryManager, type MemoryEvent } from '../services/ClaraMemoryManager';
-import { UserMemoryProfile } from '../components/ClaraSweetMemory';
-import type { ClaraMessage, ClaraAIConfig } from '../types/clara_assistant_types';
+import { angelaMemoryManager, type MemoryEvent } from '../services/angelaMemoryManager';
+import { UserMemoryProfile } from '../components/angelaSweetMemory';
+import type { angelaMessage, angelaAIConfig } from '../types/angela_assistant_types';
 
 export interface MemoryManagerState {
   profile: UserMemoryProfile | null;
@@ -27,9 +27,9 @@ export interface MemoryManagerState {
 export interface MemoryManagerActions {
   processConversation: (
     userMessage: string,
-    assistantMessage: ClaraMessage,
-    conversationHistory?: ClaraMessage[],
-    aiConfig?: ClaraAIConfig
+    assistantMessage: angelaMessage,
+    conversationHistory?: angelaMessage[],
+    aiConfig?: angelaAIConfig
   ) => Promise<boolean>;
   getUserProfile: () => Promise<UserMemoryProfile | null>;
   deleteProfile: () => Promise<boolean>;
@@ -57,7 +57,7 @@ export function useMemoryManager(): [MemoryManagerState, MemoryManagerActions] {
   // Update stats
   const refreshStats = useCallback(async () => {
     try {
-      const stats = await claraMemoryManager.getMemoryStats();
+      const stats = await angelaMemoryManager.getMemoryStats();
       setState(prev => ({ ...prev, stats }));
     } catch (error) {
       console.error('Failed to refresh memory stats:', error);
@@ -68,12 +68,12 @@ export function useMemoryManager(): [MemoryManagerState, MemoryManagerActions] {
   const actions: MemoryManagerActions = {
     processConversation: useCallback(async (
       userMessage: string,
-      assistantMessage: ClaraMessage,
-      conversationHistory: ClaraMessage[] = [],
-      aiConfig?: ClaraAIConfig
+      assistantMessage: angelaMessage,
+      conversationHistory: angelaMessage[] = [],
+      aiConfig?: angelaAIConfig
     ) => {
       try {
-        return await claraMemoryManager.processConversation(
+        return await angelaMemoryManager.processConversation(
           userMessage,
           assistantMessage,
           conversationHistory,
@@ -87,7 +87,7 @@ export function useMemoryManager(): [MemoryManagerState, MemoryManagerActions] {
 
     getUserProfile: useCallback(async () => {
       try {
-        const profile = await claraMemoryManager.getUserProfile();
+        const profile = await angelaMemoryManager.getUserProfile();
         setState(prev => ({ ...prev, profile }));
         return profile;
       } catch (error) {
@@ -98,7 +98,7 @@ export function useMemoryManager(): [MemoryManagerState, MemoryManagerActions] {
 
     deleteProfile: useCallback(async () => {
       try {
-        const success = await claraMemoryManager.deleteUserProfile();
+        const success = await angelaMemoryManager.deleteUserProfile();
         if (success) {
           setState(prev => ({ 
             ...prev, 
@@ -122,7 +122,7 @@ export function useMemoryManager(): [MemoryManagerState, MemoryManagerActions] {
 
     createBackup: useCallback(async () => {
       try {
-        return await claraMemoryManager.createBackup();
+        return await angelaMemoryManager.createBackup();
       } catch (error) {
         console.error('Failed to create backup:', error);
         return null;
@@ -131,11 +131,11 @@ export function useMemoryManager(): [MemoryManagerState, MemoryManagerActions] {
 
     restoreFromBackup: useCallback(async (backup: string) => {
       try {
-        const success = await claraMemoryManager.restoreFromBackup(backup);
+        const success = await angelaMemoryManager.restoreFromBackup(backup);
         if (success) {
           // Refresh profile and stats after restore
-          const profile = await claraMemoryManager.getUserProfile();
-          const stats = await claraMemoryManager.getMemoryStats();
+          const profile = await angelaMemoryManager.getUserProfile();
+          const stats = await angelaMemoryManager.getMemoryStats();
           setState(prev => ({ ...prev, profile, stats }));
         }
         return success;
@@ -147,11 +147,11 @@ export function useMemoryManager(): [MemoryManagerState, MemoryManagerActions] {
 
     migrateLegacyData: useCallback(async () => {
       try {
-        const success = await claraMemoryManager.migrateLegacyData();
+        const success = await angelaMemoryManager.migrateLegacyData();
         if (success) {
           // Refresh profile and stats after migration
-          const profile = await claraMemoryManager.getUserProfile();
-          const stats = await claraMemoryManager.getMemoryStats();
+          const profile = await angelaMemoryManager.getUserProfile();
+          const stats = await angelaMemoryManager.getMemoryStats();
           setState(prev => ({ ...prev, profile, stats }));
         }
         return success;
@@ -206,18 +206,18 @@ export function useMemoryManager(): [MemoryManagerState, MemoryManagerActions] {
     };
 
     // Subscribe to memory events
-    const unsubscribe = claraMemoryManager.addEventListener(handleMemoryEvent);
+    const unsubscribe = angelaMemoryManager.addEventListener(handleMemoryEvent);
 
     // Initial data load
     const initializeData = async () => {
       try {
         // Try to migrate legacy data first
-        await claraMemoryManager.migrateLegacyData();
+        await angelaMemoryManager.migrateLegacyData();
         
         // Load current profile and stats
         const [profile, stats] = await Promise.all([
-          claraMemoryManager.getUserProfile(),
-          claraMemoryManager.getMemoryStats()
+          angelaMemoryManager.getUserProfile(),
+          angelaMemoryManager.getMemoryStats()
         ]);
 
         if (isMounted) {
@@ -225,7 +225,7 @@ export function useMemoryManager(): [MemoryManagerState, MemoryManagerActions] {
             ...prev,
             profile,
             stats,
-            isProcessing: claraMemoryManager.isProcessing()
+            isProcessing: angelaMemoryManager.isProcessing()
           }));
         }
       } catch (error) {

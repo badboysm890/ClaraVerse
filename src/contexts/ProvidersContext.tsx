@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { db, Provider } from '../db';
-import { ProviderConfig } from '../services/claraNotebookService';
+import { ProviderConfig } from '../services/angelaNotebookService';
 
 interface ProvidersContextType {
   providers: Provider[];
@@ -163,7 +163,7 @@ export const ProvidersProvider: React.FC<ProvidersProviderProps> = ({ children }
     // Auto-detect provider type based on baseUrl for non-ollama providers
     let providerType = provider.type as 'openai' | 'openai_compatible' | 'ollama';
     
-    if (provider.type !== 'ollama' && provider.type !== 'claras-pocket') {
+    if (provider.type !== 'ollama' && provider.type !== 'angelas-pocket') {
       // Check if baseUrl is official OpenAI API
       if (provider.baseUrl === 'https://api.openai.com/v1' || provider.baseUrl === 'https://api.openai.com') {
         providerType = 'openai';

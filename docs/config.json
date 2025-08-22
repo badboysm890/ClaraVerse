@@ -9,7 +9,7 @@
   "files": {
     "getting-started": {
       "title": "Getting Started",
-      "description": "Quick start guide to set up ClaraVerse",
+      "description": "Quick start guide to set up angelaVerse",
       "category": "getting-started",
       "order": 1,
       "filePath": "getting-started/README.md"
@@ -28,12 +28,12 @@
       "order": 3,
       "filePath": "features/lumaui.md"
     },
-    "clara-assistant": {
-      "title": "Clara Assistant",
+    "angela-assistant": {
+      "title": "angela Assistant",
       "description": "Your AI coding companion",
       "category": "features",
       "order": 4,
-      "filePath": "features/clara-assistant.md"
+      "filePath": "features/angela-assistant.md"
     },
     "agent-studio": {
       "title": "Agent Studio Overview",
@@ -79,7 +79,7 @@
     },
     "ai-features": {
       "title": "AI Features",
-      "description": "Explore ClaraVerse AI capabilities",
+      "description": "Explore angelaVerse AI capabilities",
       "category": "ai-features",
       "order": 11,
       "filePath": "ai-features/README.md"

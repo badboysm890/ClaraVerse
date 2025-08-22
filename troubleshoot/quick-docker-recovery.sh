@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Clara Docker Quick Recovery Script
-# Use this when Clara gets stuck during Docker startup
+# angela Docker Quick Recovery Script
+# Use this when angela gets stuck during Docker startup
 
-echo "🚨 Clara Docker Quick Recovery"
+echo "🚨 angela Docker Quick Recovery"
 echo "=============================="
 echo ""
 
@@ -21,14 +21,14 @@ run_cmd() {
     echo ""
 }
 
-# Stop Clara containers
-run_cmd "docker stop clara_python clara_comfyui clara_n8n" "Stopping Clara containers"
+# Stop angela containers
+run_cmd "docker stop angela_python angela_comfyui angela_n8n" "Stopping angela containers"
 
-# Remove Clara containers
-run_cmd "docker rm -f clara_python clara_comfyui clara_n8n" "Removing Clara containers"
+# Remove angela containers
+run_cmd "docker rm -f angela_python angela_comfyui angela_n8n" "Removing angela containers"
 
-# Remove Clara network
-run_cmd "docker network rm clara_network" "Removing Clara network"
+# Remove angela network
+run_cmd "docker network rm angela_network" "Removing angela network"
 
 # Clean up any stuck containers
 echo "🧹 Cleaning up stuck containers..."
@@ -61,9 +61,9 @@ echo ""
 echo "🎉 Recovery complete!"
 echo ""
 echo "💡 Next steps:"
-echo "   1. Restart Clara application"
+echo "   1. Restart angela application"
 echo "   2. If still having issues, run: node troubleshoot/diagnose-docker-hang.js"
-echo "   3. Check Clara logs for more details"
+echo "   3. Check angela logs for more details"
 echo ""
 echo "🔧 If problems persist:"
 echo "   • Restart Docker Desktop completely"

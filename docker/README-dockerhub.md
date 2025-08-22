@@ -1,6 +1,6 @@
-# Clara ComfyUI Docker Container
+# angela ComfyUI Docker Container
 
-A comprehensive ComfyUI Docker container for the Clara AI ecosystem, pre-configured with essential custom nodes and optimizations.
+A comprehensive ComfyUI Docker container for the angela AI ecosystem, pre-configured with essential custom nodes and optimizations.
 
 ## 🎨 What's Included
 
@@ -24,13 +24,13 @@ A comprehensive ComfyUI Docker container for the Clara AI ecosystem, pre-configu
 
 ### Basic Usage
 ```bash
-docker pull clara17verse/clara-comfyui:latest
-docker run -p 8188:8188 clara17verse/clara-comfyui:latest
+docker pull angela17verse/angela-comfyui:latest
+docker run -p 8188:8188 angela17verse/angela-comfyui:latest
 ```
 
 ### With GPU Support
 ```bash
-docker run --gpus all -p 8188:8188 clara17verse/clara-comfyui:latest
+docker run --gpus all -p 8188:8188 angela17verse/angela-comfyui:latest
 ```
 
 ### With Persistent Data
@@ -40,7 +40,7 @@ docker run --gpus all \
   -v $(pwd)/models:/app/ComfyUI/models \
   -v $(pwd)/output:/app/ComfyUI/output \
   -v $(pwd)/input:/app/ComfyUI/input \
-  clara17verse/clara-comfyui:latest
+  angela17verse/angela-comfyui:latest
 ```
 
 ## 📋 Available Tags
@@ -69,7 +69,7 @@ docker run --gpus all \
 version: '3.8'
 services:
   comfyui:
-    image: clara17verse/clara-comfyui:latest
+    image: angela17verse/angela-comfyui:latest
     ports:
       - "8188:8188"
     volumes:
@@ -102,7 +102,7 @@ services:
 - Health check endpoint for monitoring
 - Proper logging and error handling
 - Volume-friendly custom nodes directory
-- Easy integration with Clara ecosystem
+- Easy integration with angela ecosystem
 
 ### Production Ready
 - Based on Ubuntu 22.04 LTS
@@ -114,8 +114,8 @@ services:
 
 ### Building Locally
 ```bash
-git clone https://github.com/your-repo/claraverse
-cd claraverse/docker
+git clone https://github.com/your-repo/angelaverse
+cd angelaverse/docker
 ./test-build-comfyui.sh  # or test-build-comfyui.bat on Windows
 ```
 
@@ -126,17 +126,17 @@ The container supports easy custom node development:
 docker run -it --gpus all \
   -p 8188:8188 \
   -v $(pwd)/my-custom-nodes:/app/ComfyUI/custom_nodes/my-custom-nodes \
-  clara17verse/clara-comfyui:latest
+  angela17verse/angela-comfyui:latest
 ```
 
-## 🔗 Integration with Clara
+## 🔗 Integration with angela
 
-This container is optimized for use within the Clara AI ecosystem:
+This container is optimized for use within the angela AI ecosystem:
 
-- **Clara Desktop**: Automatic container management
-- **Clara Web**: Direct integration via API
-- **Clara Workflows**: Pre-configured workflow templates
-- **Clara Models**: Shared model management
+- **angela Desktop**: Automatic container management
+- **angela Web**: Direct integration via API
+- **angela Workflows**: Pre-configured workflow templates
+- **angela Models**: Shared model management
 
 ## 📊 System Requirements
 
@@ -154,9 +154,9 @@ This container is optimized for use within the Clara AI ecosystem:
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/your-repo/claraverse/issues)
-- **Discord**: [Clara Community](https://discord.gg/claraverse)
-- **Documentation**: [Clara Docs](https://docs.claraverse.space)
+- **Issues**: [GitHub Issues](https://github.com/your-repo/angelaverse/issues)
+- **Discord**: [angela Community](https://discord.gg/angelaverse)
+- **Documentation**: [angela Docs](https://docs.angelaverse.space)
 
 ## 📄 License
 
@@ -167,4 +167,4 @@ This container includes software under various licenses:
 
 ---
 
-**Built with ❤️ for the Clara AI community** 
+**Built with ❤️ for the angela AI community** 

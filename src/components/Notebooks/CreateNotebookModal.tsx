@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, BookOpen, AlertCircle, Bot, ChevronDown } from 'lucide-react';
 import { useProviders } from '../../contexts/ProvidersContext';
-import { claraApiService } from '../../services/claraApiService';
-import { ClaraModel } from '../../types/clara_assistant_types';
-import { ProviderConfig } from '../../services/claraNotebookService';
+import { angelaApiService } from '../../services/angelaApiService';
+import { angelaModel } from '../../types/angela_assistant_types';
+import { ProviderConfig } from '../../services/angelaNotebookService';
 
 interface CreateNotebookModalProps {
   onClose: () => void;
@@ -18,7 +18,7 @@ const CreateNotebookModal: React.FC<CreateNotebookModalProps> = ({ onClose, onCr
   
   // Provider selection state
   const { providers } = useProviders();
-  const [models, setModels] = useState<ClaraModel[]>([]);
+  const [models, setModels] = useState<angelaModel[]>([]);
   const [selectedLLMProvider, setSelectedLLMProvider] = useState<string>('');
   const [selectedLLMModel, setSelectedLLMModel] = useState<string>('');
   const [selectedEmbeddingProvider, setSelectedEmbeddingProvider] = useState<string>('');
@@ -31,7 +31,7 @@ const CreateNotebookModal: React.FC<CreateNotebookModalProps> = ({ onClose, onCr
       setIsLoadingModels(true);
       try {
         // Load all models
-        const allModels = await claraApiService.getModels();
+        const allModels = await angelaApiService.getModels();
         setModels(allModels);
 
         // Set default providers (use primary provider if available)

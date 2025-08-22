@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Check, X, Volume2, VolumeX, Trash2, CheckCheck, TestTube, Activity, AlertCircle, Info, CheckCircle, Speaker } from 'lucide-react';
-import { notificationService, ClaraNotification } from '../../services/notificationService';
+import { notificationService, angelaNotification } from '../../services/notificationService';
 
 interface NotificationPanelProps {
   className?: string;
-  onNavigateToClara?: () => void;
+  onNavigateToangela?: () => void;
 }
 
-const NotificationPanel: React.FC<NotificationPanelProps> = ({ className = '', onNavigateToClara }) => {
-  const [notifications, setNotifications] = useState<ClaraNotification[]>([]);
+const NotificationPanel: React.FC<NotificationPanelProps> = ({ className = '', onNavigateToangela }) => {
+  const [notifications, setNotifications] = useState<angelaNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -82,21 +82,21 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ className = '', o
     notificationService.markAllAsRead();
   };
 
-  const handleBackgroundNotificationClick = (notification: ClaraNotification) => {
-    // If it's a background Clara notification, navigate to Clara and mark as read
-    if (notification.title.includes('Clara Response Ready') && onNavigateToClara) {
-      onNavigateToClara();
+  const handleBackgroundNotificationClick = (notification: angelaNotification) => {
+    // If it's a background angela notification, navigate to angela and mark as read
+    if (notification.title.includes('angela Response Ready') && onNavigateToangela) {
+      onNavigateToangela();
       handleMarkAsRead(notification.id);
       setIsOpen(false);
     }
-    // If it's the background service notification, navigate to Clara but don't mark as read
-    else if (notification.title.includes('Clara Assistant Active') && onNavigateToClara) {
-      onNavigateToClara();
+    // If it's the background service notification, navigate to angela but don't mark as read
+    else if (notification.title.includes('angela Assistant Active') && onNavigateToangela) {
+      onNavigateToangela();
       setIsOpen(false);
     }
   };
 
-  const getNotificationIcon = (type: ClaraNotification['type']) => {
+  const getNotificationIcon = (type: angelaNotification['type']) => {
     switch (type) {
       case 'completion':
         return <CheckCircle className="w-4 h-4" />;
@@ -110,7 +110,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ className = '', o
     }
   };
 
-  const getNotificationColor = (type: ClaraNotification['type']) => {
+  const getNotificationColor = (type: angelaNotification['type']) => {
     switch (type) {
       case 'completion':
         return 'text-green-600 dark:text-green-400';
@@ -124,12 +124,12 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ className = '', o
     }
   };
 
-  const isBackgroundServiceNotification = (notification: ClaraNotification) => {
-    return notification.title.includes('Clara Assistant Active');
+  const isBackgroundServiceNotification = (notification: angelaNotification) => {
+    return notification.title.includes('angela Assistant Active');
   };
 
-  const isClaraResponseNotification = (notification: ClaraNotification) => {
-    return notification.title.includes('Clara Response Ready');
+  const isangelaResponseNotification = (notification: angelaNotification) => {
+    return notification.title.includes('angela Response Ready');
   };
 
   const formatTime = (timestamp: Date) => {
@@ -266,17 +266,17 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ className = '', o
             ) : (
               notifications.map((notification) => {
                 const isBackgroundService = isBackgroundServiceNotification(notification);
-                const isClaraResponse = isClaraResponseNotification(notification);
+                const isangelaResponse = isangelaResponseNotification(notification);
                 
                 return (
                   <div
                     key={notification.id}
                     onClick={() => handleBackgroundNotificationClick(notification)}
                     title={
-                      isClaraResponse 
-                        ? 'Click to go to Clara chat' 
+                      isangelaResponse 
+                        ? 'Click to go to angela chat' 
                         : isBackgroundService 
-                        ? 'Clara is running in background - click to go to Clara'
+                        ? 'angela is running in background - click to go to angela'
                         : undefined
                     }
                     className={`p-4 border-b border-gray-200/30 dark:border-gray-700/30 last:border-b-0 hover:bg-gray-100/50 dark:hover:bg-gray-700/20 transition-colors ${
@@ -286,7 +286,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ className = '', o
                     } ${
                       isBackgroundService 
                         ? 'cursor-pointer hover:bg-green-50/20 dark:hover:bg-green-900/20 border-l-2 border-l-green-400/50 bg-green-50/10 dark:bg-green-900/10' 
-                        : isClaraResponse 
+                        : isangelaResponse 
                         ? 'cursor-pointer hover:bg-sakura-50/20 dark:hover:bg-sakura-900/20' 
                         : ''
                     }`}
@@ -352,13 +352,13 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ className = '', o
                             </span>
                           )}
                           {isBackgroundService && (
-                            <span className="text-xs text-green-600 dark:text-green-400 font-medium" title="Click to go to Clara">
+                            <span className="text-xs text-green-600 dark:text-green-400 font-medium" title="Click to go to angela">
                               Background Service
                             </span>
                           )}
-                          {isClaraResponse && (
-                            <span className="text-xs text-sakura-600 dark:text-sakura-400 font-medium" title="Click to go to Clara">
-                              → Clara
+                          {isangelaResponse && (
+                            <span className="text-xs text-sakura-600 dark:text-sakura-400 font-medium" title="Click to go to angela">
+                              → angela
                             </span>
                           )}
                         </div>

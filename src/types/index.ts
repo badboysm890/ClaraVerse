@@ -19,7 +19,7 @@ export interface GalleryImage {
   views: number;
   model: string;
   resolution: string;
-  source?: 'clara' | 'comfyui';
+  source?: 'angela' | 'comfyui';
   originalPath?: string;
   fileSize?: number;
 }

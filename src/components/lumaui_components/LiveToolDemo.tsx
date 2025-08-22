@@ -95,7 +95,7 @@ const LiveToolDemo: React.FC = () => {
           🎭 Live Tool Execution Demo
         </h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          See how Clara shows live feedback during tool execution with beautiful GSAP animations
+          See how angela shows live feedback during tool execution with beautiful GSAP animations
         </p>
       </div>
 

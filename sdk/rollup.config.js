@@ -32,9 +32,9 @@ export default [
     input: 'src/browser.js',
     output: [
       {
-        file: 'dist/clara-flow-sdk.umd.js',
+        file: 'dist/angela-flow-sdk.umd.js',
         format: 'umd',
-        name: 'ClaraFlowSDK',
+        name: 'angelaFlowSDK',
         exports: 'named',
         sourcemap: true,
         globals: {
@@ -45,9 +45,9 @@ export default [
         }
       },
       {
-        file: 'dist/clara-flow-sdk.umd.min.js',
+        file: 'dist/angela-flow-sdk.umd.min.js',
         format: 'umd',
-        name: 'ClaraFlowSDK',
+        name: 'angelaFlowSDK',
         exports: 'named',
         sourcemap: true,
         plugins: [

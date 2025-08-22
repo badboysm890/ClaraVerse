@@ -8,15 +8,15 @@ if [ -z "$DOCKER_USERNAME" ]; then
 fi
 
 # Build the image
-docker build -t $DOCKER_USERNAME/clara-ollama:latest .
+docker build -t $DOCKER_USERNAME/angela-ollama:latest .
 
 # Login to Docker Hub
 docker login
 
 # Push the image
-docker push $DOCKER_USERNAME/clara-ollama:latest
+docker push $DOCKER_USERNAME/angela-ollama:latest
 
-echo "Successfully published to Docker Hub as $DOCKER_USERNAME/clara-ollama:latest"
+echo "Successfully published to Docker Hub as $DOCKER_USERNAME/angela-ollama:latest"
 echo "Users can now pull and run using:"
-echo "docker pull $DOCKER_USERNAME/clara-ollama:latest"
-echo "docker run -p 8069:8069 $DOCKER_USERNAME/clara-ollama:latest"
+echo "docker pull $DOCKER_USERNAME/angela-ollama:latest"
+echo "docker run -p 8069:8069 $DOCKER_USERNAME/angela-ollama:latest"

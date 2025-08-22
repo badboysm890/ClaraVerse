@@ -15,7 +15,7 @@ function testServicePath(simulateProduction = false) {
   const originalResourcesPath = process.resourcesPath;
   if (simulateProduction) {
     // Simulate production path
-    process.resourcesPath = 'C:\\Users\\Admin\\AppData\\Local\\Programs\\Clara\\resources';
+    process.resourcesPath = 'C:\\Users\\Admin\\AppData\\Local\\Programs\\angela\\resources';
   } else {
     // Ensure we're in development mode
     delete process.resourcesPath;

@@ -1,10 +1,10 @@
 /**
- * Clara Flow SDK v2.0 - Modern AI Workflow Execution Engine
- * Zero-config SDK for running Clara AI agent workflows
+ * angela Flow SDK v2.0 - Modern AI Workflow Execution Engine
+ * Zero-config SDK for running angela AI agent workflows
  */
 
 // Core execution engine
-class ClaraFlowRunner {
+class angelaFlowRunner {
   constructor(options = {}) {
     this.config = {
       timeout: options.timeout || 30000,
@@ -19,13 +19,13 @@ class ClaraFlowRunner {
     this.isExecuting = false;
     
     if (this.config.enableLogging) {
-      this.log('Clara Flow SDK v2.0 initialized');
+      this.log('angela Flow SDK v2.0 initialized');
     }
   }
 
   /**
    * Execute a workflow with inputs
-   * @param {Object} flowData - Exported workflow from Clara Studio
+   * @param {Object} flowData - Exported workflow from angela Studio
    * @param {Object} inputs - Input values for the workflow
    * @returns {Promise<Object>} Execution results
    */
@@ -252,7 +252,7 @@ class ClaraFlowRunner {
   // Private methods
   
   normalizeFlow(flowData) {
-    // Handle different export formats from Clara Studio
+    // Handle different export formats from angela Studio
     if (flowData.format && flowData.flow) {
       // SDK export format
       return flowData.flow;
@@ -712,7 +712,7 @@ class ClaraFlowRunner {
     
     if (typeof console !== 'undefined') {
       const logMethod = console[level] || console.log;
-      logMethod(`[Clara SDK] ${message}`, data || '');
+      logMethod(`[angela SDK] ${message}`, data || '');
     }
   }
 }
@@ -771,7 +771,7 @@ const BrowserUtils = {
 };
 
 // Export main classes and utilities
-export { ClaraFlowRunner, BrowserUtils };
+export { angelaFlowRunner, BrowserUtils };
 
 // Default export for CommonJS compatibility
-export default ClaraFlowRunner;
+export default angelaFlowRunner;

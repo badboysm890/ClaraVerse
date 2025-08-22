@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Clara Docker Troubleshooting & Fix Script for macOS
-# This script diagnoses and fixes common Docker detection issues for Clara
+# angela Docker Troubleshooting & Fix Script for macOS
+# This script diagnoses and fixes common Docker detection issues for angela
 
 set -e
 
@@ -143,7 +143,7 @@ check_docker_process() {
 check_docker_sockets() {
     print_header "CHECKING DOCKER SOCKET LOCATIONS"
     
-    # Clara's socket search order (from dockerSetup.cjs)
+    # angela's socket search order (from dockerSetup.cjs)
     SOCKET_PATHS=(
         "$HOME/.docker/desktop/docker.sock"
         "$HOME/.docker/docker.sock"
@@ -274,26 +274,26 @@ check_environment() {
     fi
 }
 
-# Test Clara-specific Docker operations
-test_clara_operations() {
-    print_header "TESTING CLARA-SPECIFIC DOCKER OPERATIONS"
+# Test angela-specific Docker operations
+test_angela_operations() {
+    print_header "TESTING angela-SPECIFIC DOCKER OPERATIONS"
     
-    # Test network creation (Clara creates clara_network)
+    # Test network creation (angela creates angela_network)
     print_status "Testing Docker network operations..."
     
-    # Check if clara_network exists
-    if docker network ls --format "{{.Name}}" | grep -q "^clara_network$"; then
-        print_success "Clara network already exists"
+    # Check if angela_network exists
+    if docker network ls --format "{{.Name}}" | grep -q "^angela_network$"; then
+        print_success "angela network already exists"
     else
-        print_status "Creating Clara network..."
-        if docker network create clara_network >/dev/null 2>&1; then
-            print_success "Created Clara network successfully"
+        print_status "Creating angela network..."
+        if docker network create angela_network >/dev/null 2>&1; then
+            print_success "Created angela network successfully"
             
             # Clean up test network
-            docker network rm clara_network >/dev/null 2>&1
+            docker network rm angela_network >/dev/null 2>&1
             print_status "Cleaned up test network"
         else
-            print_error "Failed to create Clara network"
+            print_error "Failed to create angela network"
             return 1
         fi
     fi
@@ -321,17 +321,17 @@ test_clara_operations() {
     fi
 }
 
-# Check Clara's specific ports
-check_clara_ports() {
-    print_header "CHECKING CLARA SERVICE PORTS"
+# Check angela's specific ports
+check_angela_ports() {
+    print_header "CHECKING angela SERVICE PORTS"
     
-    CLARA_PORTS=(
-        "5001:Clara Python Backend"
-        "5678:Clara N8N"
+    angela_PORTS=(
+        "5001:angela Python Backend"
+        "5678:angela N8N"
         "11434:Ollama (if installed)"
     )
     
-    for port_info in "${CLARA_PORTS[@]}"; do
+    for port_info in "${angela_PORTS[@]}"; do
         PORT="${port_info%%:*}"
         SERVICE="${port_info##*:}"
         
@@ -402,7 +402,7 @@ fix_docker_desktop() {
 
 # Main troubleshooting function
 run_full_diagnosis() {
-    print_header "CLARA DOCKER TROUBLESHOOTING DIAGNOSTIC"
+    print_header "angela DOCKER TROUBLESHOOTING DIAGNOSTIC"
     
     local issues_found=0
     
@@ -424,8 +424,8 @@ run_full_diagnosis() {
     fi
     
     test_docker_connectivity || ((issues_found++))
-    test_clara_operations || ((issues_found++))
-    check_clara_ports || true  # Don't count port conflicts as failures
+    test_angela_operations || ((issues_found++))
+    check_angela_ports || true  # Don't count port conflicts as failures
     
     return $issues_found
 }
@@ -437,8 +437,8 @@ generate_recommendations() {
     print_header "RECOMMENDATIONS"
     
     if [[ $issues_count -eq 0 ]]; then
-        print_success "All checks passed! Docker is working correctly for Clara."
-        print_status "You can now start Clara and Docker services should work properly."
+        print_success "All checks passed! Docker is working correctly for angela."
+        print_status "You can now start angela and Docker services should work properly."
     else
         print_warning "Found $issues_count issue(s). Here are the recommended fixes:"
         
@@ -446,7 +446,7 @@ generate_recommendations() {
         echo "1. Completely quit Docker Desktop (Cmd+Q)"
         echo "2. Restart Docker Desktop from Applications"
         echo "3. Wait for the whale icon to become stable in the menu bar"
-        echo "4. Run this script again: ./clara-docker-fix.sh"
+        echo "4. Run this script again: ./angela-docker-fix.sh"
         echo ""
         echo "5. If issues persist, try:"
         echo "   - Docker Desktop → Settings → Reset to Factory Defaults"
@@ -464,15 +464,15 @@ generate_recommendations() {
 
 # Interactive mode
 interactive_mode() {
-    print_header "CLARA DOCKER INTERACTIVE TROUBLESHOOTER"
+    print_header "angela DOCKER INTERACTIVE TROUBLESHOOTER"
     
-    echo "This script will help diagnose and fix Docker issues for Clara on macOS."
+    echo "This script will help diagnose and fix Docker issues for angela on macOS."
     echo ""
     echo "What would you like to do?"
     echo "1) Run full diagnosis"
     echo "2) Quick fix (restart Docker Desktop)"
     echo "3) Check Docker status only"
-    echo "4) Test Clara operations only"
+    echo "4) Test angela operations only"
     echo "5) Exit"
     echo ""
     read -p "Enter your choice (1-5): " choice
@@ -492,8 +492,8 @@ interactive_mode() {
             test_docker_connectivity
             ;;
         4)
-            test_clara_operations
-            check_clara_ports
+            test_angela_operations
+            check_angela_ports
             ;;
         5)
             print_status "Exiting..."
@@ -524,12 +524,12 @@ main() {
             --check)
                 test_docker_connectivity
                 ;;
-            --clara)
-                test_clara_operations
-                check_clara_ports
+            --angela)
+                test_angela_operations
+                check_angela_ports
                 ;;
             --help|-h)
-                echo "Clara Docker Troubleshooting Script"
+                echo "angela Docker Troubleshooting Script"
                 echo ""
                 echo "Usage: $0 [OPTIONS]"
                 echo ""
@@ -537,7 +537,7 @@ main() {
                 echo "  --auto, --full    Run full diagnosis and recommendations"
                 echo "  --fix, --restart  Quick fix: restart Docker Desktop"
                 echo "  --check          Check Docker connectivity only"
-                echo "  --clara          Test Clara-specific operations only"
+                echo "  --angela          Test angela-specific operations only"
                 echo "  --help, -h       Show this help message"
                 echo ""
                 echo "Interactive mode (no options): Guided troubleshooting menu"

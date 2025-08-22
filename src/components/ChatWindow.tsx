@@ -121,7 +121,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ selectedFile, fileContent }) =>
         return Zap;
       case 'ollama':
         return Server;
-      case 'claras-pocket':
+      case 'angelas-pocket':
         return Bot;
       default:
         return Globe;
@@ -134,7 +134,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ selectedFile, fileContent }) =>
         return 'text-green-500';
       case 'ollama':
         return 'text-blue-500';
-      case 'claras-pocket':
+      case 'angelas-pocket':
         return 'text-purple-500';
       default:
         return 'text-gray-500';

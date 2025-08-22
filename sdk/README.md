@@ -1,8 +1,8 @@
-# Clara Flow SDK v2.0 🚀
+# angela Flow SDK v2.0 🚀
 
-**Modern JavaScript SDK for executing Clara AI agent workflows with zero configuration**
+**Modern JavaScript SDK for executing angela AI agent workflows with zero configuration**
 
-[![npm version](https://badge.fury.io/js/clara-flow-sdk.svg)](https://www.npmjs.com/package/clara-flow-sdk)
+[![npm version](https://badge.fury.io/js/angela-flow-sdk.svg)](https://www.npmjs.com/package/angela-flow-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## ✨ Features
@@ -13,22 +13,22 @@
 - ⚡ **Fast** - Lightweight and optimized execution engine
 - 🛡️ **Type Safe** - Full TypeScript support
 - 🎨 **Custom Nodes** - Create your own node types
-- 📦 **Clara Studio Compatible** - Import workflows directly
+- 📦 **angela Studio Compatible** - Import workflows directly
 
 ## 🚀 Quick Start
 
 ### Installation
 
 ```bash
-npm install clara-flow-sdk
+npm install angela-flow-sdk
 ```
 
 ### Basic Usage (5 lines of code!)
 
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 const result = await runner.execute(workflow, { input: 'Hello World!' });
 console.log(result);
 ```
@@ -38,7 +38,7 @@ console.log(result);
 ### 1. Simple Text Processing
 
 ```javascript
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
 // Create a simple workflow
 const textWorkflow = {
@@ -84,9 +84,9 @@ const textWorkflow = {
 };
 
 // Execute workflow
-const runner = new ClaraFlowRunner();
-const result = await runner.execute(textWorkflow, { 'input-1': 'Clara!' });
-console.log(result); // { "output-1": { "output": "Welcome: Clara!" } }
+const runner = new angelaFlowRunner();
+const result = await runner.execute(textWorkflow, { 'input-1': 'angela!' });
+console.log(result); // { "output-1": { "output": "Welcome: angela!" } }
 ```
 
 ### 2. JSON Data Processing
@@ -137,7 +137,7 @@ console.log(result); // Extracted: "Alice"
 ### 3. Custom Node Creation
 
 ```javascript
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 
 // Register a custom node
 runner.registerCustomNode({
@@ -246,12 +246,12 @@ console.log(result['response'].output); // AI explanation
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Clara Flow SDK Demo</title>
+    <title>angela Flow SDK Demo</title>
 </head>
 <body>
-    <script src="https://unpkg.com/clara-flow-sdk@2.0.0/dist/clara-flow-sdk.umd.min.js"></script>
+    <script src="https://unpkg.com/angela-flow-sdk@2.0.0/dist/angela-flow-sdk.umd.min.js"></script>
     <script>
-        const runner = new ClaraFlowSDK.ClaraFlowRunner();
+        const runner = new angelaFlowSDK.angelaFlowRunner();
         
         const simpleFlow = {
             nodes: [
@@ -283,8 +283,8 @@ async function runWorkflow() {
     const file = fileInput.files[0];
     
     if (file) {
-        const workflow = await ClaraFlowSDK.BrowserUtils.loadFlowFromFile(file);
-        const runner = new ClaraFlowSDK.ClaraFlowRunner();
+        const workflow = await angelaFlowSDK.BrowserUtils.loadFlowFromFile(file);
+        const runner = new angelaFlowSDK.angelaFlowRunner();
         const result = await runner.execute(workflow);
         console.log('Workflow result:', result);
     }
@@ -309,7 +309,7 @@ async function runWorkflow() {
 ## ⚙️ Configuration Options
 
 ```javascript
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,        // Enable console logging
   timeout: 30000,            // Execution timeout (ms)
   logLevel: 'info',          // Log level: 'info', 'warn', 'error'
@@ -317,14 +317,14 @@ const runner = new ClaraFlowRunner({
 });
 ```
 
-## 🔧 Clara Studio Integration
+## 🔧 angela Studio Integration
 
-Import workflows directly from Clara Studio:
+Import workflows directly from angela Studio:
 
 ```javascript
-// Export from Clara Studio as "SDK Enhanced" format
+// Export from angela Studio as "SDK Enhanced" format
 const studioExport = {
-  format: 'clara-sdk',
+  format: 'angela-sdk',
   version: '1.0.0',
   flow: { /* workflow definition */ },
   customNodes: [ /* custom node definitions */ ]
@@ -352,7 +352,7 @@ try {
 ## 📊 Monitoring & Debugging
 
 ```javascript
-const runner = new ClaraFlowRunner({ enableLogging: true });
+const runner = new angelaFlowRunner({ enableLogging: true });
 
 // Execute workflow
 await runner.execute(workflow);
@@ -374,10 +374,10 @@ The SDK is designed to work seamlessly with server deployment:
 ```javascript
 // Future server integration
 import express from 'express';
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
 const app = express();
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 
 app.post('/execute', async (req, res) => {
   try {
@@ -393,13 +393,13 @@ app.post('/execute', async (req, res) => {
 ## 📝 TypeScript Support
 
 ```typescript
-import { ClaraFlowRunner, BrowserUtils } from 'clara-flow-sdk';
+import { angelaFlowRunner, BrowserUtils } from 'angela-flow-sdk';
 
 interface WorkflowResult {
   [key: string]: any;
 }
 
-const runner: ClaraFlowRunner = new ClaraFlowRunner({
+const runner: angelaFlowRunner = new angelaFlowRunner({
   enableLogging: true,
   timeout: 30000
 });
@@ -421,10 +421,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- 📖 [Documentation](https://github.com/clara-ai/clara-flow-sdk/wiki)
-- 🐛 [Issue Tracker](https://github.com/clara-ai/clara-flow-sdk/issues)
-- 💬 [Discord Community](https://discord.gg/clara)
+- 📖 [Documentation](https://github.com/angela-ai/angela-flow-sdk/wiki)
+- 🐛 [Issue Tracker](https://github.com/angela-ai/angela-flow-sdk/issues)
+- 💬 [Discord Community](https://discord.gg/angela)
 
 ---
 
-**Made with ❤️ by the Clara Team** 
+**Made with ❤️ by the angela Team** 

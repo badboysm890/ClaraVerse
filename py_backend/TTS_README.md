@@ -1,6 +1,6 @@
-# Clara Text-to-Speech (TTS) Implementation
+# angela Text-to-Speech (TTS) Implementation
 
-Clara now supports multiple high-quality TTS engines, including the state-of-the-art **Kokoro TTS** for neural speech synthesis.
+angela now supports multiple high-quality TTS engines, including the state-of-the-art **Kokoro TTS** for neural speech synthesis.
 
 ## 🎤 Supported TTS Engines
 
@@ -73,7 +73,7 @@ POST /synthesize
 Content-Type: application/json
 
 {
-  "text": "Hello, this is Clara speaking!",
+  "text": "Hello, this is angela speaking!",
   "engine": "kokoro-onnx",
   "voice": "af_sarah",
   "speed": 1.0,
@@ -137,7 +137,7 @@ GET /tts/status
 
 ### Engine Priority (Auto Mode)
 
-When `engine="auto"`, Clara will use engines in this order:
+When `engine="auto"`, angela will use engines in this order:
 1. **Kokoro ONNX** (best quality, fastest)
 2. **Kokoro** (high quality)
 3. **gTTS** (good quality, online)
@@ -181,15 +181,15 @@ print(f"Generated {len(audio)} audio samples")
 ```bash
 curl -X POST "http://localhost:8000/synthesize" \
   -H "Content-Type: application/json" \
-  -d '{"text": "Hello Clara!", "engine": "kokoro-onnx", "voice": "af_sarah"}' \
+  -d '{"text": "Hello angela!", "engine": "kokoro-onnx", "voice": "af_sarah"}' \
   --output test_speech.wav
 ```
 
-## 🎯 Integration with Clara Voice Chat
+## 🎯 Integration with angela Voice Chat
 
-The TTS system integrates seamlessly with Clara's voice chat:
+The TTS system integrates seamlessly with angela's voice chat:
 
-1. **Auto Engine Selection**: Clara automatically uses the best available TTS engine
+1. **Auto Engine Selection**: angela automatically uses the best available TTS engine
 2. **Voice Consistency**: Maintains the same voice throughout conversations
 3. **Real-time Generation**: Kokoro provides near real-time speech synthesis
 4. **Quality Optimization**: Automatically adjusts quality based on available resources
@@ -238,10 +238,10 @@ The TTS system integrates seamlessly with Clara's voice chat:
 ## 🚀 Next Steps
 
 1. **Install Kokoro**: Run `python install_kokoro.py`
-2. **Restart Backend**: Restart your Clara backend
+2. **Restart Backend**: Restart your angela backend
 3. **Test TTS**: Use the `/tts/voices` endpoint to verify installation
-4. **Enjoy High-Quality Speech**: Clara now has professional-grade TTS!
+4. **Enjoy High-Quality Speech**: angela now has professional-grade TTS!
 
 ---
 
-**Need help?** Check the logs in your Clara backend for detailed error messages and troubleshooting information. 
+**Need help?** Check the logs in your angela backend for detailed error messages and troubleshooting information. 

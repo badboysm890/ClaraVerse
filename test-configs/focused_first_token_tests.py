@@ -52,10 +52,10 @@ def start_llama_server(config):
     kill_llama_processes()
     
     # Use the same model path as the main tests
-    model_path = "/Users/badfy17g/.clara/llama-models/Qwen3-30B-A3B-Q4_K_M.gguf"
+    model_path = "/Users/badfy17g/.angela/llama-models/Qwen3-30B-A3B-Q4_K_M.gguf"
     
     cmd = [
-        "/Users/badfy17g/ClaraVerse/electron/llamacpp-binaries/darwin-arm64/llama-server",
+        "/Users/badfy17g/angelaVerse/electron/llamacpp-binaries/darwin-arm64/llama-server",
         "-m", model_path,
         "--port", str(SERVER_PORT),
         "--threads", str(config['threads']),
@@ -73,7 +73,7 @@ def start_llama_server(config):
         cmd.append("--mlock")
     
     env = os.environ.copy()
-    env["DYLD_LIBRARY_PATH"] = "/Users/badfy17g/ClaraVerse/electron/llamacpp-binaries/darwin-arm64:"
+    env["DYLD_LIBRARY_PATH"] = "/Users/badfy17g/angelaVerse/electron/llamacpp-binaries/darwin-arm64:"
     
     print(f"🚀 Starting server with config: threads={config['threads']}, ctx={config['ctx_size']}, parallel={config['parallel']}, batch={config['batch_size']}, ubatch={config['ubatch_size']}, gpu_layers={config['n_gpu_layers']}")
     

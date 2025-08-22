@@ -1,14 +1,14 @@
 /**
- * Clara Flow SDK - Integration Tests
+ * angela Flow SDK - Integration Tests
  */
 
-import { ClaraFlowRunner } from '../src/index.js';
+import { angelaFlowRunner } from '../src/index.js';
 
-describe('Clara Flow SDK Integration Tests', () => {
+describe('angela Flow SDK Integration Tests', () => {
   let runner;
 
   beforeEach(() => {
-    runner = new ClaraFlowRunner({
+    runner = new angelaFlowRunner({
       enableLogging: false, // Disable logging in tests
       timeout: 5000
     });
@@ -25,7 +25,7 @@ describe('Clara Flow SDK Integration Tests', () => {
       const simpleFlow = {
         version: '1.0.0',
         name: 'Simple Test Flow',
-        exportFormat: 'clara-sdk',
+        exportFormat: 'angela-sdk',
         nodes: [
           {
             id: 'input-1',
@@ -68,7 +68,7 @@ describe('Clara Flow SDK Integration Tests', () => {
       const customNodeFlow = {
         version: '1.0.0',
         name: 'Custom Node Test Flow',
-        exportFormat: 'clara-sdk',
+        exportFormat: 'angela-sdk',
         nodes: [
           {
             id: 'input-1',
@@ -153,7 +153,7 @@ describe('Clara Flow SDK Integration Tests', () => {
       const asyncFlow = {
         version: '1.0.0',
         name: 'Async Test Flow',
-        exportFormat: 'clara-sdk',
+        exportFormat: 'angela-sdk',
         nodes: [
           {
             id: 'input-1',
@@ -334,7 +334,7 @@ describe('Clara Flow SDK Integration Tests', () => {
 
   describe('Error Handling', () => {
     test('should handle execution timeout', async () => {
-      const timeoutRunner = new ClaraFlowRunner({
+      const timeoutRunner = new angelaFlowRunner({
         enableLogging: false,
         timeout: 100 // Very short timeout
       });
@@ -342,7 +342,7 @@ describe('Clara Flow SDK Integration Tests', () => {
       const longRunningFlow = {
         version: '1.0.0',
         name: 'Long Running Flow',
-        exportFormat: 'clara-sdk',
+        exportFormat: 'angela-sdk',
         nodes: [
           {
             id: 'input-1',
@@ -389,7 +389,7 @@ describe('Clara Flow SDK Integration Tests', () => {
       const invalidCodeFlow = {
         version: '1.0.0',
         name: 'Invalid Code Flow',
-        exportFormat: 'clara-sdk',
+        exportFormat: 'angela-sdk',
         nodes: [
           {
             id: 'input-1',
@@ -436,7 +436,7 @@ describe('Clara Flow SDK Integration Tests', () => {
 
   describe('Logging', () => {
     test('should capture execution logs when enabled', async () => {
-      const loggingRunner = new ClaraFlowRunner({
+      const loggingRunner = new angelaFlowRunner({
         enableLogging: true,
         logLevel: 'debug'
       });
@@ -444,7 +444,7 @@ describe('Clara Flow SDK Integration Tests', () => {
       const simpleFlow = {
         version: '1.0.0',
         name: 'Logging Test Flow',
-        exportFormat: 'clara-sdk',
+        exportFormat: 'angela-sdk',
         nodes: [
           {
             id: 'input-1',
@@ -465,12 +465,12 @@ describe('Clara Flow SDK Integration Tests', () => {
     });
 
     test('should support different log levels', () => {
-      const debugRunner = new ClaraFlowRunner({
+      const debugRunner = new angelaFlowRunner({
         enableLogging: true,
         logLevel: 'debug'
       });
 
-      const errorRunner = new ClaraFlowRunner({
+      const errorRunner = new angelaFlowRunner({
         enableLogging: true,
         logLevel: 'error'
       });
@@ -496,7 +496,7 @@ describe('Clara Flow SDK Integration Tests', () => {
 
   describe('Configuration', () => {
     test('should respect custom timeout settings', async () => {
-      const customRunner = new ClaraFlowRunner({
+      const customRunner = new angelaFlowRunner({
         timeout: 2000,
         enableLogging: false
       });
@@ -505,11 +505,11 @@ describe('Clara Flow SDK Integration Tests', () => {
     });
 
     test('should handle sandbox configuration', () => {
-      const sandboxedRunner = new ClaraFlowRunner({
+      const sandboxedRunner = new angelaFlowRunner({
         sandbox: true
       });
 
-      const unsandboxedRunner = new ClaraFlowRunner({
+      const unsandboxedRunner = new angelaFlowRunner({
         sandbox: false
       });
 

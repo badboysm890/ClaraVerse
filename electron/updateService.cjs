@@ -52,7 +52,7 @@ const UPDATE_CONSTANTS = {
 };
 
 // Update preferences management
-const UPDATE_PREFERENCES_KEY = 'clara-update-preferences';
+const UPDATE_PREFERENCES_KEY = 'angela-update-preferences';
 const DEFAULT_UPDATE_PREFERENCES = {
   autoCheck: true,
   checkFrequency: 'daily', // 'daily', 'weekly', 'monthly', 'manual'
@@ -306,7 +306,7 @@ async function makeRobustRequest(url, options = {}) {
     ...options,
     signal: controller?.signal,
     headers: {
-      'User-Agent': 'Clara-App-Updater',
+      'User-Agent': 'angela-App-Updater',
       'Accept': 'application/vnd.github.v3+json',
       ...options.headers
     }
@@ -392,7 +392,7 @@ class EnhancedPlatformUpdateService {
   constructor() {
     this.platform = process.platform;
     this.currentVersion = getSafeCurrentVersion();
-    this.githubRepo = 'badboysm890/ClaraVerse';
+    this.githubRepo = 'badboysm890/angelaVerse';
     this.isChecking = false; // Prevent concurrent checks
     this.downloadProgress = null; // Track download progress
     this.backgroundDownload = null; // Background download state
@@ -477,8 +477,8 @@ class EnhancedPlatformUpdateService {
       
       if (Notification.isSupported()) {
         const notification = new Notification({
-          title: `Clara ${updateInfo.latestVersion} Available`,
-          body: `A new version of Clara is ready to download. Click to view details.`,
+          title: `angela ${updateInfo.latestVersion} Available`,
+          body: `A new version of angela is ready to download. Click to view details.`,
           icon: path.join(__dirname, '../assets/icons/icon.png'), // Adjust path as needed
           silent: false
         });
@@ -813,7 +813,7 @@ class EnhancedPlatformUpdateService {
       }
 
       const asset = this.findPlatformAsset(updateInfo.assets || []);
-      const fileName = asset ? asset.name : `Clara-${updateInfo.latestVersion}-${this.platform}.${this.platform === 'win32' ? 'exe' : 'AppImage'}`;
+      const fileName = asset ? asset.name : `angela-${updateInfo.latestVersion}-${this.platform}.${this.platform === 'win32' ? 'exe' : 'AppImage'}`;
       
       logger.info(`Starting in-app download for: ${fileName}`);
       
@@ -948,15 +948,15 @@ class EnhancedPlatformUpdateService {
         return await dialog.showMessageBox({
           type: 'info',
           title: '✅ You\'re Up to Date!',
-          message: 'Clara is current',
-          detail: `You're running Clara ${this.currentVersion}, which is the latest version available.`,
+          message: 'angela is current',
+          detail: `You're running angela ${this.currentVersion}, which is the latest version available.`,
           buttons: ['Perfect!'],
           defaultId: 0
         });
       }
 
       // Build enhanced message with categorized release notes
-      let detailMessage = `Current version: Clara ${this.currentVersion}\nNew version: Clara ${latestVersion}`;
+      let detailMessage = `Current version: angela ${this.currentVersion}\nNew version: angela ${latestVersion}`;
       
       // Indicate if this is a pre-release version
       if (updateInfo.isPrerelease) {
@@ -994,8 +994,8 @@ class EnhancedPlatformUpdateService {
           : (hasBreakingChanges ? '⚠️ Important Update Available' : '🎉 Update Available');
           
         const dialogMessage = updateInfo.isPrerelease
-          ? `Clara ${latestVersion} Beta is ready to install`
-          : `Clara ${latestVersion} is ready to install`;
+          ? `angela ${latestVersion} Beta is ready to install`
+          : `angela ${latestVersion} is ready to install`;
           
         return await dialog.showMessageBox({
           type: 'info',
@@ -1041,8 +1041,8 @@ class EnhancedPlatformUpdateService {
           : (hasBreakingChanges ? '⚠️ Important Update Available' : '📦 Update Available');
           
         const dialogMessage = updateInfo.isPrerelease
-          ? `Clara ${latestVersion} Beta is ready to download`
-          : `Clara ${latestVersion} is ready to download`;
+          ? `angela ${latestVersion} Beta is ready to download`
+          : `angela ${latestVersion} is ready to download`;
         
         return await dialog.showMessageBox({
           type: 'info',
@@ -1059,7 +1059,7 @@ class EnhancedPlatformUpdateService {
                 // Start in-app download with progress tracking
                 try {
                   const asset = this.findPlatformAsset(updateInfo.assets || []);
-                  const fileName = asset ? asset.name : `Clara-${latestVersion}-${this.platform}.${this.platform === 'win32' ? 'exe' : 'AppImage'}`;
+                  const fileName = asset ? asset.name : `angela-${latestVersion}-${this.platform}.${this.platform === 'win32' ? 'exe' : 'AppImage'}`;
                   
                   // Start download in background
                   this.downloadUpdateFile(downloadUrl, fileName).then((filePath) => {
@@ -1067,7 +1067,7 @@ class EnhancedPlatformUpdateService {
                     dialog.showMessageBox({
                       type: 'info',
                       title: '✅ Download Complete!',
-                      message: `Clara ${latestVersion} has been downloaded`,
+                      message: `angela ${latestVersion} has been downloaded`,
                       detail: `The installer has been saved to:\n${filePath}\n\nWould you like to open it now?`,
                       buttons: ['Open Installer', 'Open Downloads Folder', 'Later'],
                       defaultId: 0
@@ -1214,8 +1214,8 @@ function setupEnhancedAutoUpdater(mainWindow) {
         dialog.showMessageBox({
           type: 'info',
           title: '🎉 Update Ready!',
-          message: 'Clara has been updated successfully',
-          detail: 'The update has been downloaded and verified. Clara will restart to complete the installation.',
+          message: 'angela has been updated successfully',
+          detail: 'The update has been downloaded and verified. angela will restart to complete the installation.',
           buttons: ['Restart Now', 'Restart Later'],
           defaultId: 0,
           cancelId: 1

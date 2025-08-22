@@ -106,7 +106,7 @@ const responseExtractorNode = {
     }
   `,
   metadata: {
-    author: 'Clara Flow SDK',
+    author: 'angela Flow SDK',
     version: '1.0.0',
     tags: ['data-processing', 'response', 'extraction', 'llm']
   }

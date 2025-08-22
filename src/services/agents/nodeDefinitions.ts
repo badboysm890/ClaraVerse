@@ -11,7 +11,7 @@ export const defaultNodeDefinitions: NodeDefinition[] = [
     description: 'Manually start the workflow',
     icon: 'play',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [],
     outputs: [
       {
@@ -46,7 +46,7 @@ export const defaultNodeDefinitions: NodeDefinition[] = [
     description: 'HTTP webhook trigger',
     icon: 'network',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [],
     outputs: [
       {
@@ -120,7 +120,7 @@ export const defaultNodeDefinitions: NodeDefinition[] = [
     description: 'Time-based trigger',
     icon: 'clock',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [],
     outputs: [
       {
@@ -163,7 +163,7 @@ export const defaultNodeDefinitions: NodeDefinition[] = [
     description: 'Chat with language models',
     icon: 'bot',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'message',
@@ -257,7 +257,7 @@ export const defaultNodeDefinitions: NodeDefinition[] = [
     description: 'Generate text content',
     icon: 'file-text',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'prompt',
@@ -318,7 +318,7 @@ export const defaultNodeDefinitions: NodeDefinition[] = [
     description: 'Make HTTP requests',
     icon: 'globe',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'url',
@@ -396,7 +396,7 @@ export const defaultNodeDefinitions: NodeDefinition[] = [
     description: 'Parse and manipulate JSON data',
     icon: 'code',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'json',
@@ -441,7 +441,7 @@ export const defaultNodeDefinitions: NodeDefinition[] = [
     description: 'Conditional branching',
     icon: 'git-branch',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'condition',

@@ -13,7 +13,7 @@ import { copyToClipboard, readFromClipboard, isClipboardSupported } from './clip
   console.log('Clipboard supported:', isClipboardSupported());
   
   // Test copying
-  const testText = 'Hello from Clara clipboard test!';
+  const testText = 'Hello from angela clipboard test!';
   console.log('Attempting to copy:', testText);
   
   const copySuccess = await copyToClipboard(testText);
@@ -52,7 +52,7 @@ import { copyToClipboard, readFromClipboard, isClipboardSupported } from './clip
 }
 
 // Usage
-const greeting = greetUser("Clara");
+const greeting = greetUser("angela");
 console.log(greeting);`;
 
   console.log('Attempting to copy code block:', codeExample);

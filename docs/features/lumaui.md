@@ -9,7 +9,7 @@ contributors: ["badboysm890"]
 
 # 💻 LumaUI Web Development
 
-LumaUI is ClaraVerse's complete web development environment that brings the power of VS Code, combined with AI assistance, directly into your browser. Built on WebContainer technology, it provides a full Node.js runtime without any local setup.
+LumaUI is angelaVerse's complete web development environment that brings the power of VS Code, combined with AI assistance, directly into your browser. Built on WebContainer technology, it provides a full Node.js runtime without any local setup.
 
 ## 🚀 What is LumaUI?
 
@@ -18,7 +18,7 @@ LumaUI is more than just a code editor - it's a complete development suite featu
 - **Monaco Editor** - VS Code-quality editing experience
 - **WebContainer Runtime** - Full Node.js environment in the browser
 - **Live Preview** - Real-time preview with hot reloading
-- **AI Integration** - Chat with Clara while coding
+- **AI Integration** - Chat with angela while coding
 - **Smart Scaffolding** - AI generates complete applications
 - **Project Management** - Create, save, and organize multiple projects
 
@@ -208,13 +208,13 @@ git commit -m "Initial commit"
 **Example Conversations:**
 ```
 User: "Add a dark mode toggle to this React app"
-Clara: I'll help you implement dark mode with Tailwind CSS...
+angela: I'll help you implement dark mode with Tailwind CSS...
 
 User: "Optimize this component for performance"
-Clara: I see a few optimization opportunities...
+angela: I see a few optimization opportunities...
 
 User: "Add form validation to the contact form"
-Clara: I'll add comprehensive form validation...
+angela: I'll add comprehensive form validation...
 ```
 
 ## 🎯 Advanced Features
@@ -598,11 +598,11 @@ const expensiveValue = useMemo(() => {
 
 Ready to start building? Here's your quick start checklist:
 
-1. **Open LumaUI** from the ClaraVerse sidebar
+1. **Open LumaUI** from the angelaVerse sidebar
 2. **Create your first project** with React + Vite + Tailwind
 3. **Explore the interface** - editor, preview, terminal, chat
 4. **Make your first edit** and watch the live preview
-5. **Chat with Clara** for coding assistance
+5. **Chat with angela** for coding assistance
 6. **Try Smart Scaffolding** for AI-generated apps
 
 **Happy coding with LumaUI! 🚀**

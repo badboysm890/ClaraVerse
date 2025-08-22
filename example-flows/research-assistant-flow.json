@@ -1,5 +1,5 @@
 {
-  "format": "clara-native",
+  "format": "angela-native",
   "version": "1.0.0",
   "name": "Research Assistant Flow",
   "description": "An advanced flow that takes a research topic, calls an API to gather information, and then uses LLM to analyze and summarize the findings",
@@ -35,7 +35,7 @@
         "url": "https://api.duckduckgo.com/?q={{topic}}&format=json&no_html=1&skip_disambig=1",
         "method": "GET",
         "headers": {
-          "User-Agent": "Clara Research Assistant"
+          "User-Agent": "angela Research Assistant"
         }
       }
     },
@@ -149,7 +149,7 @@
   ],
   "metadata": {
     "createdAt": "2024-01-15T10:30:00Z",
-    "exportedBy": "Clara Agent Studio", 
+    "exportedBy": "angela Agent Studio", 
     "hasCustomNodes": false,
     "complexity": "advanced",
     "estimatedExecutionTime": "10-30 seconds"

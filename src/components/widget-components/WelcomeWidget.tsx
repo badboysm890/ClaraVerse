@@ -34,7 +34,7 @@ const WelcomeWidget: React.FC<WelcomeWidgetProps> = ({
           <div className="flex-grow">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">
-                Clara 
+                angela 
               </h1>
               <div className="flex items-center gap-2">
                 <div 
@@ -75,7 +75,7 @@ const WelcomeWidget: React.FC<WelcomeWidgetProps> = ({
               Start Chatting
             </h3>
             <p className="text-xs text-gray-600 dark:text-gray-400 mb-1 line-clamp-1">
-              Chat with Clara
+              Chat with angela
             </p>
           </button>
 
@@ -129,7 +129,7 @@ const WelcomeWidget: React.FC<WelcomeWidgetProps> = ({
               Settings
             </h3>
             <p className="text-xs text-gray-600 dark:text-gray-400 mb-1 line-clamp-1">
-              Configure Clara
+              Configure angela
             </p>
           </button>
         </div>

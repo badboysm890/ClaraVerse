@@ -1,21 +1,21 @@
 /**
  * 🎯 Example 1: Using JSON Export Format
  * 
- * This is the EASIEST way to use flows exported from Clara Agent Studio!
+ * This is the EASIEST way to use flows exported from angela Agent Studio!
  * 
  * Think of it like this:
- * 1. You build a cool workflow in Clara Agent Studio 🎨
+ * 1. You build a cool workflow in angela Agent Studio 🎨
  * 2. You export it as JSON (like saving a recipe) 📄
  * 3. You load that JSON and run it with your data! 🚀
  * 
  * Perfect for: Beginners, quick prototypes, simple automation
  */
 
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 import fs from 'fs';
 
 // 📚 Step 1: Create the SDK runner (like getting ready to cook)
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,    // See what's happening
   logLevel: 'info'        // Show important messages
 });
@@ -103,6 +103,6 @@ runSentimentAnalysis();
  * 
  * 🎯 Next steps:
  * - Try changing the input text
- * - Export different workflows from Clara Studio
+ * - Export different workflows from angela Studio
  * - Combine multiple workflows together
  */ 

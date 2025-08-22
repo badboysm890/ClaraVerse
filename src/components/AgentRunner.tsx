@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, X, FileText, Image, Upload, Calculator, Terminal, Play, Loader2, Settings2, Zap } from 'lucide-react';
 import { agentWorkflowStorage } from '../services/agentWorkflowStorage';
-import { ClaraFlowRunner } from '../../sdk/src/ClaraFlowRunner';
+import { angelaFlowRunner } from '../../sdk/src/angelaFlowRunner';
 import { customNodeManager } from './AgentBuilder/NodeCreator/CustomNodeManager';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
@@ -256,7 +256,7 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
     }
     
     return {
-      format: 'clara-sdk',
+      format: 'angela-sdk',
       version: '1.0.0',
       flow: {
         name: agentFlow.name,
@@ -267,7 +267,7 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
       customNodes: customNodes,
       metadata: {
         exportedAt: new Date().toISOString(),
-        exportedFrom: 'Clara Agent Runner',
+        exportedFrom: 'angela Agent Runner',
         hasCustomNodes: customNodes.length > 0
       }
     };
@@ -286,7 +286,7 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
     setExecutionLogs([]); // Clear previous logs
     setMessages([]); // Clear previous messages
 
-    console.log('🚀 STARTING AGENT EXECUTION - Clara Flow SDK Approach');
+    console.log('🚀 STARTING AGENT EXECUTION - angela Flow SDK Approach');
     console.log('📋 Agent Flow:', agentFlow);
     console.log('📥 Input Values:', inputValues);
     
@@ -341,8 +341,8 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
     }
 
     try {
-      // 🆕 Create Clara Flow SDK Runner - completely isolated
-      const runner = new ClaraFlowRunner({
+      // 🆕 Create angela Flow SDK Runner - completely isolated
+      const runner = new angelaFlowRunner({
         enableLogging: true,
         timeout: 30000,
         onExecutionLog: (log: any) => {
@@ -360,7 +360,7 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
         }
       });
 
-      console.log('✅ Clara Flow SDK Runner created');
+      console.log('✅ angela Flow SDK Runner created');
 
       // Convert agent flow to SDK format
       const sdkFlowData = convertToSDKFormat(agentFlow);
@@ -509,8 +509,8 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
 
       console.log('📤 SDK Inputs prepared:', sdkInputs);
 
-      // 🎯 Execute using Clara Flow SDK - COMPLETELY ISOLATED
-      console.log('⚡ Executing flow with Clara Flow SDK...');
+      // 🎯 Execute using angela Flow SDK - COMPLETELY ISOLATED
+      console.log('⚡ Executing flow with angela Flow SDK...');
       const executionResult = await runner.executeFlow(sdkFlowData, sdkInputs);
       
       console.log('🎉 SDK Execution completed!');
@@ -604,7 +604,7 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
       console.log('📝 Final SDK logs:', sdkLogs);
       
     } catch (error) {
-      console.error('❌ Clara Flow SDK execution failed:', error);
+      console.error('❌ angela Flow SDK execution failed:', error);
       
       let errorMessage = 'Execution failed: ';
       
@@ -749,7 +749,7 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 rounded-full font-medium border border-green-200/50 dark:border-green-700/50">
-                      ✨ Clara Flow SDK
+                      ✨ angela Flow SDK
                     </span>
                   </div>
                 </div>
@@ -796,7 +796,7 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                         <Terminal className="w-4 h-4" />
-                        Clara Flow SDK Logs
+                        angela Flow SDK Logs
                       </h4>
                       <span className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
                         {executionLogs.length} entries
@@ -955,7 +955,7 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
                     {isLoading ? (
                       <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Executing with Clara Flow SDK...
+                        Executing with angela Flow SDK...
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-2">
@@ -1007,7 +1007,7 @@ const AgentRunnerContent: React.FC<AgentRunnerProps> = ({ agentId, onClose, onPa
                         <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                           <span>Powered by</span>
                           <span className="px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-300 rounded-full font-medium">
-                            Clara Flow SDK
+                            angela Flow SDK
                           </span>
                         </div>
                       </div>

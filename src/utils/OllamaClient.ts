@@ -1198,7 +1198,7 @@ Your response MUST be a valid JSON object, properly formatted and parsable.`;
     
     // Also store in localStorage for persistence across sessions with provider-specific key
     try {
-      const storageKey = `clara-problematic-tools-${providerPrefix}`;
+      const storageKey = `angela-problematic-tools-${providerPrefix}`;
       const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
       const toolInfo = {
         name: tool.name,
@@ -1264,7 +1264,7 @@ Your response MUST be a valid JSON object, properly formatted and parsable.`;
    */
   private loadProblematicToolsFromStorage(providerId: string): void {
     try {
-      const storageKey = `clara-problematic-tools-${providerId}`;
+      const storageKey = `angela-problematic-tools-${providerId}`;
       const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
       for (const toolInfo of stored) {
         const toolKey = `${providerId}:${toolInfo.name}:${toolInfo.description}`;
@@ -1288,7 +1288,7 @@ Your response MUST be a valid JSON object, properly formatted and parsable.`;
     keysToRemove.forEach(key => OllamaClient.problematicTools.delete(key));
     
     try {
-      const storageKey = `clara-problematic-tools-${providerId}`;
+      const storageKey = `angela-problematic-tools-${providerId}`;
       localStorage.removeItem(storageKey);
       console.log(`🗑️ [PROBLEMATIC-TOOLS-OLLAMA] Cleared all stored problematic tools for provider ${providerId}`);
     } catch (error) {
@@ -1306,14 +1306,14 @@ Your response MUST be a valid JSON object, properly formatted and parsable.`;
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('clara-problematic-tools-')) {
+        if (key && key.startsWith('angela-problematic-tools-')) {
           keysToRemove.push(key);
         }
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
       
       // Also clear the old global key for backward compatibility
-      localStorage.removeItem('clara-problematic-tools-ollama');
+      localStorage.removeItem('angela-problematic-tools-ollama');
       console.log(`🗑️ [PROBLEMATIC-TOOLS-OLLAMA] Cleared all stored problematic tools for all providers`);
     } catch (error) {
       console.warn('Failed to clear problematic tools from localStorage:', error);

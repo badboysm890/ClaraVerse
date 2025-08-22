@@ -1,13 +1,13 @@
 /**
  * memoryConfig.ts
  * 
- * Configuration settings for Clara's memory system
+ * Configuration settings for angela's memory system
  */
 
 export const MEMORY_CONFIG = {
   // Storage settings
   storage: {
-    tablePrefix: 'clara_memory_',
+    tablePrefix: 'angela_memory_',
     enableBackup: true,
     backupInterval: 24 * 60 * 60 * 1000, // 24 hours
     maxProfileVersions: 10 // Keep last 10 versions for rollback
@@ -48,7 +48,7 @@ export const MEMORY_CONFIG = {
     consentVersion: 1,
     enableDataExport: true,
     enableDataDeletion: true,
-    enableMemoryTransparency: true // Show what Clara learned
+    enableMemoryTransparency: true // Show what angela learned
   },
 
   // Performance settings

@@ -1,36 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Clara Flow SDK Test</title>
+    <title>angela Flow SDK Test</title>
 </head>
 <body>
-    <h1>Clara Flow SDK Browser Test</h1>
+    <h1>angela Flow SDK Browser Test</h1>
     <div id="output"></div>
     
-    <script src="./dist/clara-flow-sdk.umd.js"></script>
+    <script src="./dist/angela-flow-sdk.umd.js"></script>
     <script>
         const output = document.getElementById('output');
         
         try {
             // Test SDK loading
-            if (typeof ClaraFlowSDK !== 'undefined') {
-                output.innerHTML += '<p>✅ ClaraFlowSDK loaded successfully</p>';
+            if (typeof angelaFlowSDK !== 'undefined') {
+                output.innerHTML += '<p>✅ angelaFlowSDK loaded successfully</p>';
                 
                 // Test exports
-                const exports = Object.keys(ClaraFlowSDK);
+                const exports = Object.keys(angelaFlowSDK);
                 output.innerHTML += '<p>📦 Available exports: ' + exports.join(', ') + '</p>';
                 
                 // Test initialization
-                const runner = new ClaraFlowSDK.ClaraFlowRunner();
-                output.innerHTML += '<p>✅ ClaraFlowRunner initialized</p>';
+                const runner = new angelaFlowSDK.angelaFlowRunner();
+                output.innerHTML += '<p>✅ angelaFlowRunner initialized</p>';
                 
                 // Test browser utils
-                const isBrowser = ClaraFlowSDK.BrowserUtils.isBrowser();
+                const isBrowser = angelaFlowSDK.BrowserUtils.isBrowser();
                 output.innerHTML += '<p>🌐 Is browser: ' + isBrowser + '</p>';
                 
                 output.innerHTML += '<p>🎉 All tests passed!</p>';
             } else {
-                output.innerHTML += '<p>❌ ClaraFlowSDK not found</p>';
+                output.innerHTML += '<p>❌ angelaFlowSDK not found</p>';
             }
         } catch (error) {
             output.innerHTML += '<p>❌ Error: ' + error.message + '</p>';

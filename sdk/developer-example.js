@@ -1,13 +1,13 @@
 /**
- * Clara Flow SDK v2.0 - Super Simple Developer Example
+ * angela Flow SDK v2.0 - Super Simple Developer Example
  * This shows how incredibly easy it is to use workflows with auto-input detection
  */
 
-import { ClaraFlowRunner } from './dist/index.js';
+import { angelaFlowRunner } from './dist/index.js';
 
-console.log('🧠 Clara Flow SDK - Developer-Friendly Example\n');
+console.log('🧠 angela Flow SDK - Developer-Friendly Example\n');
 
-// Just import your workflow JSON (from Clara Studio export)
+// Just import your workflow JSON (from angela Studio export)
 const myWorkflow = {
   "name": "Email Processor",
   "description": "Processes and validates emails with AI",
@@ -76,7 +76,7 @@ const myWorkflow = {
 };
 
 // Create SDK instance
-const runner = new ClaraFlowRunner({ enableLogging: true });
+const runner = new angelaFlowRunner({ enableLogging: true });
 
 async function demonstrateSimpleUsage() {
   console.log('='.repeat(60));
@@ -153,8 +153,8 @@ async function demonstrateSimpleUsage() {
   console.log('='.repeat(60));
   console.log('🎯 THREE SUPER SIMPLE STEPS:');
   console.log('');
-  console.log('1️⃣  Import your workflow JSON (from Clara Studio)');
-  console.log('2️⃣  Create runner: const runner = new ClaraFlowRunner()');
+  console.log('1️⃣  Import your workflow JSON (from angela Studio)');
+  console.log('2️⃣  Create runner: const runner = new angelaFlowRunner()');
   console.log('3️⃣  Run it: await runner.run(workflow, inputs)');
   console.log('');
   console.log('✨ The SDK automatically:');

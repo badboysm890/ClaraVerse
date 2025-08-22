@@ -102,7 +102,7 @@ const PRESETS: PresetConfig[] = [
   }
 ];
 
-const STORAGE_KEY = 'claracore-optimizer-state';
+const STORAGE_KEY = 'angelacore-optimizer-state';
 
 const LLaMAOptimizerPanel: React.FC<LLaMAOptimizerPanelProps> = ({
   configPath,
@@ -172,7 +172,7 @@ const LLaMAOptimizerPanel: React.FC<LLaMAOptimizerPanelProps> = ({
         message: `Optimizing configuration with ${presetId.replace('_', ' ')} preset...`
       });
 
-      // Call the ClaraCore optimizer via the existing llamaSwap service
+      // Call the angelaCore optimizer via the existing llamaSwap service
       const llamaSwap = (window as any).llamaSwap;
       if (!llamaSwap) {
         throw new Error('LlamaSwap service not available');
@@ -259,7 +259,7 @@ const LLaMAOptimizerPanel: React.FC<LLaMAOptimizerPanelProps> = ({
       <div className="flex items-center gap-2">
         <Brain className="w-5 h-5 text-blue-500" />
         <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-          ClaraCore Optimizer
+          angelaCore Optimizer
         </h4>
       </div>
 

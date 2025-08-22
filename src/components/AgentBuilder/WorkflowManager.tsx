@@ -159,7 +159,7 @@ const WorkflowManager: React.FC<WorkflowManagerProps> = ({ isOpen, onClose, onLo
 
   const handleExportWorkflow = async (workflow: AgentFlow) => {
     try {
-      const exported = await agentWorkflowStorage.exportWorkflow(workflow.id, 'clara-native');
+      const exported = await agentWorkflowStorage.exportWorkflow(workflow.id, 'angela-native');
       if (exported) {
         const blob = new Blob([JSON.stringify(exported.data, null, 2)], { 
           type: 'application/json' 

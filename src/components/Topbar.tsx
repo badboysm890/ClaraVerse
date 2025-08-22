@@ -11,12 +11,12 @@ interface TopbarProps {
   onPageChange?: (page: string) => void;
   projectTitle?: string;
   showProjectTitle?: boolean;
-  // Clara brain switch props (only used on Clara page)
-  showClaraBrainSwitch?: boolean;
-  claraBrainActiveTab?: 'chat' | 'brain';
-  onClaraBrainTabChange?: (tab: 'chat' | 'brain') => void;
-  claraBrainMemoryLevel?: number;
-  claraBrainIsLoading?: boolean;
+  // angela brain switch props (only used on angela page)
+  showangelaBrainSwitch?: boolean;
+  angelaBrainActiveTab?: 'chat' | 'brain';
+  onangelaBrainTabChange?: (tab: 'chat' | 'brain') => void;
+  angelaBrainMemoryLevel?: number;
+  angelaBrainIsLoading?: boolean;
 }
 
 const Topbar = ({ 
@@ -24,11 +24,11 @@ const Topbar = ({
   onPageChange, 
   projectTitle, 
   showProjectTitle = false,
-  showClaraBrainSwitch = false,
-  claraBrainActiveTab = 'chat',
-  onClaraBrainTabChange,
-  claraBrainMemoryLevel = 0,
-  claraBrainIsLoading = false
+  showangelaBrainSwitch = false,
+  angelaBrainActiveTab = 'chat',
+  onangelaBrainTabChange,
+  angelaBrainMemoryLevel = 0,
+  angelaBrainIsLoading = false
 }: TopbarProps) => {
   const { theme, setTheme } = useTheme();
   const [now, setNow] = useState(new Date());
@@ -86,9 +86,9 @@ const Topbar = ({
         },
         // TTS cleanup
         async () => {
-          const claraTTSService = (window as any).claraTTSService;
-          if (claraTTSService) {
-            claraTTSService.destroy();
+          const angelaTTSService = (window as any).angelaTTSService;
+          if (angelaTTSService) {
+            angelaTTSService.destroy();
           }
         },
         // Docker containers cleanup
@@ -102,9 +102,9 @@ const Topbar = ({
           // Get all containers
           const containers = await electronAPI.getContainers();
           
-          // Stop and remove all Clara containers
+          // Stop and remove all angela containers
           for (const container of containers) {
-            if (container.name.startsWith('clara_')) {
+            if (container.name.startsWith('angela_')) {
               try {
                 // Stop the container first
                 await electronAPI.containerAction(container.id, 'stop');
@@ -163,29 +163,29 @@ const Topbar = ({
       
       {/* Right section - Controls */}
       <div className="flex items-center gap-6">
-        {/* Clara Brain Switch - Single toggle icon only visible on Clara page */}
-        {showClaraBrainSwitch && (
+        {/* angela Brain Switch - Single toggle icon only visible on angela page */}
+        {showangelaBrainSwitch && (
           <button
-            onClick={() => onClaraBrainTabChange?.(claraBrainActiveTab === 'chat' ? 'brain' : 'chat')}
+            onClick={() => onangelaBrainTabChange?.(angelaBrainActiveTab === 'chat' ? 'brain' : 'chat')}
             className="p-2 rounded-lg hover:bg-sakura-50 dark:hover:bg-sakura-100/10 transition-colors relative"
-            title={claraBrainActiveTab === 'chat' ? "Switch to Clara's Brain" : "Switch to Chat"}
-            aria-label={claraBrainActiveTab === 'chat' ? "Switch to Clara's Brain" : "Switch to Chat"}
+            title={angelaBrainActiveTab === 'chat' ? "Switch to angela's Brain" : "Switch to Chat"}
+            aria-label={angelaBrainActiveTab === 'chat' ? "Switch to angela's Brain" : "Switch to Chat"}
           >
-            {claraBrainActiveTab === 'chat' ? (
+            {angelaBrainActiveTab === 'chat' ? (
               <Brain className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             ) : (
               <MessageCircle className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             )}
             
             {/* Activity indicator for chat when on brain tab */}
-            {claraBrainActiveTab === 'brain' && claraBrainIsLoading && (
+            {angelaBrainActiveTab === 'brain' && angelaBrainIsLoading && (
               <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
             )}
             
             {/* Memory indicator for brain when on chat tab */}
-            {claraBrainActiveTab === 'chat' && claraBrainMemoryLevel > 0 && (
+            {angelaBrainActiveTab === 'chat' && angelaBrainMemoryLevel > 0 && (
               <div className="absolute -top-1 -right-1 px-1 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full min-w-[16px] text-center">
-                {claraBrainMemoryLevel}%
+                {angelaBrainMemoryLevel}%
               </div>
             )}
           </button>
@@ -200,7 +200,7 @@ const Topbar = ({
           {theme === 'dark' && <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300" />}
           {theme === 'system' && <Monitor className="w-5 h-5 text-gray-600 dark:text-gray-300" />}
         </button>
-        <NotificationPanel onNavigateToClara={() => onPageChange?.('clara')} />
+        <NotificationPanel onNavigateToangela={() => onPageChange?.('angela')} />
         <UserProfileButton
           userName={userName || personalInfo?.name || 'Profile'}
           avatarUrl={personalInfo?.avatar_url}
@@ -215,7 +215,7 @@ const Topbar = ({
               : 'hover:bg-red-50 dark:hover:bg-red-900/20'
           }`}
           aria-label="Exit application"
-          title="Exit Clara"
+          title="Exit angela"
         >
           {isExiting ? (
             <Loader2 className="w-5 h-5 text-red-600 dark:text-red-400 animate-spin" />

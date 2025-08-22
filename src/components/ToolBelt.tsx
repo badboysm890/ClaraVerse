@@ -25,8 +25,8 @@ import {
 } from 'lucide-react';
 import { db } from '../db';
 // Import AI service and types
-import { claraApiService } from '../services/claraApiService';
-import type { ClaraProvider, ClaraModel, ClaraAIConfig } from '../types/clara_assistant_types';
+import { angelaApiService } from '../services/angelaApiService';
+import type { angelaProvider, angelaModel, angelaAIConfig } from '../types/angela_assistant_types';
 
 // Tool Belt Types - Updated to match database schema
 interface ToolBeltTool {
@@ -195,8 +195,8 @@ const ToolBelt: React.FC = () => {
   });
 
   // AI-powered tool creation state
-  const [providers, setProviders] = useState<ClaraProvider[]>([]);
-  const [models, setModels] = useState<ClaraModel[]>([]);
+  const [providers, setProviders] = useState<angelaProvider[]>([]);
+  const [models, setModels] = useState<angelaModel[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [aiPrompt, setAiPrompt] = useState<string>('');
@@ -307,7 +307,7 @@ const ToolBelt: React.FC = () => {
   useEffect(() => {
     const loadProvidersAndModels = async () => {
       try {
-        const loadedProviders = await claraApiService.getProviders();
+        const loadedProviders = await angelaApiService.getProviders();
         const enabledProviders = loadedProviders.filter(p => p.isEnabled);
         setProviders(enabledProviders);
 
@@ -316,7 +316,7 @@ const ToolBelt: React.FC = () => {
           setSelectedProvider(primaryProvider.id);
 
           // Load models for the primary provider
-          const loadedModels = await claraApiService.getModels(primaryProvider.id);
+          const loadedModels = await angelaApiService.getModels(primaryProvider.id);
           setModels(loadedModels);
 
           // Select a default text model
@@ -337,7 +337,7 @@ const ToolBelt: React.FC = () => {
   const handleProviderChange = async (providerId: string) => {
     setSelectedProvider(providerId);
     try {
-      const loadedModels = await claraApiService.getModels(providerId);
+      const loadedModels = await angelaApiService.getModels(providerId);
       setModels(loadedModels);
       
       // Select first available text model
@@ -365,7 +365,7 @@ const ToolBelt: React.FC = () => {
 
     try {
       // Create AI config for the request
-      const aiConfig: ClaraAIConfig = {
+      const aiConfig: angelaAIConfig = {
         provider: selectedProvider,
         models: {
           text: selectedModel,
@@ -401,7 +401,7 @@ const ToolBelt: React.FC = () => {
       };
 
       // Enhanced system prompt for tool generation
-      const systemPrompt = `You are an expert JavaScript developer and tool architect. Your job is to create Clara Assistant tools based on user descriptions.
+      const systemPrompt = `You are an expert JavaScript developer and tool architect. Your job is to create angela Assistant tools based on user descriptions.
 
 CRITICAL INSTRUCTIONS:
 1. You MUST respond with valid JSON only - no explanations, no markdown, no code blocks
@@ -448,14 +448,14 @@ EXAMPLES OF GOOD TOOLS:
 
 Remember: RESPOND WITH VALID JSON ONLY!`;
 
-      const userPrompt = `Create a Clara Assistant tool based on this description:
+      const userPrompt = `Create a angela Assistant tool based on this description:
 
 ${aiPrompt}
 
 Make it useful, robust, and user-friendly. Include proper error handling and return meaningful results.`;
 
       // Send request to AI
-      const response = await claraApiService.sendChatMessage(
+      const response = await angelaApiService.sendChatMessage(
         userPrompt,
         aiConfig,
         undefined,
@@ -728,7 +728,7 @@ Make it useful, robust, and user-friendly. Include proper error handling and ret
               Tool Belt
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Manage and create custom tools for Clara Assistant
+              Manage and create custom tools for angela Assistant
             </p>
           </div>
         </div>
@@ -804,7 +804,7 @@ Make it useful, robust, and user-friendly. Include proper error handling and ret
                   AI Tool Creator
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Describe what you want, and AI will create a custom tool for Clara
+                  Describe what you want, and AI will create a custom tool for angela
                 </p>
               </div>
             </div>

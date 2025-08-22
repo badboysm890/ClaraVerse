@@ -34,7 +34,7 @@ class WatchdogService extends EventEmitter {
       comfyUI: true,
       n8n: true,
       ragAndTts: true,
-      claraCore: true
+      angelaCore: true
     };
     
     // Watchdog configuration
@@ -51,17 +51,17 @@ class WatchdogService extends EventEmitter {
     // Service status tracking - only include selected services
     this.services = {};
     
-    // Clara Core is always enabled
-    this.services.clarasCore = {
-      name: "Clara's Core",
+    // angela Core is always enabled
+    this.services.angelasCore = {
+      name: "angela's Core",
       status: 'unknown',
       lastCheck: null,
       lastHealthyTime: null, // Track when service was last confirmed healthy
       failureCount: 0,
       isRetrying: false,
       enabled: true,
-      healthCheck: () => this.checkClarasCoreHealth(),
-      restart: () => this.restartClarasCore()
+      healthCheck: () => this.checkangelasCoreHealth(),
+      restart: () => this.restartangelasCore()
     };
     
     // Python backend is always enabled (core service)
@@ -310,16 +310,16 @@ class WatchdogService extends EventEmitter {
         const autoStartDisabled = consentData.autoStartServices === false;
         
         if (isOnboardingMode && autoStartDisabled) {
-          this.logEvent('ONBOARDING_MODE_DETECTED', 'INFO', 'Onboarding mode with auto-start disabled - only Clara Core will be managed');
+          this.logEvent('ONBOARDING_MODE_DETECTED', 'INFO', 'Onboarding mode with auto-start disabled - only angela Core will be managed');
           
           // In onboarding mode with auto-start disabled:
-          // - Clara Core is always managed (it's essential)
+          // - angela Core is always managed (it's essential)
           // - Other services are disabled for auto-management but user preferences are stored
           for (const [serviceKey, service] of Object.entries(this.services)) {
-            if (serviceKey === 'clarasCore') {
-              // Always enable Clara Core monitoring (using correct service key)
+            if (serviceKey === 'angelasCore') {
+              // Always enable angela Core monitoring (using correct service key)
               service.enabled = true;
-              this.logEvent('SERVICE_CLARA_CORE_ENABLED', 'INFO', 'Clara Core monitoring enabled - essential service');
+              this.logEvent('SERVICE_angela_CORE_ENABLED', 'INFO', 'angela Core monitoring enabled - essential service');
             } else {
               // Disable auto-management for other services during onboarding mode
               service.enabled = false;
@@ -328,7 +328,7 @@ class WatchdogService extends EventEmitter {
             }
           }
           
-          return true; // Return true so watchdog runs, but only for Clara Core
+          return true; // Return true so watchdog runs, but only for angela Core
         }
         
         // Check if user has auto-start enabled for post-onboarding use
@@ -359,10 +359,10 @@ class WatchdogService extends EventEmitter {
         // Only enable services that user has explicitly consented to (for full auto-start mode)
         if (consentData.hasConsented && consentData.services && autoStartEnabled) {
           for (const [serviceKey, service] of Object.entries(this.services)) {
-            if (serviceKey === 'clarasCore') {
-              // Clara Core is always enabled when user has consented
+            if (serviceKey === 'angelasCore') {
+              // angela Core is always enabled when user has consented
               service.enabled = true;
-              this.logEvent('SERVICE_CLARA_CORE_ENABLED', 'INFO', 'Clara Core monitoring enabled - essential service');
+              this.logEvent('SERVICE_angela_CORE_ENABLED', 'INFO', 'angela Core monitoring enabled - essential service');
             } else if (consentData.services[serviceKey] === true) {
               service.enabled = true;
               this.logEvent('SERVICE_CONSENT_ENABLED', 'INFO', `Service ${serviceKey} enabled by user consent`);
@@ -376,38 +376,38 @@ class WatchdogService extends EventEmitter {
         
         return consentData.hasConsented === true;
       } else {
-        this.logEvent('USER_CONSENT_CHECK', 'INFO', 'No user consent file found - only Clara Core will be managed');
+        this.logEvent('USER_CONSENT_CHECK', 'INFO', 'No user consent file found - only angela Core will be managed');
         
-        // Without consent file, only enable Clara Core (essential service)
+        // Without consent file, only enable angela Core (essential service)
         for (const [serviceKey, service] of Object.entries(this.services)) {
-          if (serviceKey === 'clarasCore') {
+          if (serviceKey === 'angelasCore') {
             service.enabled = true;
-            this.logEvent('SERVICE_CLARA_CORE_ENABLED', 'INFO', 'Clara Core monitoring enabled - essential service (no consent file)');
+            this.logEvent('SERVICE_angela_CORE_ENABLED', 'INFO', 'angela Core monitoring enabled - essential service (no consent file)');
           } else {
             service.enabled = false;
             service.status = 'disabled';
           }
         }
         
-        return true; // Return true so watchdog runs for Clara Core
+        return true; // Return true so watchdog runs for angela Core
       }
     } catch (error) {
-      this.logEvent('USER_CONSENT_ERROR', 'ERROR', 'Failed to read user consent status - only Clara Core will be managed', {
+      this.logEvent('USER_CONSENT_ERROR', 'ERROR', 'Failed to read user consent status - only angela Core will be managed', {
         error: error.message
       });
       
-      // On error, only enable Clara Core (essential service)
+      // On error, only enable angela Core (essential service)
       for (const [serviceKey, service] of Object.entries(this.services)) {
-        if (serviceKey === 'clarasCore') {
+        if (serviceKey === 'angelasCore') {
           service.enabled = true;
-          this.logEvent('SERVICE_CLARA_CORE_ENABLED', 'INFO', 'Clara Core monitoring enabled - essential service (error fallback)');
+          this.logEvent('SERVICE_angela_CORE_ENABLED', 'INFO', 'angela Core monitoring enabled - essential service (error fallback)');
         } else {
           service.enabled = false;
           service.status = 'disabled';
         }
       }
       
-      return true; // Return true so watchdog runs for Clara Core
+      return true; // Return true so watchdog runs for angela Core
     }
   }
 
@@ -675,12 +675,12 @@ class WatchdogService extends EventEmitter {
   }
 
   // Individual service health check methods
-  async checkClarasCoreHealth() {
+  async checkangelasCoreHealth() {
     try {
       const status = await this.llamaSwapService.getStatusWithHealthCheck();
       const isHealthy = status.isRunning && status.healthCheck === 'passed';
       
-      this.logEvent('SERVICE_HEALTH_CHECK', 'DEBUG', 'Clara\'s Core health check completed', {
+      this.logEvent('SERVICE_HEALTH_CHECK', 'DEBUG', 'angela\'s Core health check completed', {
         isRunning: status.isRunning,
         healthCheck: status.healthCheck,
         isHealthy: isHealthy
@@ -688,7 +688,7 @@ class WatchdogService extends EventEmitter {
       
       return isHealthy;
     } catch (error) {
-      this.logEvent('SERVICE_HEALTH_CHECK_ERROR', 'ERROR', 'Clara\'s Core health check failed', {
+      this.logEvent('SERVICE_HEALTH_CHECK_ERROR', 'ERROR', 'angela\'s Core health check failed', {
         error: error.message,
         stack: error.stack
       });
@@ -752,8 +752,8 @@ class WatchdogService extends EventEmitter {
   }
 
   // Individual service restart methods
-  async restartClarasCore() {
-    this.logEvent('SERVICE_RESTART', 'INFO', 'Initiating Clara\'s Core service restart');
+  async restartangelasCore() {
+    this.logEvent('SERVICE_RESTART', 'INFO', 'Initiating angela\'s Core service restart');
     
     try {
       if (this.llamaSwapService.isRunning) {
@@ -762,10 +762,10 @@ class WatchdogService extends EventEmitter {
       }
       
       await this.llamaSwapService.start();
-      this.logEvent('SERVICE_RESTART_OPERATION', 'INFO', 'Clara\'s Core restart operation completed');
+      this.logEvent('SERVICE_RESTART_OPERATION', 'INFO', 'angela\'s Core restart operation completed');
       
     } catch (error) {
-      this.logEvent('SERVICE_RESTART_ERROR', 'ERROR', 'Clara\'s Core restart operation failed', {
+      this.logEvent('SERVICE_RESTART_ERROR', 'ERROR', 'angela\'s Core restart operation failed', {
         error: error.message,
         stack: error.stack
       });
@@ -783,13 +783,13 @@ class WatchdogService extends EventEmitter {
       if (!n8nConfig) {
         this.logEvent('SERVICE_RESTART_WARNING', 'WARN', 'N8N configuration not found, creating default configuration');
         n8nConfig = {
-          name: 'clara_n8n',
+          name: 'angela_n8n',
           image: this.dockerSetup.getArchSpecificImage('n8nio/n8n', 'latest'),
           port: 5678,
           internalPort: 5678,
           healthCheck: this.dockerSetup.checkN8NHealth.bind(this.dockerSetup),
           volumes: [
-            `${require('path').join(require('os').homedir(), '.clara', 'n8n')}:/home/node/.n8n`
+            `${require('path').join(require('os').homedir(), '.angela', 'n8n')}:/home/node/.n8n`
           ]
         };
         this.dockerSetup.containers.n8n = n8nConfig;
@@ -816,16 +816,16 @@ class WatchdogService extends EventEmitter {
       if (!pythonConfig) {
         this.logEvent('SERVICE_RESTART_WARNING', 'WARN', 'Python configuration not found, creating default configuration');
         pythonConfig = {
-          name: 'clara_python',
-          image: this.dockerSetup.getArchSpecificImage('clara17verse/clara-backend', 'latest'),
+          name: 'angela_python',
+          image: this.dockerSetup.getArchSpecificImage('angela17verse/angela-backend', 'latest'),
           port: 5001,
           internalPort: 5000,
           healthCheck: this.dockerSetup.isPythonRunning.bind(this.dockerSetup),
           volumes: [
-            `${this.dockerSetup.pythonBackendDataPath}:/home/clara`,
-            'clara_python_models:/app/models'
+            `${this.dockerSetup.pythonBackendDataPath}:/home/angela`,
+            'angela_python_models:/app/models'
           ],
-          volumeNames: ['clara_python_models']
+          volumeNames: ['angela_python_models']
         };
         this.dockerSetup.containers.python = pythonConfig;
       }

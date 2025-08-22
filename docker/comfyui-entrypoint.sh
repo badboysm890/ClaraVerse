@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# ComfyUI Entrypoint Script for Clara
+# ComfyUI Entrypoint Script for angela
 set -e
 
-echo "🎨 Starting ComfyUI for Clara..."
+echo "🎨 Starting ComfyUI for angela..."
 
 # Set working directory
 cd /app/ComfyUI
@@ -64,8 +64,8 @@ fi
 
 # Create extra_model_paths.yaml for easy model management
 cat > extra_model_paths.yaml << EOF
-# Clara ComfyUI Model Paths Configuration
-clara:
+# angela ComfyUI Model Paths Configuration
+angela:
     base_path: /app/ComfyUI/
     
     checkpoints: models/checkpoints/
@@ -76,7 +76,7 @@ clara:
     unet: models/unet/
     upscale_models: models/upscale_models/
     
-    # Custom paths for Clara integration
+    # Custom paths for angela integration
     embeddings: models/embeddings/
     hypernetworks: models/hypernetworks/
     style_models: models/style_models/
@@ -89,7 +89,7 @@ echo "    • Listen: 0.0.0.0"
 echo "    • GPU Support: $([ -n "$CUDA_VISIBLE_DEVICES" ] && echo "Enabled" || echo "Disabled")"
 echo "    • Mode: $([ "$COMFYUI_ARGS" = "--cpu" ] && echo "CPU Only" || echo "GPU/CPU Auto")"
 
-# Start ComfyUI with Clara-optimized settings
+# Start ComfyUI with angela-optimized settings
 exec python3 main.py \
     --listen 0.0.0.0 \
     --port 8188 \

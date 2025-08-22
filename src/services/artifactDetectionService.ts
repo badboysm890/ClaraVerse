@@ -13,18 +13,18 @@
  * - Mermaid diagram detection both in code blocks and unmarked content
  */
 
-import { ClaraArtifact, ClaraArtifactType, ClaraAIConfig } from '../types/clara_assistant_types';
+import { angelaArtifact, angelaArtifactType, angelaAIConfig } from '../types/angela_assistant_types';
 
 export interface DetectionContext {
   userMessage?: string;
   conversationHistory?: string[];
   messageContent: string;
   attachments?: any[];
-  artifactConfig?: ClaraAIConfig['artifacts'];
+  artifactConfig?: angelaAIConfig['artifacts'];
 }
 
 export interface DetectionResult {
-  artifacts: ClaraArtifact[];
+  artifacts: angelaArtifact[];
   cleanedContent: string;
   detectionSummary: {
     totalArtifacts: number;
@@ -372,7 +372,7 @@ export class ArtifactDetectionService {
    */
   static detectArtifacts(context: DetectionContext): DetectionResult {
     const { messageContent, userMessage = '', conversationHistory = [], artifactConfig } = context;
-    const artifacts: ClaraArtifact[] = [];
+    const artifacts: angelaArtifact[] = [];
     const placeholders: { [key: string]: string } = {};
     let cleanedContent = messageContent;
     let detectionConfidence = 0;
@@ -539,8 +539,8 @@ export class ArtifactDetectionService {
   /**
    * Extract code blocks from content
    */
-  private static extractCodeBlocks(content: string): { artifacts: ClaraArtifact[]; cleanedContent: string; confidence: number } {
-    const artifacts: ClaraArtifact[] = [];
+  private static extractCodeBlocks(content: string): { artifacts: angelaArtifact[]; cleanedContent: string; confidence: number } {
+    const artifacts: angelaArtifact[] = [];
     let cleanedContent = content; // Keep original content instead of cleaning
     let confidence = 0;
 
@@ -608,8 +608,8 @@ export class ArtifactDetectionService {
   /**
    * Extract tables from content
    */
-  private static extractTables(content: string): { artifacts: ClaraArtifact[]; cleanedContent: string; confidence: number } {
-    const artifacts: ClaraArtifact[] = [];
+  private static extractTables(content: string): { artifacts: angelaArtifact[]; cleanedContent: string; confidence: number } {
+    const artifacts: angelaArtifact[] = [];
     let cleanedContent = content; // Keep original content instead of cleaning
     let confidence = 0;
 
@@ -700,8 +700,8 @@ export class ArtifactDetectionService {
   /**
    * Extract Mermaid diagrams
    */
-  private static extractMermaidDiagrams(content: string): { artifacts: ClaraArtifact[]; cleanedContent: string; confidence: number } {
-    const artifacts: ClaraArtifact[] = [];
+  private static extractMermaidDiagrams(content: string): { artifacts: angelaArtifact[]; cleanedContent: string; confidence: number } {
+    const artifacts: angelaArtifact[] = [];
     let cleanedContent = content;
     let confidence = 0;
 
@@ -838,8 +838,8 @@ export class ArtifactDetectionService {
   /**
    * Extract structured data (JSON, API responses, etc.)
    */
-  private static extractStructuredData(content: string): { artifacts: ClaraArtifact[]; cleanedContent: string; confidence: number } {
-    const artifacts: ClaraArtifact[] = [];
+  private static extractStructuredData(content: string): { artifacts: angelaArtifact[]; cleanedContent: string; confidence: number } {
+    const artifacts: angelaArtifact[] = [];
     let cleanedContent = content;
     let confidence = 0;
 
@@ -918,8 +918,8 @@ export class ArtifactDetectionService {
   /**
    * Extract math formulas
    */
-  private static extractMathFormulas(content: string): { artifacts: ClaraArtifact[]; cleanedContent: string; confidence: number } {
-    const artifacts: ClaraArtifact[] = [];
+  private static extractMathFormulas(content: string): { artifacts: angelaArtifact[]; cleanedContent: string; confidence: number } {
+    const artifacts: angelaArtifact[] = [];
     let cleanedContent = content;
     let confidence = 0;
 
@@ -979,8 +979,8 @@ export class ArtifactDetectionService {
   /**
    * Context-aware detection based on user request
    */
-  private static detectFromContext(content: string, userMessage: string, conversationHistory: string[]): { artifacts: ClaraArtifact[]; cleanedContent: string; confidence: number } {
-    const artifacts: ClaraArtifact[] = [];
+  private static detectFromContext(content: string, userMessage: string, conversationHistory: string[]): { artifacts: angelaArtifact[]; cleanedContent: string; confidence: number } {
+    const artifacts: angelaArtifact[] = [];
     let cleanedContent = content;
     let confidence = 0;
 
@@ -1131,7 +1131,7 @@ export class ArtifactDetectionService {
   /**
    * Detect JSON object type
    */
-  private static detectJsonType(obj: any): ClaraArtifactType {
+  private static detectJsonType(obj: any): angelaArtifactType {
     if (obj.labels && obj.datasets) return 'chart';
     if (obj.status && (obj.data || obj.error)) return 'json';
     if (obj.query || obj.table || obj.rows) return 'json';
@@ -1143,7 +1143,7 @@ export class ArtifactDetectionService {
   /**
    * Detect array type
    */
-  private static detectArrayType(arr: any[]): ClaraArtifactType {
+  private static detectArrayType(arr: any[]): angelaArtifactType {
     if (arr.length === 0) return 'json';
     
     const firstItem = arr[0];
@@ -1190,7 +1190,7 @@ export class ArtifactDetectionService {
   /**
    * **NEW: Check if artifact should be rendered inline instead of as a separate artifact**
    */
-  private static isInlineVisualContentFromArtifact(artifact: ClaraArtifact): boolean {
+  private static isInlineVisualContentFromArtifact(artifact: angelaArtifact): boolean {
     const { language, content, type } = artifact;
     
     // Check for Mermaid diagrams

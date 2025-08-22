@@ -1225,7 +1225,7 @@ export class APIClient {
     
     // Also store in localStorage for persistence across sessions with provider-specific key
     try {
-      const storageKey = `clara-problematic-tools-${providerPrefix}`;
+      const storageKey = `angela-problematic-tools-${providerPrefix}`;
       const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
       const toolInfo = {
         name: tool.name,
@@ -1291,7 +1291,7 @@ export class APIClient {
    */
   private loadProblematicToolsFromStorage(providerId: string): void {
     try {
-      const storageKey = `clara-problematic-tools-${providerId}`;
+      const storageKey = `angela-problematic-tools-${providerId}`;
       const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
       for (const toolInfo of stored) {
         const toolKey = `${providerId}:${toolInfo.name}:${toolInfo.description}`;
@@ -1315,7 +1315,7 @@ export class APIClient {
     keysToRemove.forEach(key => APIClient.problematicTools.delete(key));
     
     try {
-      const storageKey = `clara-problematic-tools-${providerId}`;
+      const storageKey = `angela-problematic-tools-${providerId}`;
       localStorage.removeItem(storageKey);
       console.log(`🗑️ [PROBLEMATIC-TOOLS] Cleared all stored problematic tools for provider ${providerId}`);
     } catch (error) {
@@ -1333,14 +1333,14 @@ export class APIClient {
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('clara-problematic-tools-')) {
+        if (key && key.startsWith('angela-problematic-tools-')) {
           keysToRemove.push(key);
         }
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
       
       // Also clear the old global key for backward compatibility
-      localStorage.removeItem('clara-problematic-tools');
+      localStorage.removeItem('angela-problematic-tools');
       console.log(`🗑️ [PROBLEMATIC-TOOLS] Cleared all stored problematic tools for all providers`);
     } catch (error) {
       console.warn('Failed to clear problematic tools from localStorage:', error);
@@ -1364,7 +1364,7 @@ export class APIClient {
       const storageKeysToCheck: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('clara-problematic-tools-')) {
+        if (key && key.startsWith('angela-problematic-tools-')) {
           storageKeysToCheck.push(key);
         }
       }

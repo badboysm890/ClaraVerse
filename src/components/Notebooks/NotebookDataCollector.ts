@@ -1,4 +1,4 @@
-import { claraNotebookService } from '../../services/claraNotebookService';
+import { angelaNotebookService } from '../../services/angelaNotebookService';
 import { NotebookContent } from './NotebookExportService';
 
 interface NotebookNote {
@@ -40,7 +40,7 @@ class NotebookDataCollector {
   async collectNotebookData(notebookId: string): Promise<NotebookContent> {
     try {
       // Get basic notebook info
-      const notebook = await claraNotebookService.getNotebook(notebookId);
+      const notebook = await angelaNotebookService.getNotebook(notebookId);
       
       // Collect notes from localStorage (from NotebookCanvas)
       const notes = this.collectNotesFromStorage(notebookId);
@@ -94,7 +94,7 @@ class NotebookDataCollector {
       // Try different possible storage keys for chat history
       const possibleKeys = [
         `notebook-chat-${notebookId}`,
-        `clara-chat-${notebookId}`,
+        `angela-chat-${notebookId}`,
         `chat-history-${notebookId}`,
         `notebook-${notebookId}-chat`
       ];

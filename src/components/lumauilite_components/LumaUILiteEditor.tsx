@@ -986,7 +986,7 @@ interface Document {
 interface HTMLElement {
   innerHTML: string;
   textContent: string;
-  style: CSSStyleDeclaration;
+  style: CSSStyleDeangelation;
   classList: DOMTokenList;
   addEventListener(type: string, listener: EventListener): void;
   removeEventListener(type: string, listener: EventListener): void;

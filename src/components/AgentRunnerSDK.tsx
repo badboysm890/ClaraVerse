@@ -4,8 +4,8 @@ import ReactMarkdown from 'react-markdown';
 import { agentWorkflowStorage } from '../services/agentWorkflowStorage';
 import { customNodeManager } from './AgentBuilder/NodeCreator/CustomNodeManager';
 
-// Import Clara Flow SDK
-import { ClaraFlowRunner } from '../../sdk/src/ClaraFlowRunner';
+// Import angela Flow SDK
+import { angelaFlowRunner } from '../../sdk/src/angelaFlowRunner';
 
 interface ChatMessage {
   id: string;
@@ -238,7 +238,7 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
     }
 
     return {
-      format: 'clara-sdk',
+      format: 'angela-sdk',
       version: '1.0.0',
       flow: {
         id: agentFlow.id,
@@ -250,7 +250,7 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
       customNodes: customNodes,
       metadata: {
         exportedAt: new Date().toISOString(),
-        exportedFrom: 'Clara Agent Runner SDK',
+        exportedFrom: 'angela Agent Runner SDK',
         hasCustomNodes: customNodes.length > 0
       }
     };
@@ -269,7 +269,7 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
     setExecutionLogs([]); // Clear previous logs
     setMessages([]); // Clear previous messages
 
-    console.log('🚀 STARTING AGENT EXECUTION - Clara Flow SDK Approach');
+    console.log('🚀 STARTING AGENT EXECUTION - angela Flow SDK Approach');
     console.log('📋 Agent Flow:', agentFlow);
     console.log('📥 Input Values:', inputValues);
     
@@ -324,13 +324,13 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
     }
 
     try {
-      // 🆕 Create Clara Flow SDK Runner - completely isolated
-      const runner = new ClaraFlowRunner({
+      // 🆕 Create angela Flow SDK Runner - completely isolated
+      const runner = new angelaFlowRunner({
         enableLogging: true,
         timeout: 30000
       });
 
-      console.log('✅ Clara Flow SDK Runner created');
+      console.log('✅ angela Flow SDK Runner created');
 
       // Convert agent flow to SDK format
       const sdkFlowData = convertToSDKFormat(agentFlow);
@@ -477,8 +477,8 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
 
       console.log('📤 SDK Inputs prepared:', sdkInputs);
 
-      // 🎯 Execute using Clara Flow SDK - COMPLETELY ISOLATED
-      console.log('⚡ Executing flow with Clara Flow SDK...');
+      // 🎯 Execute using angela Flow SDK - COMPLETELY ISOLATED
+      console.log('⚡ Executing flow with angela Flow SDK...');
       const executionResult = await runner.executeFlow(sdkFlowData, sdkInputs);
       
       console.log('🎉 SDK Execution completed!');
@@ -586,7 +586,7 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
       setExecutionLogs(convertedLogs);
       
     } catch (error) {
-      console.error('❌ Clara Flow SDK execution failed:', error);
+      console.error('❌ angela Flow SDK execution failed:', error);
       
       let errorMessage = 'Execution failed: ';
       
@@ -664,7 +664,7 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-              ✨ Clara Flow SDK
+              ✨ angela Flow SDK
             </span>
             <button
               onClick={() => setShowLogs(!showLogs)}
@@ -694,7 +694,7 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
         {showLogs && (
           <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Clara Flow SDK Logs</h4>
+              <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100">angela Flow SDK Logs</h4>
               <span className="text-xs text-gray-500 dark:text-gray-400">{executionLogs.length} entries</span>
             </div>
             {executionLogs.length === 0 ? (
@@ -830,7 +830,7 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
               {isLoading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
-                  Executing with Clara Flow SDK...
+                  Executing with angela Flow SDK...
                 </div>
               ) : (
                 `🚀 Run Agent (${inputValues.filter(iv => iv.value).length}/${inputValues.length} inputs)`
@@ -854,7 +854,7 @@ const AgentRunnerSDK: React.FC<AgentRunnerProps> = ({ agentId, onClose }) => {
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Agent Results</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              View the output from your agent execution using Clara Flow SDK
+              View the output from your agent execution using angela Flow SDK
             </p>
           </div>
 

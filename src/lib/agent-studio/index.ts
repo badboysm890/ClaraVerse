@@ -1,12 +1,12 @@
 /**
- * Clara Agent Studio - Production Ready Framework
+ * angela Agent Studio - Production Ready Framework
  * 
  * This is the main entry point for the Agent Studio framework.
  * It provides a complete plugin-based architecture for building
  * visual AI workflows with hot-reloading and LLM-powered node generation.
  * 
  * @version 2.0.0
- * @author Clara Team
+ * @author angela Team
  */
 
 // Core Framework

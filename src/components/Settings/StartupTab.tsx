@@ -38,7 +38,7 @@ const StartupTab = () => {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Startup & Launch</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Control how Clara starts and behaves when launching
+              Control how angela starts and behaves when launching
             </p>
           </div>
         </div>
@@ -71,7 +71,7 @@ const StartupTab = () => {
                   <div>
                     <h4 className="font-medium text-gray-900 dark:text-white">Auto Start with System</h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Launch Clara automatically when you start your computer
+                      Launch angela automatically when you start your computer
                       {settings.isDevelopment && (
                         <span className="text-amber-600 dark:text-amber-400 ml-1">(Disabled in development mode)</span>
                       )}
@@ -97,7 +97,7 @@ const StartupTab = () => {
                   <Minimize2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   <div>
                     <h4 className="font-medium text-gray-900 dark:text-white">Start Minimized</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Launch Clara in the system tray instead of showing the main window</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Launch angela in the system tray instead of showing the main window</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer" aria-label="Toggle start minimized">
@@ -124,7 +124,7 @@ const StartupTab = () => {
                   <Maximize2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   <div>
                     <h4 className="font-medium text-gray-900 dark:text-white">Start Fullscreen</h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Launch Clara in fullscreen mode for immersive experience</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Launch angela in fullscreen mode for immersive experience</p>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer" aria-label="Toggle start fullscreen">

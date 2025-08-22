@@ -1,6 +1,6 @@
-# ClaraVerse Widget Service
+# angelaVerse Widget Service
 
-A Go-based microservice that provides real-time system monitoring data for ClaraVerse widgets, including GPU usage, CPU stats, memory usage, and more.
+A Go-based microservice that provides real-time system monitoring data for angelaVerse widgets, including GPU usage, CPU stats, memory usage, and more.
 
 ## Features
 
@@ -73,9 +73,9 @@ GOOS=darwin GOARCH=amd64 go build -o widgets-service-macos main.go enhanced_pdf_
 #### WebSocket
 - `WS /ws/stats` - Real-time system statistics stream
 
-### Integration with ClaraVerse
+### Integration with angelaVerse
 
-The service is automatically managed by ClaraVerse:
+The service is automatically managed by angelaVerse:
 
 1. **Auto-Start**: Service starts when widgets requiring it are added
 2. **Auto-Stop**: Service stops when no monitoring widgets are active
@@ -224,4 +224,4 @@ For production deployments, consider adding:
 
 ## License
 
-Part of the ClaraVerse project.
+Part of the angelaVerse project.

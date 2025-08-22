@@ -1,4 +1,4 @@
-# Clara Flow SDK - CDN Usage Guide
+# angela Flow SDK - CDN Usage Guide
 
 ## 🚀 Quick Start
 
@@ -6,26 +6,26 @@
 
 ```html
 <!-- Latest version -->
-<script src="https://unpkg.com/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.js"></script>
+<script src="https://unpkg.com/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.js"></script>
 
 <!-- Specific version -->
-<script src="https://unpkg.com/clara-flow-sdk@1.4.0/dist/clara-flow-sdk.umd.js"></script>
+<script src="https://unpkg.com/angela-flow-sdk@1.4.0/dist/angela-flow-sdk.umd.js"></script>
 
 <!-- Minified version -->
-<script src="https://unpkg.com/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.min.js"></script>
+<script src="https://unpkg.com/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.min.js"></script>
 ```
 
 ### Option 2: Use from jsDelivr CDN
 
 ```html
 <!-- Latest version -->
-<script src="https://cdn.jsdelivr.net/npm/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.js"></script>
 
 <!-- Specific version -->
-<script src="https://cdn.jsdelivr.net/npm/clara-flow-sdk@1.4.0/dist/clara-flow-sdk.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/angela-flow-sdk@1.4.0/dist/angela-flow-sdk.umd.js"></script>
 
 <!-- Minified version -->
-<script src="https://cdn.jsdelivr.net/npm/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.min.js"></script>
 ```
 
 ## 📖 Basic Usage
@@ -36,20 +36,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Clara Flow SDK Example</title>
+    <title>angela Flow SDK Example</title>
 </head>
 <body>
     <!-- Load the SDK -->
-    <script src="https://unpkg.com/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.js"></script>
+    <script src="https://unpkg.com/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.js"></script>
     
     <script>
         // Initialize the flow runner
-        const runner = new ClaraFlowSDK.ClaraFlowRunner({
+        const runner = new angelaFlowSDK.angelaFlowRunner({
             enableLogging: true,
             timeout: 30000
         });
         
-        console.log('Clara Flow SDK loaded!');
+        console.log('angela Flow SDK loaded!');
     </script>
 </body>
 </html>
@@ -171,11 +171,11 @@ runner.handleFileUpload(file, { outputFormat: 'url' })
 
 ```javascript
 // Export a flow as downloadable file
-ClaraFlowSDK.BrowserUtils.downloadFlow(flowData, 'my-flow.json');
+angelaFlowSDK.BrowserUtils.downloadFlow(flowData, 'my-flow.json');
 
 // Load flow from file input
 const fileInput = document.getElementById('flow-file-input');
-ClaraFlowSDK.BrowserUtils.loadFlowFromFileInput(fileInput)
+angelaFlowSDK.BrowserUtils.loadFlowFromFileInput(fileInput)
     .then(flowData => {
         console.log('Loaded flow:', flowData);
     });
@@ -191,11 +191,11 @@ runner.loadFlowFromUrl('https://example.com/flow.json')
 
 ```javascript
 // Get browser information
-const browserInfo = ClaraFlowSDK.BrowserUtils.getBrowserInfo();
+const browserInfo = angelaFlowSDK.BrowserUtils.getBrowserInfo();
 console.log('Browser:', browserInfo);
 
 // Check if running in browser
-const isBrowser = ClaraFlowSDK.BrowserUtils.isBrowser();
+const isBrowser = angelaFlowSDK.BrowserUtils.isBrowser();
 console.log('Is browser:', isBrowser);
 ```
 
@@ -207,7 +207,7 @@ console.log('Is browser:', isBrowser);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clara Flow SDK - Complete Example</title>
+    <title>angela Flow SDK - Complete Example</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
         button { background: #007bff; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; }
@@ -215,7 +215,7 @@ console.log('Is browser:', isBrowser);
     </style>
 </head>
 <body>
-    <h1>Clara Flow SDK Example</h1>
+    <h1>angela Flow SDK Example</h1>
     
     <button onclick="runTextFlow()">Run Text Processing Flow</button>
     <button onclick="runAPIFlow()">Run API Request Flow</button>
@@ -223,12 +223,12 @@ console.log('Is browser:', isBrowser);
     
     <div id="output" class="output">Click a button to see results...</div>
 
-    <!-- Load Clara Flow SDK -->
-    <script src="https://unpkg.com/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.js"></script>
+    <!-- Load angela Flow SDK -->
+    <script src="https://unpkg.com/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.js"></script>
     
     <script>
         const output = document.getElementById('output');
-        const runner = new ClaraFlowSDK.ClaraFlowRunner({ enableLogging: true });
+        const runner = new angelaFlowSDK.angelaFlowRunner({ enableLogging: true });
         
         function log(message) {
             output.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
@@ -245,7 +245,7 @@ console.log('Is browser:', isBrowser);
                     {
                         id: "input-1",
                         type: "input",
-                        data: { label: "First Name", inputType: "string", defaultValue: "Clara" }
+                        data: { label: "First Name", inputType: "string", defaultValue: "angela" }
                     },
                     {
                         id: "input-2", 
@@ -336,11 +336,11 @@ console.log('Is browser:', isBrowser);
                 ]
             };
             
-            const validation = ClaraFlowSDK.validateFlow(flow);
+            const validation = angelaFlowSDK.validateFlow(flow);
             log('Validation result: ' + JSON.stringify(validation, null, 2));
         }
         
-        log('Clara Flow SDK loaded and ready!');
+        log('angela Flow SDK loaded and ready!');
     </script>
 </body>
 </html>
@@ -349,31 +349,31 @@ console.log('Is browser:', isBrowser);
 ## 🔗 CDN Links Summary
 
 ### unpkg (Recommended)
-- **Latest**: `https://unpkg.com/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.js`
-- **Minified**: `https://unpkg.com/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.min.js`
-- **Specific Version**: `https://unpkg.com/clara-flow-sdk@1.4.0/dist/clara-flow-sdk.umd.js`
+- **Latest**: `https://unpkg.com/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.js`
+- **Minified**: `https://unpkg.com/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.min.js`
+- **Specific Version**: `https://unpkg.com/angela-flow-sdk@1.4.0/dist/angela-flow-sdk.umd.js`
 
 ### jsDelivr
-- **Latest**: `https://cdn.jsdelivr.net/npm/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.js`
-- **Minified**: `https://cdn.jsdelivr.net/npm/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.min.js`
-- **Specific Version**: `https://cdn.jsdelivr.net/npm/clara-flow-sdk@1.4.0/dist/clara-flow-sdk.umd.js`
+- **Latest**: `https://cdn.jsdelivr.net/npm/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.js`
+- **Minified**: `https://cdn.jsdelivr.net/npm/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.min.js`
+- **Specific Version**: `https://cdn.jsdelivr.net/npm/angela-flow-sdk@1.4.0/dist/angela-flow-sdk.umd.js`
 
 ## 📚 API Reference
 
-### ClaraFlowSDK.ClaraFlowRunner
-- `new ClaraFlowRunner(options)` - Create a new flow runner
+### angelaFlowSDK.angelaFlowRunner
+- `new angelaFlowRunner(options)` - Create a new flow runner
 - `executeFlow(flowData, inputs)` - Execute a flow with inputs
 - `validateFlow(flowData)` - Validate flow structure
 - `loadFlowFromUrl(url)` - Load flow from URL
 - `handleFileUpload(file, options)` - Handle browser file uploads
 
-### ClaraFlowSDK.BrowserUtils
+### angelaFlowSDK.BrowserUtils
 - `isBrowser()` - Check if running in browser
 - `getBrowserInfo()` - Get browser information
 - `downloadFlow(flowData, filename)` - Download flow as file
 - `loadFlowFromFileInput(fileInput)` - Load flow from file input
 
-### ClaraFlowSDK Utilities
+### angelaFlowSDK Utilities
 - `createFlowRunner(options)` - Create flow runner instance
 - `validateFlow(flowData)` - Standalone flow validation
 

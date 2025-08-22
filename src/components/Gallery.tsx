@@ -30,7 +30,7 @@ if (!(db as any).getStorageItems) {
       return await indexedDBService.getAll('storage');
     } catch (error) {
       console.error('IndexedDB retrieval failed, falling back to localStorage', error);
-      const data = localStorage.getItem('clara_db_storage');
+      const data = localStorage.getItem('angela_db_storage');
       return data ? JSON.parse(data) : [];
     }
   };
@@ -41,11 +41,11 @@ if (!(db as any).deleteStorageItem) {
       await indexedDBService.delete('storage', id);
     } catch (error) {
       console.error('IndexedDB deletion failed, falling back to localStorage', error);
-      const data = localStorage.getItem('clara_db_storage');
+      const data = localStorage.getItem('angela_db_storage');
       if (data) {
         const items = JSON.parse(data);
         const updated = items.filter((item: any) => item.id !== id);
-        localStorage.setItem('clara_db_storage', JSON.stringify(updated));
+        localStorage.setItem('angela_db_storage', JSON.stringify(updated));
       }
     }
   };
@@ -68,7 +68,7 @@ const Gallery: React.FC<GalleryProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
-  const [imageSource, setImageSource] = useState<'all' | 'clara' | 'comfyui'>('all');
+  const [imageSource, setImageSource] = useState<'all' | 'angela' | 'comfyui'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingComfyUI, setIsLoadingComfyUI] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid');
@@ -87,7 +87,7 @@ const Gallery: React.FC<GalleryProps> = ({
     setDarkMode(isDarkMode);
   }, [isDarkMode]);
 
-  // Load Clara images on mount
+  // Load angela images on mount
   useEffect(() => {
     const loadImages = async () => {
       setIsLoading(true);
@@ -108,13 +108,13 @@ const Gallery: React.FC<GalleryProps> = ({
             views: item.views ?? 0,
             model: item.model || 'SD-Model',
             resolution: item.resolution || '1024x1024',
-            source: 'clara'
+            source: 'angela'
           };
         });
         setImages(galleryImages);
       } catch (error) {
-        console.error('Error loading Clara images from DB:', error);
-        showToast('Failed to load Clara images', 'error');
+        console.error('Error loading angela images from DB:', error);
+        showToast('Failed to load angela images', 'error');
       } finally {
         setIsLoading(false);
       }
@@ -221,7 +221,7 @@ const Gallery: React.FC<GalleryProps> = ({
   // Combine images based on source filter
   const getAllImages = () => {
     switch (imageSource) {
-      case 'clara':
+      case 'angela':
         return images;
       case 'comfyui':
         return comfyUIImages;
@@ -233,23 +233,23 @@ const Gallery: React.FC<GalleryProps> = ({
 
   // Determine which tabs to show and auto-switch if needed
   const shouldShowTabs = () => {
-    const hasClaraImages = images.length > 0;
+    const hasangelaImages = images.length > 0;
     const hasComfyUIImages = comfyUIImages.length > 0;
-    return hasClaraImages && hasComfyUIImages;
+    return hasangelaImages && hasComfyUIImages;
   };
 
   // Auto-switch image source if current selection becomes empty
   useEffect(() => {
-    const hasClaraImages = images.length > 0;
+    const hasangelaImages = images.length > 0;
     const hasComfyUIImages = comfyUIImages.length > 0;
 
-    if (imageSource === 'clara' && !hasClaraImages && hasComfyUIImages) {
+    if (imageSource === 'angela' && !hasangelaImages && hasComfyUIImages) {
       setImageSource('comfyui');
-    } else if (imageSource === 'comfyui' && !hasComfyUIImages && hasClaraImages) {
-      setImageSource('clara');
-    } else if (imageSource !== 'all' && hasClaraImages && hasComfyUIImages) {
+    } else if (imageSource === 'comfyui' && !hasComfyUIImages && hasangelaImages) {
+      setImageSource('angela');
+    } else if (imageSource !== 'all' && hasangelaImages && hasComfyUIImages) {
       // Keep current selection if both sources have images
-    } else if (!hasClaraImages && !hasComfyUIImages) {
+    } else if (!hasangelaImages && !hasComfyUIImages) {
       setImageSource('all');
     }
   }, [images.length, comfyUIImages.length, imageSource]);
@@ -300,7 +300,7 @@ const Gallery: React.FC<GalleryProps> = ({
   const handleDownload = (image: GalleryImage) => {
     const a = document.createElement('a');
     a.href = image.url;
-    a.download = `clara-generated-${image.id}.png`;
+    a.download = `angela-generated-${image.id}.png`;
     a.click();
     showToast('Image downloaded successfully');
   };
@@ -339,7 +339,7 @@ const Gallery: React.FC<GalleryProps> = ({
           throw new Error('Failed to delete ComfyUI image');
         }
       } else {
-        // Delete Clara image
+        // Delete angela image
         await (db as any).deleteStorageItem(imageId);
         setImages(prev => prev.filter(img => img.id !== imageId));
         showToast('Image deleted successfully');
@@ -462,14 +462,14 @@ const Gallery: React.FC<GalleryProps> = ({
                     All ({images.length + comfyUIImages.length})
                   </button>
                   <button
-                    onClick={() => setImageSource('clara')}
+                    onClick={() => setImageSource('angela')}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      imageSource === 'clara'
+                      imageSource === 'angela'
                         ? 'bg-gradient-to-r from-sakura-500 to-sakura-600 text-white shadow-lg'
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                     }`}
                   >
-                    Clara ({images.length})
+                    angela ({images.length})
                   </button>
                   <button
                     onClick={() => setImageSource('comfyui')}
@@ -527,7 +527,7 @@ const Gallery: React.FC<GalleryProps> = ({
               <div className="flex flex-col items-center justify-center h-64">
                 <div className="w-16 h-16 border-4 border-sakura-200 dark:border-sakura-800 border-t-sakura-500 dark:border-t-sakura-400 rounded-full animate-spin mb-4"></div>
                 <p className="text-gray-600 dark:text-gray-400">
-                  {isLoading ? 'Loading Clara images...' : 'Loading ComfyUI images...'}
+                  {isLoading ? 'Loading angela images...' : 'Loading ComfyUI images...'}
                 </p>
               </div>
             ) : displayedImages.length === 0 ? (
@@ -643,7 +643,7 @@ const Gallery: React.FC<GalleryProps> = ({
                             ? 'bg-orange-500/90 text-white' 
                             : 'bg-sakura-500/90 text-white'
                         }`}>
-                          {image.source === 'comfyui' ? 'ComfyUI' : 'Clara'}
+                          {image.source === 'comfyui' ? 'ComfyUI' : 'angela'}
                         </span>
                       </div>
                     )}

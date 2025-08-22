@@ -194,7 +194,7 @@ const Settings = () => {
     comfyUI: true,
     n8n: true,
     ragAndTts: true,
-    claraCore: true
+    angelaCore: true
   });
   const [featureConfigLoaded, setFeatureConfigLoaded] = useState(false);
   const [savingFeatureConfig, setSavingFeatureConfig] = useState(false);
@@ -302,7 +302,7 @@ const Settings = () => {
         percent: progress.percent || 0,
         transferred: progress.transferred || '0 B',
         total: progress.total || 'Unknown',
-        fileName: progress.fileName || 'Clara Update'
+        fileName: progress.fileName || 'angela Update'
       });
     };
 
@@ -403,8 +403,8 @@ const Settings = () => {
       setSavingFeatureConfig(true);
       const newConfig = { ...featureConfig, ...updates };
       
-      // Clara Core is always enabled
-      newConfig.claraCore = true;
+      // angela Core is always enabled
+      newConfig.angelaCore = true;
       
       setFeatureConfig(newConfig);
       
@@ -477,8 +477,8 @@ const Settings = () => {
   // Add auto-detection when API tab is opened
   useEffect(() => {
     if (effectiveActiveTab === 'api' && !providersLoading) {
-      // Only auto-detect if no providers exist or only Clara's Core exists
-      const nonCoreProviders = providers.filter(p => p.type !== 'claras-pocket');
+      // Only auto-detect if no providers exist or only angela's Core exists
+      const nonCoreProviders = providers.filter(p => p.type !== 'angelas-pocket');
       if (nonCoreProviders.length === 0) {
         autoDetectOllamaProvider();
       }
@@ -738,7 +738,7 @@ const Settings = () => {
           percent: 0,
           transferred: '0 B',
           total: updateInfo.assetSize || 'Unknown',
-          fileName: `Clara-${updateInfo.latestVersion}-${updateInfo.platform}.${updateInfo.platform === 'win32' ? 'exe' : 'AppImage'}`
+          fileName: `angela-${updateInfo.latestVersion}-${updateInfo.platform}.${updateInfo.platform === 'win32' ? 'exe' : 'AppImage'}`
         });
 
         // Start in-app download for manual platforms
@@ -984,8 +984,8 @@ const Settings = () => {
       });
     } catch (error) {
       console.error('Error adding provider:', error);
-      if (error instanceof Error && error.message.includes("Clara's Pocket provider already exists")) {
-        alert("⚠️ Clara's Pocket provider already exists. Only one instance is allowed.");
+      if (error instanceof Error && error.message.includes("angela's Pocket provider already exists")) {
+        alert("⚠️ angela's Pocket provider already exists. Only one instance is allowed.");
       } else {
         alert('❌ Failed to add provider. Please try again.');
       }
@@ -1083,7 +1083,7 @@ const Settings = () => {
 
   const getProviderIcon = (type: Provider['type']) => {
     switch (type) {
-      case 'claras-pocket':
+      case 'angelas-pocket':
         return Bot;
       case 'openai':
         return Zap;
@@ -1104,8 +1104,8 @@ const Settings = () => {
         return { baseUrl: 'https://openrouter.ai/api/v1', name: 'OpenRouter' };
       case 'ollama':
         return { baseUrl: 'http://localhost:11434/v1', name: 'Ollama' };
-      case 'claras-pocket':
-        return { baseUrl: 'http://localhost:8091/v1', name: "Clara's Core" };
+      case 'angelas-pocket':
+        return { baseUrl: 'http://localhost:8091/v1', name: "angela's Core" };
       default:
         return { baseUrl: '', name: '' };
     }
@@ -1242,7 +1242,7 @@ const Settings = () => {
         await checkForLlamacppUpdates();
         
         // Show success message
-        console.log('Official Llama.cpp Binaries Updated:', result.message || `Successfully updated official binaries to version ${result.version}. Clara's custom binaries were preserved.`);
+        console.log('Official Llama.cpp Binaries Updated:', result.message || `Successfully updated official binaries to version ${result.version}. angela's custom binaries were preserved.`);
       } else {
         console.error('Binary update failed:', result.error);
       }
@@ -1480,7 +1480,7 @@ const Settings = () => {
         storedItems = await indexedDBService.getAll('storage');
       } catch (error) {
         console.error('IndexedDB retrieval failed, falling back to localStorage', error);
-        const data = localStorage.getItem('clara_db_storage');
+        const data = localStorage.getItem('angela_db_storage');
         storedItems = data ? JSON.parse(data) : [];
       }
       
@@ -2039,7 +2039,7 @@ const Settings = () => {
                                 <Edit3 className="w-4 h-4" />
                               </button>
 
-                              {provider.type !== 'claras-pocket' && (
+                              {provider.type !== 'angelas-pocket' && (
                                 <button
                                   onClick={() => setShowDeleteConfirm(provider.id)}
                                   className="p-2.5 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-red-50/50 dark:hover:bg-red-900/20"
@@ -2512,7 +2512,7 @@ const Settings = () => {
                             const samples = [
                               "The quick brown fox jumps over the lazy dog.",
                               "Hello! How can I assist you today?",
-                              "This is a longer sample text to demonstrate how your typography settings affect readability in extended conversations with Clara.",
+                              "This is a longer sample text to demonstrate how your typography settings affect readability in extended conversations with angela.",
                               "Code: function greet() { return 'Hello World'; }"
                             ];
                             const current = document.querySelector('[data-preview-text]')?.textContent || '';
@@ -2563,7 +2563,7 @@ const Settings = () => {
                             C
                           </div>
                           <div>
-                            <p className="text-gray-800 dark:text-gray-200 font-semibold text-sm">Clara</p>
+                            <p className="text-gray-800 dark:text-gray-200 font-semibold text-sm">angela</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">AI Assistant</p>
                           </div>
                         </div>
@@ -2574,7 +2574,7 @@ const Settings = () => {
                           className="text-gray-600 dark:text-gray-400 mb-3"
                           data-preview-text
                         >
-                          The quick brown fox jumps over the lazy dog. This preview demonstrates how your typography settings affect readability and visual appeal in conversations with Clara.
+                          The quick brown fox jumps over the lazy dog. This preview demonstrates how your typography settings affect readability and visual appeal in conversations with angela.
                         </p>
                         <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 bg-gray-50 dark:bg-gray-800 rounded p-2">
                           <div className="flex justify-between">
@@ -2943,7 +2943,7 @@ const Settings = () => {
                     <div className="flex items-center justify-between py-2">
                       <div>
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          🤖 Clara Core
+                          🤖 angela Core
                         </label>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           Core AI assistant functionality (Always enabled)
@@ -3052,7 +3052,7 @@ const Settings = () => {
                                   comfyUI: true,
                                   n8n: true,
                                   ragAndTts: true,
-                                  claraCore: true
+                                  angelaCore: true
                                 });
                                 alert('✅ Feature configuration reset to defaults. The feature selection screen will appear on next startup.');
                               } else {
@@ -3096,7 +3096,7 @@ const Settings = () => {
                         Auto Start Application
                       </label>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Start ClaraVerse automatically when system boots
+                        Start angelaVerse automatically when system boots
                       </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -3308,7 +3308,7 @@ const Settings = () => {
                   🚀 Export Your Flows as JavaScript Code
                 </h3>
                 <p className="text-purple-700 dark:text-purple-300 mb-4">
-                  Transform your Clara flows into ready-to-use JavaScript modules that can be directly integrated into any application using the Clara Flow SDK.
+                  Transform your angela flows into ready-to-use JavaScript modules that can be directly integrated into any application using the angela Flow SDK.
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3343,12 +3343,12 @@ const Settings = () => {
                 </h3>
                 <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 text-sm font-mono overflow-x-auto">
                   <pre className="text-green-400">
-                    {`// Generated by Clara Agent Studio
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+                    {`// Generated by angela Agent Studio
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
 export class MyAwesomeFlow {
   constructor(options = {}) {
-    this.runner = new ClaraFlowRunner({
+    this.runner = new angelaFlowRunner({
       enableLogging: true,
       logLevel: 'info',
       ...options
@@ -3396,7 +3396,7 @@ export default MyAwesomeFlow;`}
                     <li><strong>2.</strong> Click the Export dropdown in the toolbar</li>
                     <li><strong>3.</strong> Select "Export as Code" (JavaScript)</li>
                     <li><strong>4.</strong> Save the generated .js file</li>
-                    <li><strong>5.</strong> Install the SDK: <code className="bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded">npm install clara-flow-sdk</code></li>
+                    <li><strong>5.</strong> Install the SDK: <code className="bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded">npm install angela-flow-sdk</code></li>
                     <li><strong>6.</strong> Import and use in your application!</li>
                   </ol>
                 </div>
@@ -3492,7 +3492,7 @@ const ProcessButton = () => {
                     Updates & Notifications
                   </h2>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Keep Clara up to date with smart, automated checking and beautiful notifications
+                    Keep angela up to date with smart, automated checking and beautiful notifications
                   </p>
                 </div>
               </div>
@@ -3674,7 +3674,7 @@ const ProcessButton = () => {
                       Current Version
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Clara {updateInfo?.currentVersion || '1.0.0'} on {updateInfo ? getPlatformName(updateInfo.platform) : 'Unknown Platform'}
+                      angela {updateInfo?.currentVersion || '1.0.0'} on {updateInfo ? getPlatformName(updateInfo.platform) : 'Unknown Platform'}
                     </p>
                   </div>
                   <button
@@ -3722,7 +3722,7 @@ const ProcessButton = () => {
                         </div>
                         <div className="flex-1">
                           <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-2 text-lg">
-                            🎉 Clara {updateInfo.latestVersion || 'Unknown'} is Available!
+                            🎉 angela {updateInfo.latestVersion || 'Unknown'} is Available!
                           </h4>
 
                           {/* Platform-specific messaging */}
@@ -3873,7 +3873,7 @@ const ProcessButton = () => {
                             You're Up to Date!
                           </h4>
                           <p className="text-sm text-green-700 dark:text-green-300">
-                            Clara {updateInfo.currentVersion || 'Unknown'} is the latest version. You're all set!
+                            angela {updateInfo.currentVersion || 'Unknown'} is the latest version. You're all set!
                           </p>
                         </div>
                       </div>
@@ -3893,7 +3893,7 @@ const ProcessButton = () => {
               <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <h3 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <Brain className="w-5 h-5 text-purple-500" />
-                  How Clara Updates Work
+                  How angela Updates Work
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div className="bg-gradient-to-br from-sakura-50 to-pink-50 dark:from-sakura-900/20 dark:to-pink-900/20 rounded-lg p-4 border border-sakura-200 dark:border-sakura-800">

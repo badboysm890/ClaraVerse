@@ -8,7 +8,7 @@ import {
   MessageSquare,
   Calendar
 } from 'lucide-react';
-import { NotebookResponse } from '../../services/claraNotebookService';
+import { NotebookResponse } from '../../services/angelaNotebookService';
 
 interface NotebookCardProps {
   notebook: NotebookResponse;

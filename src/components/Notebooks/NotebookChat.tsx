@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Bot, Copy, Check, MessageSquare, AlertCircle, FileText, ExternalLink, ChevronDown, ChevronUp, BookOpen, AlertTriangle, Upload, Loader2, Brain } from 'lucide-react';
-import { claraNotebookService, NotebookCitation } from '../../services/claraNotebookService';
+import { angelaNotebookService, NotebookCitation } from '../../services/angelaNotebookService';
 import DocumentUpload from './DocumentUpload';
 
 interface ChatMessage {
@@ -43,11 +43,11 @@ const NotebookChat: React.FC<NotebookChatProps> = ({ notebookId, documentCount, 
 
   // Subscribe to backend health changes
   useEffect(() => {
-    const unsubscribe = claraNotebookService.onHealthChange(setIsBackendHealthy);
+    const unsubscribe = angelaNotebookService.onHealthChange(setIsBackendHealthy);
     return unsubscribe;
   }, []);
 
-  // Listen for progress updates from Clara assistant
+  // Listen for progress updates from angela assistant
   useEffect(() => {
     let hideTimeout: NodeJS.Timeout | null = null;
 
@@ -69,14 +69,14 @@ const NotebookChat: React.FC<NotebookChatProps> = ({ notebookId, documentCount, 
     };
 
     // Listen for progress events
-    window.addEventListener('clara-progress-update', handleProgressUpdate as EventListener);
+    window.addEventListener('angela-progress-update', handleProgressUpdate as EventListener);
 
-    // Also listen for console logs from Clara assistant and parse them
+    // Also listen for console logs from angela assistant and parse them
     const originalLog = console.log;
     console.log = (...args) => {
       originalLog.apply(console, args);
       
-      // Check if this is a Clara progress log
+      // Check if this is a angela progress log
       if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('Setting new progressState')) {
         try {
           // Parse the progress object from the log
@@ -111,7 +111,7 @@ const NotebookChat: React.FC<NotebookChatProps> = ({ notebookId, documentCount, 
     };
 
     return () => {
-      window.removeEventListener('clara-progress-update', handleProgressUpdate as EventListener);
+      window.removeEventListener('angela-progress-update', handleProgressUpdate as EventListener);
       console.log = originalLog;
       if (hideTimeout) {
         clearTimeout(hideTimeout);
@@ -154,7 +154,7 @@ const NotebookChat: React.FC<NotebookChatProps> = ({ notebookId, documentCount, 
       );
       
       // Start API request
-      const summaryPromise = claraNotebookService.generateSummary(notebookId);
+      const summaryPromise = angelaNotebookService.generateSummary(notebookId);
       
       // Wait for both skeleton time AND API response
       const [, response] = await Promise.all([skeletonPromise, summaryPromise]);
@@ -226,8 +226,8 @@ const NotebookChat: React.FC<NotebookChatProps> = ({ notebookId, documentCount, 
     setIsLoading(true);
 
     try {
-      // Query the notebook using the claraNotebookService
-      const response = await claraNotebookService.queryNotebook(notebookId, {
+      // Query the notebook using the angelaNotebookService
+      const response = await angelaNotebookService.queryNotebook(notebookId, {
         question: inputMessage.trim(),
         mode: 'hybrid',
         response_type: 'Multiple Paragraphs',

@@ -39,7 +39,7 @@ export function useDatabase() {
 
         // Detect storage type
         const storageType = 'indexedDB' in window && window.indexedDB !== null ? 
-          (localStorage.getItem('clara_db_migrated') === 'true' ? 'IndexedDB' : 'LocalStorage') : 
+          (localStorage.getItem('angela_db_migrated') === 'true' ? 'IndexedDB' : 'LocalStorage') : 
           'LocalStorage';
 
         // Convert nanoseconds to seconds

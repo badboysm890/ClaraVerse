@@ -261,7 +261,7 @@ export interface Logger {
 
 // Export/Import Types
 export interface FlowExport {
-  format: 'clara-native' | 'docker' | 'api-server' | 'cloud-function';
+  format: 'angela-native' | 'docker' | 'api-server' | 'cloud-function';
   flow: AgentFlow;
   dependencies?: string[];
   configuration?: Record<string, any>;

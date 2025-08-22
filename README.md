@@ -5,31 +5,31 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="/public/logo.png">
   <source media="(prefers-color-scheme: light)" srcset="/public/logo.png">
-  <img alt="ClaraVerse Logo" src="/public/logo.png" width="120">
+  <img alt="angelaVerse Logo" src="/public/logo.png" width="120">
 </picture>
 
 <br/>
 <br/>
 
-# **ClaraVerse**
+# **angelaVerse**
 
 <h3>
   <em>The Complete AI Ecosystem That <b>Actually</b> Respects Your Privacy</em>
 </h3>
 
 <p align="center">
-  <a href="https://github.com/badboysm890/ClaraVerse/stargazers">
+  <a href="https://github.com/badboysm890/angelaVerse/stargazers">
     <img src="https://img.shields.io/badge/⭐_Star_us_on_GitHub-It_helps_a_lot!-gold?style=flat&labelColor=1e1e2e" alt="Star us" />
   </a>
 </p>
 
 <br/>
 
-[![GitHub Stars](https://img.shields.io/github/stars/badboysm890/ClaraVerse?style=flat&logo=github&color=gold&labelColor=1e1e2e)](https://github.com/badboysm890/ClaraVerse/stargazers)
-[![Downloads](https://img.shields.io/github/downloads/badboysm890/ClaraVerse/total?style=flat&logo=github&color=00D4AA&labelColor=1e1e2e)](https://github.com/badboysm890/ClaraVerse/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/badboysm890/angelaVerse?style=flat&logo=github&color=gold&labelColor=1e1e2e)](https://github.com/badboysm890/angelaVerse/stargazers)
+[![Downloads](https://img.shields.io/github/downloads/badboysm890/angelaVerse/total?style=flat&logo=github&color=00D4AA&labelColor=1e1e2e)](https://github.com/badboysm890/angelaVerse/releases)
 [![Discord](https://img.shields.io/badge/Discord-Join_Community-5865F2?style=flat&logo=discord&labelColor=1e1e2e)](https://discord.gg/j633fsrAne)
-[![License](https://img.shields.io/github/license/badboysm890/ClaraVerse?style=flat&color=FF6B6B&labelColor=1e1e2e)](LICENSE)
-[![Latest Release](https://img.shields.io/github/v/release/badboysm890/ClaraVerse?style=flat&color=9333EA&labelColor=1e1e2e)](https://github.com/badboysm890/ClaraVerse/releases/latest)
+[![License](https://img.shields.io/github/license/badboysm890/angelaVerse?style=flat&color=FF6B6B&labelColor=1e1e2e)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/badboysm890/angelaVerse?style=flat&color=9333EA&labelColor=1e1e2e)](https://github.com/badboysm890/angelaVerse/releases/latest)
 
 <br/>
 
@@ -42,15 +42,15 @@
 
 <br/>
 
-<a href="https://github.com/badboysm890/ClaraVerse/releases/latest">
+<a href="https://github.com/badboysm890/angelaVerse/releases/latest">
   <img src="https://img.shields.io/badge/Download_Now-🚀-FF4757?style=for-the-badge&labelColor=1e1e2e" alt="Download" height="40"/>
 </a>
 &nbsp;
-<a href="https://claraverse.space/">
+<a href="https://angelaverse.space/">
   <img src="https://img.shields.io/badge/Try_Demo-🌐-5352ED?style=for-the-badge&labelColor=1e1e2e" alt="Demo" height="40"/>
 </a>
 &nbsp;
-<a href="https://buymeacoffee.com/claraverse">
+<a href="https://buymeacoffee.com/angelaverse">
   <img src="https://img.shields.io/badge/Support_Us-☕-FFDD00?style=for-the-badge&labelColor=1e1e2e" alt="Support" height="40"/>
 </a>
 
@@ -60,7 +60,7 @@
 
 <br/>
 
-## 💭 **The Story Behind ClaraVerse**
+## 💭 **The Story Behind angelaVerse**
 
 > **"Why can't everything be in a single app? Why do we need to jump between different AI tools and pay multiple subscriptions?"**
 
@@ -72,9 +72,9 @@ When using Ollama, downloading models was the only way to get started — but th
 
 **That's when it hit us: Why can't everything be in a single app?**
 
-ClaraVerse is our answer to that question.
+angelaVerse is our answer to that question.
 
-> ClaraVerse is not another OpenWebUI (which is excellent for chat) or Ollama - everything is just scattered around and I'm trying to build a single app where people can just install it and use it. 
+> angelaVerse is not another OpenWebUI (which is excellent for chat) or Ollama - everything is just scattered around and I'm trying to build a single app where people can just install it and use it. 
 
 <br/>
 
@@ -90,7 +90,7 @@ ClaraVerse is our answer to that question.
 
 <br/>
 
-## ✨ **The Solution: ClaraVerse**
+## ✨ **The Solution: angelaVerse**
 
 <div align="center">
 
@@ -105,7 +105,7 @@ ClaraVerse is our answer to that question.
   <br/>
   <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Robot.png" width="60" />
   
-  ### **Clara AI**
+  ### **angela AI**
   **Smart Assistant**
   
   `Advanced Chat` `Code Gen`
@@ -214,9 +214,9 @@ ClaraVerse is our answer to that question.
 
 <div align="center">
 
-[![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/badboysm890/ClaraVerse/releases/latest)
-[![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/badboysm890/ClaraVerse/releases/latest)
-[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/badboysm890/ClaraVerse/releases/latest)
+[![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/badboysm890/angelaVerse/releases/latest)
+[![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/badboysm890/angelaVerse/releases/latest)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/badboysm890/angelaVerse/releases/latest)
 
 </div>
 
@@ -224,8 +224,8 @@ ClaraVerse is our answer to that question.
 
 ```bash
 # Clone the repository
-git clone https://github.com/badboysm890/ClaraVerse.git
-cd ClaraVerse
+git clone https://github.com/badboysm890/angelaVerse.git
+cd angelaVerse
 
 # Install dependencies
 npm install
@@ -242,11 +242,11 @@ npm run electron:dev:hot
 
 <br/>
 
-## 📊 **Why ClaraVerse?**
+## 📊 **Why angelaVerse?**
 
 <div align="center">
 
-| Feature | ClaraVerse | Others |
+| Feature | angelaVerse | Others |
 |:--------|:----------:|:------:|
 | **All-in-One Platform** | ✅ | ❌ |
 | **100% Local Processing** | ✅ | ❌ |
@@ -268,7 +268,7 @@ npm run electron:dev:hot
 ```mermaid
 graph LR
     A[🎨 React UI] --> B[⚡ Unified API]
-    B --> C[🧠 Clara Core]
+    B --> C[🧠 angela Core]
     B --> D[🔧 LumaUI]
     B --> E[🎨 ComfyUI]
     B --> F[🔄 N8N]
@@ -294,7 +294,7 @@ graph LR
 
 | Status | Feature | ETA |
 |:-------|:--------|:----|
-| ✅ | Clara AI Assistant | **Released** |
+| ✅ | angela AI Assistant | **Released** |
 | ✅ | LumaUI Code Builder | **Released** |
 | ✅ | ComfyUI Integration | **Released** |
 | ✅ | N8N Workflows | **Released** |
@@ -308,7 +308,7 @@ graph LR
 </div>
   
 > **🚧 Development Status**  
-> ClaraVerse is actively evolving! While core features are stable, some components may change as we work toward v1.0. We prioritize stability but welcome your feedback on improvements and new features. Join our [Discord](https://discord.gg/j633fsrAne) to stay updated! 🚀
+> angelaVerse is actively evolving! While core features are stable, some components may change as we work toward v1.0. We prioritize stability but welcome your feedback on improvements and new features. Join our [Discord](https://discord.gg/j633fsrAne) to stay updated! 🚀
 
 <br/>
 
@@ -317,16 +317,16 @@ graph LR
 <div align="center">
 
 [![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/j633fsrAne)
-[![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white)](https://www.reddit.com/r/claraverse/)
-[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/claraverse)
-[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@claraverse)
+[![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white)](https://www.reddit.com/r/angelaverse/)
+[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/angelaverse)
+[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@angelaverse)
 
 ### **📚 Resources**
 
-[Documentation](https://github.com/badboysm890/ClaraVerse/tree/main/docs) • 
-[API Reference](https://github.com/badboysm890/ClaraVerse/tree/main/docs/api) • 
-[Tutorials](https://github.com/badboysm890/ClaraVerse/tree/main/docs/tutorials) • 
-[FAQ](https://github.com/badboysm890/ClaraVerse/wiki/FAQ)
+[Documentation](https://github.com/badboysm890/angelaVerse/tree/main/docs) • 
+[API Reference](https://github.com/badboysm890/angelaVerse/tree/main/docs/api) • 
+[Tutorials](https://github.com/badboysm890/angelaVerse/tree/main/docs/tutorials) • 
+[FAQ](https://github.com/badboysm890/angelaVerse/wiki/FAQ)
 
 </div>
 
@@ -337,8 +337,8 @@ graph LR
 <div align="center">
 
 <!-- ALL-CONTRIBUTORS-LIST:START -->
-<a href="https://github.com/badboysm890/ClaraVerse/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=badboysm890/ClaraVerse&max=100&columns=10&anon=1" />
+<a href="https://github.com/badboysm890/angelaVerse/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=badboysm890/angelaVerse&max=100&columns=10&anon=1" />
 </a>
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
@@ -398,8 +398,8 @@ See [LICENSE](LICENSE) for details.
 
 <br/>
 
-<a href="https://github.com/badboysm890/ClaraVerse/releases/latest">
-  <img src="https://img.shields.io/badge/Download_ClaraVerse_Now-🚀_Get_Started-FF4757?style=for-the-badge&labelColor=1e1e2e" alt="Download" height="50"/>
+<a href="https://github.com/badboysm890/angelaVerse/releases/latest">
+  <img src="https://img.shields.io/badge/Download_angelaVerse_Now-🚀_Get_Started-FF4757?style=for-the-badge&labelColor=1e1e2e" alt="Download" height="50"/>
 </a>
 
 <br/>
@@ -426,7 +426,7 @@ See [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-### **Building ClaraVerse**
+### **Building angelaVerse**
 
 <br/>
 
@@ -472,7 +472,7 @@ See [LICENSE](LICENSE) for details.
 
 Here's the honest truth...
 
-I'm a **single developer** building ClaraVerse during nights and weekends while working a **9-6 day job**. I'm maintaining **3 platforms**, fixing bugs, adding features, answering Discord questions, reviewing PRs, and somehow trying to keep documentation updated.
+I'm a **single developer** building angelaVerse during nights and weekends while working a **9-6 day job**. I'm maintaining **3 platforms**, fixing bugs, adding features, answering Discord questions, reviewing PRs, and somehow trying to keep documentation updated.
 
 <br/>
 
@@ -491,7 +491,7 @@ I'm a **single developer** building ClaraVerse during nights and weekends while 
 
 **👨‍💻 @aruntemme**
 <br/>
-<sub>ClaraCore Dev • Notebook Features</sub>
+<sub>angelaCore Dev • Notebook Features</sub>
 
 </td>
 <td align="center">
@@ -592,7 +592,7 @@ More Info → Run Anyway
 **🍎 macOS Won't Open?**
 ```bash
 sudo xattr -r -d com.apple.quarantine \
-  /Applications/ClaraVerse.app
+  /Applications/angelaVerse.app
 ```
 
 </td>
@@ -630,11 +630,11 @@ sudo xattr -r -d com.apple.quarantine \
 
 ### **Performance Tips**
 
-**Clara AI Not Responding?**
+**angela AI Not Responding?**
 1. Check AI provider settings
 2. Switch to different model
 3. Ensure Ollama running: `ollama serve`
-4. Restart ClaraVerse
+4. Restart angelaVerse
 
 **Memory Optimization:**
 - Use smaller models (7B vs 70B)
@@ -661,7 +661,7 @@ sudo xattr -r -d com.apple.quarantine \
 ### **LumaUI Issues**
 
 **Project Won't Start?**
-- Restart ClaraVerse
+- Restart angelaVerse
 - Clear app cache
 - Check 4GB+ RAM available
 - Close heavy applications
@@ -696,8 +696,8 @@ sudo xattr -r -d com.apple.quarantine \
 
 <br/>
 
-You can run **all tools simultaneously** - that's the magic of ClaraVerse! 
-Clara AI + LumaUI + ComfyUI can all share context and work together.
+You can run **all tools simultaneously** - that's the magic of angelaVerse! 
+angela AI + LumaUI + ComfyUI can all share context and work together.
 
 </details>
 
@@ -783,11 +783,11 @@ Clara AI + LumaUI + ComfyUI can all share context and work together.
 
 ### **🆘 Still Need Help?**
 
-<a href="https://github.com/badboysm890/ClaraVerse/tree/main/docs">
+<a href="https://github.com/badboysm890/angelaVerse/tree/main/docs">
   <img src="https://img.shields.io/badge/📚_Documentation-Read_Docs-4A90E2?style=flat&labelColor=1e1e2e" />
 </a>
 &nbsp;
-<a href="https://github.com/badboysm890/ClaraVerse/issues">
+<a href="https://github.com/badboysm890/angelaVerse/issues">
   <img src="https://img.shields.io/badge/🐛_GitHub_Issues-Report_Bug-FF6B6B?style=flat&labelColor=1e1e2e" />
 </a>
 &nbsp;

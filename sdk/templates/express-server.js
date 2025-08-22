@@ -1,11 +1,11 @@
 /**
- * Clara Flow SDK - Express.js Server Template
- * This template demonstrates how to deploy Clara workflows as REST APIs
+ * angela Flow SDK - Express.js Server Template
+ * This template demonstrates how to deploy angela workflows as REST APIs
  */
 
 import express from 'express';
 import cors from 'cors';
-import { ClaraFlowRunner } from 'clara-flow-sdk';
+import { angelaFlowRunner } from 'angela-flow-sdk';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // Global workflow runner
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,
   timeout: 60000
 });
@@ -24,7 +24,7 @@ const runner = new ClaraFlowRunner({
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
-    service: 'Clara Flow API',
+    service: 'angela Flow API',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -82,7 +82,7 @@ app.post('/validate', async (req, res) => {
     }
     
     // Basic validation by attempting to normalize
-    const testRunner = new ClaraFlowRunner({ enableLogging: false });
+    const testRunner = new angelaFlowRunner({ enableLogging: false });
     const normalizedFlow = testRunner.normalizeFlow(workflow);
     testRunner.validateFlow(normalizedFlow);
     
@@ -194,9 +194,9 @@ app.post('/execute/batch', async (req, res) => {
 // Workflow info endpoint
 app.get('/info', (req, res) => {
   res.json({
-    service: 'Clara Flow API Server',
+    service: 'angela Flow API Server',
     version: '2.0.0',
-    sdk: 'clara-flow-sdk@2.0.0',
+    sdk: 'angela-flow-sdk@2.0.0',
     features: [
       'Workflow execution',
       'Batch processing',
@@ -245,10 +245,10 @@ app.use((req, res) => {
 
 // Start server
 app.listen(port, () => {
-  console.log(`🚀 Clara Flow API Server running on port ${port}`);
+  console.log(`🚀 angela Flow API Server running on port ${port}`);
   console.log(`📖 API Documentation: http://localhost:${port}/info`);
   console.log(`💚 Health Check: http://localhost:${port}/health`);
-  console.log(`📊 Ready to execute Clara workflows!`);
+  console.log(`📊 Ready to execute angela workflows!`);
 });
 
 export default app; 

@@ -549,7 +549,7 @@ func collectProcessStats() []ProcessStats {
 func isRelevantProcess(name string) bool {
 	relevantProcesses := []string{
 		"python", "python3", "ollama", "comfyui", "pytorch", "tensorflow",
-		"node", "electron", "clara", "nvidia-smi", "nvtop", "htop",
+		"node", "electron", "angela", "nvidia-smi", "nvtop", "htop",
 	}
 
 	nameLower := strings.ToLower(name)

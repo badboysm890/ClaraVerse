@@ -12,7 +12,7 @@ global.log = {
 global.app = {
   getPath: (name) => {
     if (name === 'userData') {
-      return path.join(os.homedir(), '.clara-test');
+      return path.join(os.homedir(), '.angela-test');
     }
     return os.homedir();
   }

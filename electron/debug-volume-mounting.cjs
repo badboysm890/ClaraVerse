@@ -8,12 +8,12 @@ const os = require('os');
 class VolumeDebugger {
   constructor() {
     this.docker = new Docker();
-    this.appDataPath = path.join(os.homedir(), '.clara');
+    this.appDataPath = path.join(os.homedir(), '.angela');
     this.pythonBackendDataPath = path.join(this.appDataPath, 'python_backend_data');
   }
 
   async debugVolumeMounting() {
-    console.log('🔍 Debugging Clara Python Backend Volume Mounting\n');
+    console.log('🔍 Debugging angela Python Backend Volume Mounting\n');
     
     // 1. Check host directory structure
     await this.checkHostDirectories();
@@ -43,14 +43,14 @@ class VolumeDebugger {
     const directories = [
       this.appDataPath,
       this.pythonBackendDataPath,
-      path.join(this.pythonBackendDataPath, '.clara'),
-      path.join(this.pythonBackendDataPath, '.clara', 'lightrag_storage'),
-      path.join(this.pythonBackendDataPath, '.clara', 'lightrag_storage', 'metadata'),
+      path.join(this.pythonBackendDataPath, '.angela'),
+      path.join(this.pythonBackendDataPath, '.angela', 'lightrag_storage'),
+      path.join(this.pythonBackendDataPath, '.angela', 'lightrag_storage', 'metadata'),
     ];
 
     const files = [
-      path.join(this.pythonBackendDataPath, '.clara', 'lightrag_storage', 'metadata', 'notebooks.json'),
-      path.join(this.pythonBackendDataPath, '.clara', 'lightrag_storage', 'metadata', 'documents.json'),
+      path.join(this.pythonBackendDataPath, '.angela', 'lightrag_storage', 'metadata', 'notebooks.json'),
+      path.join(this.pythonBackendDataPath, '.angela', 'lightrag_storage', 'metadata', 'documents.json'),
     ];
 
     directories.forEach(dir => {
@@ -82,7 +82,7 @@ class VolumeDebugger {
     console.log('===================================');
     
     try {
-      const container = this.docker.getContainer('clara_python');
+      const container = this.docker.getContainer('angela_python');
       const containerInfo = await container.inspect();
       
       console.log(`  ✅ Container exists: ${containerInfo.Name}`);
@@ -112,21 +112,21 @@ class VolumeDebugger {
     console.log('===================================');
     
     try {
-      const container = this.docker.getContainer('clara_python');
+      const container = this.docker.getContainer('angela_python');
       const containerInfo = await container.inspect();
       
       // Look for our specific mount
-      const claraMounts = containerInfo.Mounts.filter(mount => 
-        mount.Destination === '/home/clara' || 
+      const angelaMounts = containerInfo.Mounts.filter(mount => 
+        mount.Destination === '/home/angela' || 
         mount.Source.includes('python_backend_data')
       );
 
-      if (claraMounts.length === 0) {
-        console.log('  ❌ No Clara home directory mount found!');
-        console.log('  🚨 ISSUE DETECTED: python_backend_data is not mounted to /home/clara');
+      if (angelaMounts.length === 0) {
+        console.log('  ❌ No angela home directory mount found!');
+        console.log('  🚨 ISSUE DETECTED: python_backend_data is not mounted to /home/angela');
       } else {
-        claraMounts.forEach(mount => {
-          console.log(`  ✅ Found Clara mount:`);
+        angelaMounts.forEach(mount => {
+          console.log(`  ✅ Found angela mount:`);
           console.log(`      Source: ${mount.Source}`);
           console.log(`      Destination: ${mount.Destination}`);
           console.log(`      Type: ${mount.Type}`);
@@ -150,9 +150,9 @@ class VolumeDebugger {
     
     const importantPaths = [
       this.pythonBackendDataPath,
-      path.join(this.pythonBackendDataPath, '.clara'),
-      path.join(this.pythonBackendDataPath, '.clara', 'lightrag_storage'),
-      path.join(this.pythonBackendDataPath, '.clara', 'lightrag_storage', 'metadata'),
+      path.join(this.pythonBackendDataPath, '.angela'),
+      path.join(this.pythonBackendDataPath, '.angela', 'lightrag_storage'),
+      path.join(this.pythonBackendDataPath, '.angela', 'lightrag_storage', 'metadata'),
     ];
 
     importantPaths.forEach(dir => {
@@ -180,7 +180,7 @@ class VolumeDebugger {
     console.log('===========================================');
     
     try {
-      const container = this.docker.getContainer('clara_python');
+      const container = this.docker.getContainer('angela_python');
       const logs = await container.logs({
         stdout: true,
         stderr: true,
@@ -202,16 +202,16 @@ class VolumeDebugger {
     console.log('=======================================');
     
     try {
-      const container = this.docker.getContainer('clara_python');
+      const container = this.docker.getContainer('angela_python');
       
       // Test if the container can see the mounted files
       const commands = [
-        'ls -la /home/clara',
-        'ls -la /home/clara/.clara',
-        'ls -la /home/clara/.clara/lightrag_storage',
-        'ls -la /home/clara/.clara/lightrag_storage/metadata',
-        'cat /home/clara/.clara/lightrag_storage/metadata/notebooks.json',
-        'cat /home/clara/.clara/lightrag_storage/metadata/documents.json',
+        'ls -la /home/angela',
+        'ls -la /home/angela/.angela',
+        'ls -la /home/angela/.angela/lightrag_storage',
+        'ls -la /home/angela/.angela/lightrag_storage/metadata',
+        'cat /home/angela/.angela/lightrag_storage/metadata/notebooks.json',
+        'cat /home/angela/.angela/lightrag_storage/metadata/documents.json',
         'whoami',
         'id',
         'pwd'
@@ -259,7 +259,7 @@ class VolumeDebugger {
     try {
       // 1. Stop the container
       console.log('  1️⃣ Stopping container...');
-      const container = this.docker.getContainer('clara_python');
+      const container = this.docker.getContainer('angela_python');
       await container.stop();
       console.log('    ✅ Container stopped');
       
@@ -275,7 +275,7 @@ class VolumeDebugger {
       
       // 4. Restart using Docker setup
       console.log('  4️⃣ Restarting container with proper volume mounting...');
-      console.log('    ℹ️  Please restart Clara to recreate the container with proper volumes');
+      console.log('    ℹ️  Please restart angela to recreate the container with proper volumes');
       
     } catch (error) {
       console.log(`  ❌ Fix attempt failed: ${error.message}`);
@@ -285,9 +285,9 @@ class VolumeDebugger {
   async ensureDirectoryStructure() {
     const directories = [
       this.pythonBackendDataPath,
-      path.join(this.pythonBackendDataPath, '.clara'),
-      path.join(this.pythonBackendDataPath, '.clara', 'lightrag_storage'),
-      path.join(this.pythonBackendDataPath, '.clara', 'lightrag_storage', 'metadata'),
+      path.join(this.pythonBackendDataPath, '.angela'),
+      path.join(this.pythonBackendDataPath, '.angela', 'lightrag_storage'),
+      path.join(this.pythonBackendDataPath, '.angela', 'lightrag_storage', 'metadata'),
       path.join(this.pythonBackendDataPath, '.cache'),
       path.join(this.pythonBackendDataPath, 'uploads'),
       path.join(this.pythonBackendDataPath, 'temp')
@@ -302,8 +302,8 @@ class VolumeDebugger {
 
     // Create metadata files
     const metadataFiles = [
-      { file: '.clara/lightrag_storage/metadata/notebooks.json', content: '{}' },
-      { file: '.clara/lightrag_storage/metadata/documents.json', content: '{}' }
+      { file: '.angela/lightrag_storage/metadata/notebooks.json', content: '{}' },
+      { file: '.angela/lightrag_storage/metadata/documents.json', content: '{}' }
     ];
 
     metadataFiles.forEach(({ file, content }) => {
@@ -331,8 +331,8 @@ async function main() {
     console.log('==============');
     console.log('1. If the python_backend_data mount is missing, run: node debug-volume-mounting.cjs --fix');
     console.log('2. If files are missing, the container will recreate them on next startup');
-    console.log('3. If permissions are wrong, check that Clara has read/write access to ~/.clara/');
-    console.log('4. Make sure Docker has permission to access the ~/.clara directory');
+    console.log('3. If permissions are wrong, check that angela has read/write access to ~/.angela/');
+    console.log('4. Make sure Docker has permission to access the ~/.angela directory');
   }
 }
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Clara Flow SDK Installation Script
+# angela Flow SDK Installation Script
 # This script sets up the development environment and builds the SDK
 
-echo "🌟 Clara Flow SDK Installation"
+echo "🌟 angela Flow SDK Installation"
 echo "==============================="
 
 # Check if Node.js is installed
@@ -63,19 +63,19 @@ else
 fi
 
 echo ""
-echo "🎉 Clara Flow SDK installation completed successfully!"
+echo "🎉 angela Flow SDK installation completed successfully!"
 echo ""
 echo "📁 SDK files are available in:"
-echo "   • dist/clara-flow-sdk.umd.js (Browser)"
-echo "   • dist/clara-flow-sdk.cjs.js (Node.js)"
-echo "   • dist/clara-flow-sdk.esm.js (ES Modules)"
+echo "   • dist/angela-flow-sdk.umd.js (Browser)"
+echo "   • dist/angela-flow-sdk.cjs.js (Node.js)"
+echo "   • dist/angela-flow-sdk.esm.js (ES Modules)"
 echo ""
 echo "📚 Documentation:"
 echo "   • README.md - Getting started guide"
 echo "   • examples/ - Example usage"
 echo ""
 echo "🚀 Quick start:"
-echo "   1. Export a flow from Clara Agent Studio using 'SDK Export'"
+echo "   1. Export a flow from angela Agent Studio using 'SDK Export'"
 echo "   2. Use the examples in examples/ directory"
 echo "   3. Import and run flows in your JavaScript applications"
 echo ""

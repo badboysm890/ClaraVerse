@@ -5,8 +5,8 @@ import ImageGenHeader from './ImageGenHeader';
 import { db } from '../db';
 import ComfyUIManager from './ComfyUIManager';
 import ImageModelManager from './ImageModelManager';
-import { claraApiService } from '../services/claraApiService';
-import { ClaraModel, ClaraProvider } from '../types/clara_assistant_types';
+import { angelaApiService } from '../services/angelaApiService';
+import { angelaModel, angelaProvider } from '../types/angela_assistant_types';
 import ComfyUIStartupModal from './ComfyUIStartupModal';
 
 import PromptArea from './imagegen_components/PromptArea';
@@ -16,7 +16,7 @@ import LoadingOverlay from './imagegen_components/LoadingOverlay';
 import InitialLoadingOverlay from './imagegen_components/InitialLoadingOverlay';
 import { Buffer } from 'buffer';
 
-// Add TypeScript declaration for webview
+// Add TypeScript deangelation for webview
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -258,7 +258,7 @@ interface ModelConfig {
   negativeTags: string[];
 }
 
-const MODEL_CONFIGS_KEY = 'clara-ollama-model-configs';
+const MODEL_CONFIGS_KEY = 'angela-ollama-model-configs';
 
 const getOptimalConfig = (modelName: string): ModelConfig => {
   const baseNegative = ['nsfw', '(worst quality, low quality, normal quality:2)'];
@@ -329,7 +329,7 @@ interface ImageGenProps {
   onPageChange?: (page: string) => void;
 }
 
-const LAST_USED_LLM_KEY = 'clara-ollama-last-used-llm';
+const LAST_USED_LLM_KEY = 'angela-ollama-last-used-llm';
 
 interface EnhancePromptSettings {
   selectedModel: string;
@@ -577,8 +577,8 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
   const [userHasConsented, setUserHasConsented] = useState(false);
 
   // localStorage key for storing selected model
-  const LAST_USED_MODEL_KEY = 'clara-ollama-last-used-model';
-  const COMFYUI_CONSENT_KEY = 'clara-comfyui-user-consent';
+  const LAST_USED_MODEL_KEY = 'angela-ollama-last-used-model';
+  const COMFYUI_CONSENT_KEY = 'angela-comfyui-user-consent';
 
   // Initial loading states
   const [isInitialSetupComplete, setIsInitialSetupComplete] = useState(false);
@@ -679,13 +679,13 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
   
   // Load initial expanded state from localStorage, default to true (expanded)
   const [showSettings, setShowSettings] = useState(() => {
-    const saved = localStorage.getItem('clara-imagegen-settings-expanded');
+    const saved = localStorage.getItem('angela-imagegen-settings-expanded');
     return saved !== null ? JSON.parse(saved) : true;
   });
   
   // Track if user manually collapsed it - if so, don't auto-expand on hover
   const [isManuallyCollapsed, setIsManuallyCollapsed] = useState(() => {
-    const saved = localStorage.getItem('clara-imagegen-settings-manually-collapsed');
+    const saved = localStorage.getItem('angela-imagegen-settings-manually-collapsed');
     return saved !== null ? JSON.parse(saved) : false;
   });
   
@@ -701,12 +701,12 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
 
   // Save expanded state to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('clara-imagegen-settings-expanded', JSON.stringify(showSettings));
+    localStorage.setItem('angela-imagegen-settings-expanded', JSON.stringify(showSettings));
   }, [showSettings]);
 
   // Save manually collapsed state to localStorage
   useEffect(() => {
-    localStorage.setItem('clara-imagegen-settings-manually-collapsed', JSON.stringify(isManuallyCollapsed));
+    localStorage.setItem('angela-imagegen-settings-manually-collapsed', JSON.stringify(isManuallyCollapsed));
   }, [isManuallyCollapsed]);
 
   // Toggle settings panel - when user manually toggles
@@ -769,13 +769,13 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
 
   // Add smart memory management toggle
   const [smartMemoryEnabled, setSmartMemoryEnabled] = useState(() => {
-    const saved = localStorage.getItem('clara-smart-memory-enabled');
+    const saved = localStorage.getItem('angela-smart-memory-enabled');
     return saved !== null ? JSON.parse(saved) : true; // Default to enabled
   });
 
   // Add new state variables for the provider system
-  const [providers, setProviders] = useState<ClaraProvider[]>([]);
-  const [availableModels, setAvailableModels] = useState<ClaraModel[]>([]);
+  const [providers, setProviders] = useState<angelaProvider[]>([]);
+  const [availableModels, setAvailableModels] = useState<angelaModel[]>([]);
 
   // Wallpaper state
   const [wallpaperUrl, setWallpaperUrl] = useState<string | null>(null);
@@ -1316,7 +1316,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
       setScheduler(optimalConfig.scheduler);
       setNegativeTags(optimalConfig.negativeTags);
       
-      setNotificationMessage('Clara loaded optimal settings for this model');
+      setNotificationMessage('angela loaded optimal settings for this model');
     }
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
@@ -1361,8 +1361,8 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
 
   // Function to make direct API calls for prompt enhancement
   const makeDirectEnhancementCall = async (
-    provider: ClaraProvider,
-    model: ClaraModel,
+    provider: angelaProvider,
+    model: angelaModel,
     prompt: string,
     imageData?: { preview: string; buffer: ArrayBuffer; base64: string }
   ): Promise<string> => {
@@ -1439,8 +1439,8 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
           headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${provider.apiKey}`,
-            'HTTP-Referer': 'https://claraverse.app',
-            'X-Title': 'ClaraVerse ImageGen Enhancement'
+            'HTTP-Referer': 'https://angelaverse.app',
+            'X-Title': 'angelaVerse ImageGen Enhancement'
           };
           requestBody = {
             model: model.name,
@@ -1450,12 +1450,12 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
           };
           break;
 
-        case 'claras-pocket':
-          // Clara's Pocket - OpenAI-compatible API (base URL already includes /v1)
+        case 'angelas-pocket':
+          // angela's Pocket - OpenAI-compatible API (base URL already includes /v1)
           apiUrl = `${provider.baseUrl || 'http://localhost:8080'}/chat/completions`;
           headers = {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${provider.apiKey || 'clara-key'}`
+            'Authorization': `Bearer ${provider.apiKey || 'angela-key'}`
           };
           requestBody = {
             model: model.name,
@@ -1539,7 +1539,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
         console.log('🔍 Checking LLM connection and loading providers...');
         
         // Load providers
-        const loadedProviders = await claraApiService.getProviders();
+        const loadedProviders = await angelaApiService.getProviders();
         const enabledProviders = loadedProviders.filter(p => p.isEnabled);
         setProviders(enabledProviders);
         
@@ -1557,7 +1557,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
         let hasHealthyProvider = false;
         for (const provider of enabledProviders) {
           try {
-            const isHealthy = await claraApiService.testProvider(provider);
+            const isHealthy = await angelaApiService.testProvider(provider);
             if (isHealthy) {
               hasHealthyProvider = true;
               console.log(`✅ Provider ${provider.name} is healthy`);
@@ -1620,7 +1620,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
           : "Analyze this image and provide a detailed text-to-image generation prompt that would recreate it. Include style, composition, lighting, and important details."
         : enhanceSettings.systemPrompt + `\n\n${currentPrompt}\n\nDon't include the text "Original prompt:" or "Enhanced prompt:" in your response`;
 
-      // Use Clara's API service for the enhancement
+      // Use angela's API service for the enhancement
       const enhancementConfig = {
         provider: provider.id,
         model: selectedModel.name,
@@ -1708,7 +1708,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
   const handleToggleSmartMemory = () => {
     const newValue = !smartMemoryEnabled;
     setSmartMemoryEnabled(newValue);
-    localStorage.setItem('clara-smart-memory-enabled', JSON.stringify(newValue));
+    localStorage.setItem('angela-smart-memory-enabled', JSON.stringify(newValue));
     
     setNotificationMessage(
       newValue 
@@ -1824,12 +1824,12 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
   };
 
   // Replace the fetchLLMModels function with provider-based system
-  const fetchLLMModels = async (): Promise<ClaraModel[]> => {
+  const fetchLLMModels = async (): Promise<angelaModel[]> => {
     try {
       console.log('🔄 Fetching models from all configured providers...');
       
       // Get all enabled providers
-      const allProviders = await claraApiService.getProviders();
+      const allProviders = await angelaApiService.getProviders();
       const enabledProviders = allProviders.filter(p => p.isEnabled);
       
       console.log(`📡 Found ${enabledProviders.length} enabled providers:`, 
@@ -1841,11 +1841,11 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
       }
 
       // Load models from all enabled providers
-      let allModels: ClaraModel[] = [];
+      let allModels: angelaModel[] = [];
       for (const provider of enabledProviders) {
         try {
           console.log(`📦 Loading models from ${provider.name}...`);
-          const providerModels = await claraApiService.getModels(provider.id);
+          const providerModels = await angelaApiService.getModels(provider.id);
           allModels = [...allModels, ...providerModels];
           console.log(`✅ Loaded ${providerModels.length} models from ${provider.name}`);
         } catch (error) {
@@ -1929,7 +1929,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
             onToggleSmartMemory={handleToggleSmartMemory}
           />
           
-          {/* Conditional rendering: Show either Clara's interface or ComfyUI interface */}
+          {/* Conditional rendering: Show either angela's interface or ComfyUI interface */}
           {showComfyUIInterface ? (
             // ComfyUI Interface
             <div className="flex-1 relative bg-gray-100 dark:bg-gray-900">
@@ -1970,7 +1970,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
                         onClick={handleSwitchToComfyUI}
                         className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                       >
-                        Back to Clara ImageGen
+                        Back to angela ImageGen
                       </button>
                     </div>
                   </div>
@@ -1990,7 +1990,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
 
             </div>
           ) : (
-            // Clara's ImageGen Interface
+            // angela's ImageGen Interface
             <>
               {isGenerating && (
                 <LoadingOverlay 
@@ -2062,7 +2062,7 @@ const ImageGen: React.FC<ImageGenProps> = ({ onPageChange }) => {
           />
         )}
         
-        {/* Configuration Sidebar - Vertical Tab - Only show in Clara interface mode */}
+        {/* Configuration Sidebar - Vertical Tab - Only show in angela interface mode */}
         {!showComfyUIInterface && (
           <div
             ref={edgeRef}

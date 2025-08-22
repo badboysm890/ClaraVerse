@@ -1,5 +1,5 @@
 // Project Templates for LumaUI-lite
-// Each template includes HTML, CSS, and JavaScript with Clara's font and stunning designs
+// Each template includes HTML, CSS, and JavaScript with angela's font and stunning designs
 
 export interface ProjectTemplate {
   html: string;
@@ -7,12 +7,12 @@ export interface ProjectTemplate {
   js: string;
 }
 
-// Clara's custom font CSS with sakura theme
-const CLARA_FONT_CSS = `
+// angela's custom font CSS with sakura theme
+const angela_FONT_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
 
 :root {
-  --clara-font: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --angela-font: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --sakura-50: #fdf2f8;
   --sakura-100: #fce7f3;
   --sakura-200: #fbcfe8;
@@ -26,7 +26,7 @@ const CLARA_FONT_CSS = `
 }
 
 * {
-  font-family: var(--clara-font);
+  font-family: var(--angela-font);
 }
 `;
 
@@ -177,7 +177,7 @@ const getLandingPageTemplate = (name: string, description: string): ProjectTempl
         <div class="max-w-7xl mx-auto px-4 text-center">
             <div class="flex justify-center items-center mb-4">
                 <i class="fas fa-heart text-sakura-400 mx-2"></i>
-                <span class="text-white">Built with Clara's LumaUI-lite</span>
+                <span class="text-white">Built with angela's LumaUI-lite</span>
                 <i class="fas fa-heart text-sakura-400 mx-2"></i>
             </div>
             <p class="text-gray-300">© ${new Date().getFullYear()} ${name}. All rights reserved.</p>
@@ -188,7 +188,7 @@ const getLandingPageTemplate = (name: string, description: string): ProjectTempl
 </body>
 </html>`,
 
-  css: `${CLARA_FONT_CSS}
+  css: `${angela_FONT_CSS}
 
 /* Landing Page Specific Styles */
 .animate-float {
@@ -463,7 +463,7 @@ const getPortfolioTemplate = (name: string, description: string): ProjectTemplat
 </body>
 </html>`,
 
-  css: `${CLARA_FONT_CSS}
+  css: `${angela_FONT_CSS}
 
 /* Portfolio Specific Styles */
 .project-card {
@@ -604,7 +604,7 @@ const getTodoAppTemplate = (name: string, description: string): ProjectTemplate 
 </body>
 </html>`,
 
-  css: `${CLARA_FONT_CSS}
+  css: `${angela_FONT_CSS}
 
 /* Todo App Specific Styles */
 .todo-item {
@@ -804,7 +804,7 @@ const getDefaultTemplate = (name: string, description: string): ProjectTemplate 
 </body>
 </html>`,
 
-  css: `${CLARA_FONT_CSS}
+  css: `${angela_FONT_CSS}
 
 /* Default template styles */
 html {

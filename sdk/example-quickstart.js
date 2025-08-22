@@ -1,14 +1,14 @@
 /**
- * Clara Flow SDK v2.0 - Quick Start Example
+ * angela Flow SDK v2.0 - Quick Start Example
  * This example demonstrates how easy it is to use the SDK
  */
 
-import { ClaraFlowRunner } from './dist/index.js';
+import { angelaFlowRunner } from './dist/index.js';
 
-console.log('🚀 Clara Flow SDK v2.0 - Quick Start Example\n');
+console.log('🚀 angela Flow SDK v2.0 - Quick Start Example\n');
 
 // Create runner
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true
 });
 
@@ -57,9 +57,9 @@ const workflow = {
 // Execute workflow - just 1 line!
 const result = await runner.execute(workflow, {
   greeting: 'Welcome',
-  name: 'Clara SDK v2.0!'
+  name: 'angela SDK v2.0!'
 });
 
 console.log('\n🎉 Result:', result.result?.output || result['result']?.output);
-console.log('\n✨ That\'s it! Your first Clara workflow is complete.');
+console.log('\n✨ That\'s it! Your first angela workflow is complete.');
 console.log('\n📚 Check README.md for more examples and features.'); 

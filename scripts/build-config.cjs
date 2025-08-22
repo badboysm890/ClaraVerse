@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Build configuration script for Clara Electron builds
+ * Build configuration script for angela Electron builds
  * Supports two variants:
  * - full: Includes all llamaCpp binaries
  * - barebone: Excludes specific Windows variants (win32-x64-cpu, win32-x64-cuda, win32-x64-rocm, win32-x64-vulkan)

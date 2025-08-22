@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
 /**
- * Clara Flow SDK - Quick Demo
+ * angela Flow SDK - Quick Demo
  * 
- * This script demonstrates the key features of the Clara Flow SDK:
+ * This script demonstrates the key features of the angela Flow SDK:
  * - Loading flows from Agent Studio exports
  * - Multiple input methods
  * - Custom nodes
  * - Error handling
  */
 
-import { ClaraFlowRunner } from '../dist/clara-flow-sdk.esm.js';
+import { angelaFlowRunner } from '../dist/angela-flow-sdk.esm.js';
 
-console.log('🚀 Clara Flow SDK - Quick Demo\n');
+console.log('🚀 angela Flow SDK - Quick Demo\n');
 
 // Initialize the runner
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,
   logLevel: 'info',
   timeout: 30000
@@ -36,7 +36,7 @@ const simpleFlow = {
       id: 'input-1',
       type: 'input',
       name: 'User Message',
-      data: { inputType: 'string', defaultValue: 'Hello Clara!' },
+      data: { inputType: 'string', defaultValue: 'Hello angela!' },
       inputs: [],
       outputs: [{ id: 'output', name: 'Value', type: 'output', dataType: 'string' }]
     },
@@ -62,7 +62,7 @@ const simpleFlow = {
 
 try {
   const result1 = await runner.executeFlow(simpleFlow, {
-    'User Message': 'Hello from the Clara Flow SDK!'
+    'User Message': 'Hello from the angela Flow SDK!'
   });
   
   console.log('✅ Result:', result1);
@@ -76,7 +76,7 @@ console.log('🏭 Demo 2: Agent Studio Export Format');
 console.log('═'.repeat(50));
 
 const agentStudioExport = {
-  format: 'clara-sdk',
+  format: 'angela-sdk',
   version: '1.0.0',
   flow: {
     id: 'studio-export',
@@ -112,13 +112,13 @@ const agentStudioExport = {
   },
   customNodes: [],
   exportedAt: new Date().toISOString(),
-  exportedBy: 'Clara Agent Studio'
+  exportedBy: 'angela Agent Studio'
 };
 
 try {
   // SDK automatically detects and handles Agent Studio format
   const result2 = await runner.executeFlow(agentStudioExport, {
-    'Question': 'How easy is it to use Clara Flow SDK?'
+    'Question': 'How easy is it to use angela Flow SDK?'
   });
   
   console.log('✅ Result:', result2);
@@ -194,7 +194,7 @@ await runner.registerCustomNode({
 console.log('✅ Custom node registered');
 
 const customNodeFlow = {
-  format: 'clara-sdk',
+  format: 'angela-sdk',
   version: '1.0.0',
   flow: {
     id: 'custom-demo',
@@ -251,7 +251,7 @@ const customNodeFlow = {
 
 try {
   const result3 = await runner.executeFlow(customNodeFlow, {
-    'Original Text': 'The Clara Flow SDK is amazing'
+    'Original Text': 'The angela Flow SDK is amazing'
   });
   
   console.log('✅ Result:', result3);
@@ -273,7 +273,7 @@ const flexibleFlow = {
       id: 'input-name',
       type: 'input',
       name: 'Your Name',
-      data: { inputType: 'string', defaultValue: 'Clara User' },
+      data: { inputType: 'string', defaultValue: 'angela User' },
       inputs: [],
       outputs: [{ id: 'output', name: 'Value', type: 'output', dataType: 'string' }]
     },
@@ -344,7 +344,7 @@ console.log('✅ Multiple input methods supported');
 console.log('✅ Error handling is robust');
 console.log('');
 console.log('📚 Check the README.md for detailed documentation!');
-console.log('🚀 Ready to build amazing AI workflows with Clara Flow SDK!');
+console.log('🚀 Ready to build amazing AI workflows with angela Flow SDK!');
 
 // Get execution statistics
 const stats = runner.getStats();

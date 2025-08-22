@@ -20,11 +20,11 @@
 **Developer-Friendly API:**
 ```javascript
 // Old API (complex)
-const runner = new ClaraFlowRunner(complexConfig);
+const runner = new angelaFlowRunner(complexConfig);
 await runner.executeFlow(flowData, inputs);
 
 // New API (simple)
-const runner = new ClaraFlowRunner();
+const runner = new angelaFlowRunner();
 await runner.execute(workflow, inputs);
 ```
 
@@ -51,9 +51,9 @@ await runner.execute(workflow, inputs);
 - Full TypeScript support
 - Runtime validation
 
-**Clara Studio Integration:**
-- Direct import of Clara Studio exports
-- Support for `clara-sdk` and `clara-native` formats
+**angela Studio Integration:**
+- Direct import of angela Studio exports
+- Support for `angela-sdk` and `angela-native` formats
 - Custom node preservation
 - Metadata handling
 
@@ -88,8 +88,8 @@ await runner.execute(workflow, inputs);
 **Package Formats:**
 - `dist/index.js` - ES modules (Node.js)
 - `dist/index.cjs` - CommonJS (Node.js)
-- `dist/clara-flow-sdk.umd.js` - Browser UMD
-- `dist/clara-flow-sdk.umd.min.js` - Minified browser
+- `dist/angela-flow-sdk.umd.js` - Browser UMD
+- `dist/angela-flow-sdk.umd.min.js` - Minified browser
 
 **Bundle Sizes:**
 - Node.js: 16KB (uncompressed)
@@ -106,9 +106,9 @@ await runner.execute(workflow, inputs);
 
 **CDN Usage:**
 ```html
-<script src="https://unpkg.com/clara-flow-sdk@2.0.0/dist/clara-flow-sdk.umd.min.js"></script>
+<script src="https://unpkg.com/angela-flow-sdk@2.0.0/dist/angela-flow-sdk.umd.min.js"></script>
 <script>
-  const runner = new ClaraFlowSDK.ClaraFlowRunner();
+  const runner = new angelaFlowSDK.angelaFlowRunner();
   // Use immediately
 </script>
 ```
@@ -152,8 +152,8 @@ await runner.execute(workflow, inputs);
 
 ```javascript
 // v1.x (deprecated)
-import { ClaraFlowRunner } from 'clara-flow-sdk';
-const runner = new ClaraFlowRunner({
+import { angelaFlowRunner } from 'angela-flow-sdk';
+const runner = new angelaFlowRunner({
   enableLogging: true,
   timeout: 30000,
   sandbox: true
@@ -161,8 +161,8 @@ const runner = new ClaraFlowRunner({
 await runner.executeFlow(flowData, inputs);
 
 // v2.0 (current)
-import { ClaraFlowRunner } from 'clara-flow-sdk';
-const runner = new ClaraFlowRunner(); // Zero config!
+import { angelaFlowRunner } from 'angela-flow-sdk';
+const runner = new angelaFlowRunner(); // Zero config!
 await runner.execute(workflow, inputs); // Simplified API
 ```
 

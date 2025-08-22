@@ -373,8 +373,8 @@ class LlamaConfigTester:
 
 def main():
     # Configuration - modify these paths according to your setup
-    model_path = "/Users/badfy17g/.clara/llama-models/Qwen3-30B-A3B-Q4_K_M.gguf"
-    llama_server_path = "/Users/badfy17g/ClaraVerse/electron/llamacpp-binaries/darwin-arm64/llama-server"
+    model_path = "/Users/badfy17g/.angela/llama-models/Qwen3-30B-A3B-Q4_K_M.gguf"
+    llama_server_path = "/Users/badfy17g/angelaVerse/electron/llamacpp-binaries/darwin-arm64/llama-server"
     
     # Check if files exist
     if not os.path.exists(model_path):

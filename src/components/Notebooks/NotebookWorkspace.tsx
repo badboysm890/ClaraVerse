@@ -21,7 +21,7 @@ import GraphViewer from './GraphViewer';
 import ExportModal from './ExportModal';
 import NotebookExportService, { NotebookContent, ExportOptions } from './NotebookExportService';
 import { notebookDataCollector } from './NotebookDataCollector';
-import { NotebookResponse, NotebookDocumentResponse, claraNotebookService } from '../../services/claraNotebookService';
+import { NotebookResponse, NotebookDocumentResponse, angelaNotebookService } from '../../services/angelaNotebookService';
 import { db } from '../../db';
 
 interface NotebookWorkspaceProps {
@@ -77,12 +77,12 @@ const NotebookWorkspace: React.FC<NotebookWorkspaceProps> = ({
 
   // Handle document upload
   const handleDocumentUpload = async (files: File[]) => {
-    if (!claraNotebookService.isBackendHealthy()) {
+    if (!angelaNotebookService.isBackendHealthy()) {
       throw new Error('Notebook backend is not available');
     }
 
     try {
-      const uploadedDocs = await claraNotebookService.uploadDocuments(notebook.id, files);
+      const uploadedDocs = await angelaNotebookService.uploadDocuments(notebook.id, files);
       
       // Update notebook document count
       const updatedNotebook = {

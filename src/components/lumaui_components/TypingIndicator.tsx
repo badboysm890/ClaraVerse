@@ -9,7 +9,7 @@ interface TypingIndicatorProps {
 
 const TypingIndicator: React.FC<TypingIndicatorProps> = ({ 
   isVisible, 
-  message = "Clara is thinking..."
+  message = "angela is thinking..."
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<HTMLDivElement>(null);

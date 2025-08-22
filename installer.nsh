@@ -1,4 +1,4 @@
-; Clara Installer Configuration
+; angela Installer Configuration
 ; This file is included in the NSIS installer build process
 
 ; Custom installer sections and macros can be added here

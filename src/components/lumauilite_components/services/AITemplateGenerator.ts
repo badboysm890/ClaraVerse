@@ -40,7 +40,7 @@ const TEMPLATE_GENERATION_SCHEMA = {
           },
           content: {
             type: "string",
-            description: "Complete HTML document with Clara's font, Tailwind CSS, Font Awesome, inline CSS, and inline JavaScript"
+            description: "Complete HTML document with angela's font, Tailwind CSS, Font Awesome, inline CSS, and inline JavaScript"
           },
           description: {
             type: "string",
@@ -99,7 +99,7 @@ export class AITemplateGenerator {
   }
 
   private createSystemPrompt(): string {
-    return `You are Clara's AI Template Generator, an expert web developer specializing in creating stunning, production-ready web applications that rival the best modern websites.
+    return `You are angela's AI Template Generator, an expert web developer specializing in creating stunning, production-ready web applications that rival the best modern websites.
 
 🎯 CORE MISSION: Create applications that are visually stunning, highly functional, and production-ready from day one.
 
@@ -108,8 +108,8 @@ export class AITemplateGenerator {
 **STYLING & DESIGN:**
 - ALWAYS use Tailwind CSS CDN: https://cdn.tailwindcss.com
 - ALWAYS include Font Awesome 6.4.0 CDN: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css
-- Use Clara's Quicksand font family: https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap
-- Implement Clara's sakura pink theme with dark mode design (gray-900, gray-800 backgrounds)
+- Use angela's Quicksand font family: https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap
+- Implement angela's sakura pink theme with dark mode design (gray-900, gray-800 backgrounds)
 - Use sakura color palette: sakura-400, sakura-500, sakura-600 for accents and CTAs
 - Create glassmorphic effects with backdrop-blur and subtle transparency
 - Add smooth animations, hover effects, and micro-interactions
@@ -133,7 +133,7 @@ export class AITemplateGenerator {
 
 **TECHNICAL EXCELLENCE:**
 - Clean, semantic HTML5 with proper DOCTYPE and meta tags
-- Inline CSS within <style> tags for custom animations and Clara's design system
+- Inline CSS within <style> tags for custom animations and angela's design system
 - Modern JavaScript (ES6+) within <script> tags with proper error handling
 - Performance optimized (lazy loading, efficient animations)
 - Cross-browser compatibility
@@ -191,7 +191,7 @@ Generate applications that users will be impressed by and want to use immediatel
 2. **Consistent Navigation** - Working navigation menu that links between all pages
 3. **Tailwind CSS Integration** - Full CDN implementation with custom utility classes on every page
 4. **Font Awesome Icons** - Strategic use of icons throughout the interface
-5. **Clara's Design System** - Quicksand font, sakura theme, dark mode, glassmorphic effects
+5. **angela's Design System** - Quicksand font, sakura theme, dark mode, glassmorphic effects
 6. **Responsive Layout** - Perfect on mobile (320px+), tablet (768px+), and desktop (1024px+)
 7. **Interactive JavaScript** - Modern ES6+ with smooth animations, form validation, and user feedback
 8. **Accessibility Features** - WCAG AA compliance, keyboard navigation, screen reader support
@@ -200,7 +200,7 @@ Generate applications that users will be impressed by and want to use immediatel
 **DESIGN EXCELLENCE:**
 - Hero section with compelling value proposition and clear CTAs
 - Feature sections with icons, descriptions, and benefits
-- Professional color scheme using Clara's sakura palette
+- Professional color scheme using angela's sakura palette
 - Smooth hover effects and micro-interactions
 - Mobile-first responsive navigation with hamburger menu
 - Footer with social links and contact information
@@ -282,7 +282,7 @@ Generate a complete, polished, production-ready multi-page web application with 
         if (request.provider === 'openrouter') {
           requestPayload.headers = {
             'HTTP-Referer': window.location.origin,
-            'X-Title': 'Clara LumaUI-lite'
+            'X-Title': 'angela LumaUI-lite'
           };
         }
       } else if (request.provider === 'anthropic') {

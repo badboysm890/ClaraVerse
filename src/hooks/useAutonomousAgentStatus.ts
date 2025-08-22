@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { AutonomousAgentStatus, ToolExecution } from '../components/Clara_Components/AutonomousAgentStatusPanel';
+import { AutonomousAgentStatus, ToolExecution } from '../components/angela_Components/AutonomousAgentStatusPanel';
 
 interface UseAutonomousAgentStatusReturn {
   status: AutonomousAgentStatus;

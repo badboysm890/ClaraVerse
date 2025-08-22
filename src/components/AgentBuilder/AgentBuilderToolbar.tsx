@@ -26,7 +26,7 @@ const AgentBuilderToolbar: React.FC = () => {
       <Button
         variant="outline"
         size="sm"
-        onClick={() => exportFlow('clara-native')}
+        onClick={() => exportFlow('angela-native')}
         className="bg-white/10 text-white hover:bg-white/20"
         disabled={!currentFlow}
       >
@@ -37,7 +37,7 @@ const AgentBuilderToolbar: React.FC = () => {
       <Button
         variant="outline"
         size="sm"
-        onClick={() => exportFlow('clara-sdk')}
+        onClick={() => exportFlow('angela-sdk')}
         className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/30"
         disabled={!currentFlow}
         title="Export for SDK - includes custom node code"

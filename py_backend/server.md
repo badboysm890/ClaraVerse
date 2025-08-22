@@ -4,4 +4,4 @@
 - run using python main.py --port 5001
 - this is fastapi so you can check the docs at http://localhost:5001/docs
 - using lightrag for knowledge base and embedding - https://github.com/HKUDS/LightRAG
-- lightrag data will be stored in ~/.clara/lightrag_storage/ with metadata acting as db for notebooks and documents
+- lightrag data will be stored in ~/.angela/lightrag_storage/ with metadata acting as db for notebooks and documents

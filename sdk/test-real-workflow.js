@@ -1,21 +1,21 @@
 /**
- * Clara Flow SDK v2.0 - Real Workflow Test
- * Testing with actual exported workflow from Clara Studio
+ * angela Flow SDK v2.0 - Real Workflow Test
+ * Testing with actual exported workflow from angela Studio
  */
 
-import { ClaraFlowRunner } from './dist/index.js';
+import { angelaFlowRunner } from './dist/index.js';
 import fs from 'fs';
 
-console.log('🧠 Testing Real Clara Studio Workflow\n');
+console.log('🧠 Testing Real angela Studio Workflow\n');
 
 // Load the actual exported workflow
 const workflowData = JSON.parse(fs.readFileSync('agent_exported/Testing_SDK_flow_sdk.json', 'utf8'));
 
 async function testRealWorkflow() {
-  const runner = new ClaraFlowRunner({ enableLogging: true });
+  const runner = new angelaFlowRunner({ enableLogging: true });
 
   console.log('=' .repeat(60));
-  console.log('📋 ANALYZING REAL CLARA STUDIO WORKFLOW');
+  console.log('📋 ANALYZING REAL angela STUDIO WORKFLOW');
   console.log('=' .repeat(60));
   
   // Analyze the workflow
@@ -95,11 +95,11 @@ async function testRealWorkflow() {
   console.log(`   • Custom nodes: ${description.hasCustomNodes ? 'Yes' : 'None'}`);
   console.log();
   console.log('🎯 For developers:');
-  console.log('   const runner = new ClaraFlowRunner();');
+  console.log('   const runner = new angelaFlowRunner();');
   console.log('   const result = await runner.run(workflow, inputs);');
   console.log();
   console.log('🚀 The SDK handled everything automatically:');
-  console.log('   ✅ Detected Clara Studio export format');
+  console.log('   ✅ Detected angela Studio export format');
   console.log('   ✅ Found input requirements');
   console.log('   ✅ Applied default values');
   console.log('   ✅ Executed nodes in correct order');

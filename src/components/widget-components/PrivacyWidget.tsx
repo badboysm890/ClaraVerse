@@ -33,14 +33,14 @@ const PrivacyWidget: React.FC<PrivacyWidgetProps> = ({ id, onRemove }) => {
           <div className="flex-1 px-4 border-l border-gray-200 dark:border-gray-700/30">
             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Local Processing</h4>
             <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
-              Clara processes your data locally on your device whenever possible, keeping your information private and secure.
+              angela processes your data locally on your device whenever possible, keeping your information private and secure.
             </p>
           </div>
           
           <div className="flex-1 px-4 border-l border-gray-200 dark:border-gray-700/30">
             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">End-to-End Encryption</h4>
             <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">
-              When data must be transmitted, Clara uses end-to-end encryption to protect your information.
+              When data must be transmitted, angela uses end-to-end encryption to protect your information.
             </p>
           </div>
           

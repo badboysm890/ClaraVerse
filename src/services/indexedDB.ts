@@ -1,4 +1,4 @@
-const DB_NAME = 'clara_db';
+const DB_NAME = 'angela_db';
 const DB_VERSION = 9; // Increment version to trigger upgrade for Lumaui project stores
 
 export class IndexedDBService {
@@ -88,24 +88,24 @@ export class IndexedDBService {
           db.createObjectStore('providers', { keyPath: 'id' });
         }
 
-        // Add Clara-specific stores
-        if (!db.objectStoreNames.contains('clara_sessions')) {
-          const sessionStore = db.createObjectStore('clara_sessions', { keyPath: 'id' });
+        // Add angela-specific stores
+        if (!db.objectStoreNames.contains('angela_sessions')) {
+          const sessionStore = db.createObjectStore('angela_sessions', { keyPath: 'id' });
           sessionStore.createIndex('created_at_index', 'createdAt', { unique: false });
           sessionStore.createIndex('updated_at_index', 'updatedAt', { unique: false });
           sessionStore.createIndex('starred_index', 'isStarred', { unique: false });
           sessionStore.createIndex('archived_index', 'isArchived', { unique: false });
         }
 
-        if (!db.objectStoreNames.contains('clara_messages')) {
-          const messageStore = db.createObjectStore('clara_messages', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('angela_messages')) {
+          const messageStore = db.createObjectStore('angela_messages', { keyPath: 'id' });
           messageStore.createIndex('session_id_index', 'sessionId', { unique: false });
           messageStore.createIndex('timestamp_index', 'timestamp', { unique: false });
           messageStore.createIndex('role_index', 'role', { unique: false });
         }
 
-        if (!db.objectStoreNames.contains('clara_files')) {
-          const fileStore = db.createObjectStore('clara_files', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('angela_files')) {
+          const fileStore = db.createObjectStore('angela_files', { keyPath: 'id' });
           fileStore.createIndex('session_id_index', 'sessionId', { unique: false });
           fileStore.createIndex('message_id_index', 'messageId', { unique: false });
           fileStore.createIndex('type_index', 'type', { unique: false });

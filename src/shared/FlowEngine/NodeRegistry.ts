@@ -547,7 +547,7 @@ export class NodeRegistry {
           
           // Build headers
           const headers: Record<string, string> = {
-            'User-Agent': 'ClaraVerse-API-Node/1.0',
+            'User-Agent': 'angelaVerse-API-Node/1.0',
             ...additionalHeaders
           };
           

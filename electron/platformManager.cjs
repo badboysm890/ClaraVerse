@@ -18,7 +18,7 @@ class PlatformManager {
     this.supportedPlatforms = this.getSupportedPlatforms();
     
     // System resources configuration
-    this.systemResourcesConfigPath = path.join(app.getPath('userData'), 'clara-system-config.yaml');
+    this.systemResourcesConfigPath = path.join(app.getPath('userData'), 'angela-system-config.yaml');
     this.systemRequirements = {
       minimum: {
         ramGB: 8,
@@ -758,15 +758,15 @@ class PlatformManager {
   getUnsupportedPlatformInstructions(platform) {
     return {
       title: `Unsupported Platform: ${platform}`,
-      description: `The platform ${platform} is not currently supported by ClaraVerse.`,
+      description: `The platform ${platform} is not currently supported by angelaVerse.`,
       minimumRequired: 'Supported platforms: Windows, macOS, Linux',
       instructions: [
-        'ClaraVerse currently supports:',
+        'angelaVerse currently supports:',
         '• Windows 10+ (x64)',
         '• macOS Big Sur 11.0+ (Intel and Apple Silicon)',
         '• Linux x64 with kernel 4.4+ (Ubuntu, Debian, CentOS, RHEL, Fedora, etc.)',
         '',
-        'Please use one of these supported platforms to run ClaraVerse.'
+        'Please use one of these supported platforms to run angelaVerse.'
       ],
       downloadLinks: [
         { name: 'Windows', url: 'https://www.microsoft.com/windows' },
@@ -987,7 +987,7 @@ class PlatformManager {
       recommendations: [],
       performanceMode: 'full', // full, lite, core-only
       enabledFeatures: {
-        claraCore: true,
+        angelaCore: true,
         dockerServices: true,
         comfyUI: true,
         n8nWorkflows: true,
@@ -1050,7 +1050,7 @@ class PlatformManager {
     switch (performanceMode) {
       case 'core-only':
         evaluation.enabledFeatures = {
-          claraCore: true,
+          angelaCore: true,
           dockerServices: false,
           comfyUI: false,
           n8nWorkflows: false,
@@ -1068,7 +1068,7 @@ class PlatformManager {
         
       case 'lite':
         evaluation.enabledFeatures = {
-          claraCore: true,
+          angelaCore: true,
           dockerServices: false,
           comfyUI: false,
           n8nWorkflows: true,

@@ -83,7 +83,7 @@ async function buildServices() {
   try {
     // Step 1: Build llama optimizer for all platforms
     console.log('\n=== Building llama optimizer ===');
-    process.chdir(path.join(__dirname, '..', 'clara-core-optimiser'));
+    process.chdir(path.join(__dirname, '..', 'angela-core-optimiser'));
     
     // Windows
     await runCommand(goExecutable, ['build', '-ldflags="-s -w"', '-o', '../electron/services/llama-optimizer-windows.exe', 'llama_optimizer.go']);
@@ -129,7 +129,7 @@ async function buildServices() {
 
     // Step 3: Build MCP server for all platforms
     console.log('\n=== Building MCP server ===');
-    process.chdir(path.join(__dirname, '..', 'clara-mcp'));
+    process.chdir(path.join(__dirname, '..', 'angela-mcp'));
     
     // Windows
     await runCommand(goExecutable, ['build', '-ldflags="-s -w"', '-o', '../electron/services/python-mcp-server-windows.exe', 'python-mcp-server.go'], {

@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🔧 Building Clara for production..."
+echo "🔧 Building angela for production..."
 echo "================================="
 
 # Clean previous builds

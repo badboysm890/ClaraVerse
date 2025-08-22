@@ -9,7 +9,7 @@ contributors: ["badboysm890"]
 
 # 📦 Installation Guide
 
-This comprehensive guide covers all installation methods for ClaraVerse across different platforms and use cases.
+This comprehensive guide covers all installation methods for angelaVerse across different platforms and use cases.
 
 ## 🎯 Installation Options
 
@@ -33,8 +33,8 @@ This comprehensive guide covers all installation methods for ClaraVerse across d
 
 1. **Download the Installer**
    ```
-   https://github.com/badboysm890/claraverse/releases/latest
-   → ClaraVerse-win-x64.exe
+   https://github.com/badboysm890/angelaverse/releases/latest
+   → angelaVerse-win-x64.exe
    ```
 
 2. **Run the Installer**
@@ -48,12 +48,12 @@ This comprehensive guide covers all installation methods for ClaraVerse across d
    - This is normal for unsigned applications
 
 4. **First Launch**
-   - Find ClaraVerse in Start Menu
+   - Find angelaVerse in Start Menu
    - Pin to taskbar for easy access
    - Complete the onboarding process
 
 **Troubleshooting Windows:**
-- **Antivirus blocking**: Add ClaraVerse to your antivirus exceptions
+- **Antivirus blocking**: Add angelaVerse to your antivirus exceptions
 - **Installation fails**: Run installer as administrator
 - **App won't start**: Check Windows Event Viewer for detailed errors
 
@@ -71,13 +71,13 @@ This comprehensive guide covers all installation methods for ClaraVerse across d
 
 1. **Download the DMG**
    ```
-   https://github.com/badboysm890/claraverse/releases/latest
-   → ClaraVerse-mac-universal.dmg
+   https://github.com/badboysm890/angelaverse/releases/latest
+   → angelaVerse-mac-universal.dmg
    ```
 
 2. **Install the Application**
    - Open the downloaded `.dmg` file
-   - Drag ClaraVerse to the Applications folder
+   - Drag angelaVerse to the Applications folder
    - Eject the DMG when complete
 
 3. **Security Permissions**
@@ -109,25 +109,25 @@ This comprehensive guide covers all installation methods for ClaraVerse across d
 
 1. **Download AppImage**
    ```bash
-   wget https://github.com/badboysm890/claraverse/releases/latest/download/ClaraVerse-linux-x64.AppImage
+   wget https://github.com/badboysm890/angelaverse/releases/latest/download/angelaVerse-linux-x64.AppImage
    ```
 
 2. **Make Executable**
    ```bash
-   chmod +x ClaraVerse-linux-x64.AppImage
+   chmod +x angelaVerse-linux-x64.AppImage
    ```
 
 3. **Run the Application**
    ```bash
-   ./ClaraVerse-linux-x64.AppImage
+   ./angelaVerse-linux-x64.AppImage
    ```
 
 4. **Optional: Desktop Integration**
    ```bash
    # Create desktop entry
-   ./ClaraVerse-linux-x64.AppImage --appimage-extract
-   cp squashfs-root/ClaraVerse.desktop ~/.local/share/applications/
-   cp squashfs-root/ClaraVerse.png ~/.local/share/icons/
+   ./angelaVerse-linux-x64.AppImage --appimage-extract
+   cp squashfs-root/angelaVerse.desktop ~/.local/share/applications/
+   cp squashfs-root/angelaVerse.png ~/.local/share/icons/
    ```
 
 **Troubleshooting Linux:**
@@ -174,8 +174,8 @@ sudo dnf install make gcc gcc-c++ nss-devel atk-devel
 
 1. **Clone Repository**
    ```bash
-   git clone https://github.com/badboysm890/claraverse.git
-   cd claraverse
+   git clone https://github.com/badboysm890/angelaverse.git
+   cd angelaverse
    ```
 
 2. **Install Dependencies**
@@ -217,7 +217,7 @@ sudo dnf install make gcc gcc-c++ nss-devel atk-devel
 
 ## 🐳 Docker Deployment
 
-ClaraVerse can be deployed as a web application using Docker:
+angelaVerse can be deployed as a web application using Docker:
 
 ### Quick Start with Docker Compose
 
@@ -225,20 +225,20 @@ ClaraVerse can be deployed as a web application using Docker:
    ```yaml
    version: '3.8'
    services:
-     claraverse:
-       image: ghcr.io/badboysm890/claraverse:latest
+     angelaverse:
+       image: ghcr.io/badboysm890/angelaverse:latest
        ports:
          - "3000:3000"
        volumes:
-         - claraverse_data:/app/data
-         - claraverse_models:/app/models
+         - angelaverse_data:/app/data
+         - angelaverse_models:/app/models
        environment:
          - NODE_ENV=production
          - PORT=3000
    
    volumes:
-     claraverse_data:
-     claraverse_models:
+     angelaverse_data:
+     angelaverse_models:
    ```
 
 2. **Start the Services**
@@ -246,7 +246,7 @@ ClaraVerse can be deployed as a web application using Docker:
    docker-compose up -d
    ```
 
-3. **Access ClaraVerse**
+3. **Access angelaVerse**
    ```
    http://localhost:3000
    ```
@@ -257,16 +257,16 @@ For a complete setup with all services:
 
 ```bash
 # Clone the repository
-git clone https://github.com/badboysm890/claraverse.git
-cd claraverse
+git clone https://github.com/badboysm890/angelaverse.git
+cd angelaverse
 
 # Start all services
-./start-clara.sh
+./start-angela.sh
 ```
 
 This includes:
-- **Clara Web UI** (Port 3000)
-- **Clara Backend** (Port 8000)
+- **angela Web UI** (Port 3000)
+- **angela Backend** (Port 8000)
 - **N8N** (Port 5678)
 - **ComfyUI** (Port 8188)
 - **Redis** (Port 6379)
@@ -280,9 +280,9 @@ This includes:
 
 1. **Fork and Clone**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/claraverse.git
-   cd claraverse
-   git remote add upstream https://github.com/badboysm890/claraverse.git
+   git clone https://github.com/YOUR_USERNAME/angelaverse.git
+   cd angelaverse
+   git remote add upstream https://github.com/badboysm890/angelaverse.git
    ```
 
 2. **Install Dependencies**
@@ -343,7 +343,7 @@ LOG_LEVEL=debug
 **Local AI (Recommended):**
 1. Install [Ollama](https://ollama.ai)
 2. Pull a model: `ollama pull llama2`
-3. ClaraVerse will auto-detect Ollama
+3. angelaVerse will auto-detect Ollama
 
 **Cloud AI (Optional):**
 1. Go to Settings → AI Providers
@@ -385,7 +385,7 @@ LOG_LEVEL=debug
 **Issue: "App is damaged and can't be opened" (macOS)**
 ```bash
 # Remove quarantine flag
-sudo xattr -r -d com.apple.quarantine /Applications/ClaraVerse.app
+sudo xattr -r -d com.apple.quarantine /Applications/angelaVerse.app
 ```
 
 **Issue: "DLL missing" errors (Windows)**
@@ -398,7 +398,7 @@ sudo xattr -r -d com.apple.quarantine /Applications/ClaraVerse.app
 sudo apt install fuse libfuse2
 
 # Or run with --appimage-extract-and-run
-./ClaraVerse-linux-x64.AppImage --appimage-extract-and-run
+./angelaVerse-linux-x64.AppImage --appimage-extract-and-run
 ```
 
 ### Performance Issues
@@ -418,7 +418,7 @@ sudo apt install fuse libfuse2
 ## 🆙 Updates
 
 ### Automatic Updates
-- ClaraVerse checks for updates on startup
+- angelaVerse checks for updates on startup
 - Notifications appear when updates are available
 - Updates download automatically in background
 
@@ -446,7 +446,7 @@ After installation, verify everything works:
    - [ ] Settings menu accessible
 
 2. **AI Features**
-   - [ ] Chat with Clara works
+   - [ ] Chat with angela works
    - [ ] AI providers connect (if configured)
    - [ ] File upload and analysis works
 

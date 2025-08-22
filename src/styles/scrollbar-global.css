@@ -1,4 +1,4 @@
-/* Global Scrollbar Hiding for Clara Application */
+/* Global Scrollbar Hiding for angela Application */
 /* This file ensures no scrollbars are visible anywhere in the application */
 
 /* Universal scrollbar hiding - applies to all elements */
@@ -81,8 +81,8 @@ form::-webkit-scrollbar, fieldset::-webkit-scrollbar,
   display: none !important;
 }
 
-/* Target Clara-specific components */
-[class*="clara"], [id*="clara"],
+/* Target angela-specific components */
+[class*="angela"], [id*="angela"],
 [class*="chat"], [id*="chat"],
 [class*="sidebar"], [id*="sidebar"],
 [class*="dashboard"], [id*="dashboard"] {
@@ -90,7 +90,7 @@ form::-webkit-scrollbar, fieldset::-webkit-scrollbar,
   -ms-overflow-style: none !important;
 }
 
-[class*="clara"]::-webkit-scrollbar, [id*="clara"]::-webkit-scrollbar,
+[class*="angela"]::-webkit-scrollbar, [id*="angela"]::-webkit-scrollbar,
 [class*="chat"]::-webkit-scrollbar, [id*="chat"]::-webkit-scrollbar,
 [class*="sidebar"]::-webkit-scrollbar, [id*="sidebar"]::-webkit-scrollbar,
 [class*="dashboard"]::-webkit-scrollbar, [id*="dashboard"]::-webkit-scrollbar {

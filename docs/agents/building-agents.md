@@ -14,14 +14,14 @@ By the end of this tutorial, you'll have created a **Smart Content Analyzer** th
 
 ## 📋 Prerequisites
 
-- Access to ClaraVerse Agent Studio
+- Access to angelaVerse Agent Studio
 - Basic understanding of workflows (input → process → output)
 - An AI API endpoint configured (OpenAI, Ollama, or compatible)
 
 ## 🚀 Step 1: Create Your First Workflow
 
 ### **1.1 Access Agent Studio**
-1. Open ClaraVerse in your browser
+1. Open angelaVerse in your browser
 2. Navigate to the **"Agents"** section in the sidebar
 3. Click **"Create New Flow"**
 4. Name your workflow: **"Smart Content Analyzer"**

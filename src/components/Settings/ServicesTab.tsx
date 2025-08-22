@@ -351,8 +351,8 @@ const ServicesTab: React.FC = () => {
       
       // Map service names to container names
       const containerNameMap: { [key: string]: string } = {
-        'python': 'clara_python',
-        'n8n': 'clara_n8n'
+        'python': 'angela_python',
+        'n8n': 'angela_n8n'
       };
       
       const containerName = containerNameMap[service];
@@ -536,7 +536,7 @@ const ServicesTab: React.FC = () => {
               </h4>
             </div>
             <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-              Docker is not installed or not running. Please install Docker Desktop to manage Clara's services.
+              Docker is not installed or not running. Please install Docker Desktop to manage angela's services.
             </p>
             <button
               onClick={() => window.open('https://docs.docker.com/desktop/', '_blank')}
@@ -689,7 +689,7 @@ const ServicesTab: React.FC = () => {
                LLM Service (Llama-swap)
              </h3>
              <p className="text-sm text-gray-600 dark:text-gray-400">
-               Local AI model inference service for Clara
+               Local AI model inference service for angela
              </p>
            </div>
          </div>

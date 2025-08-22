@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🎨 Building and Pushing ComfyUI Docker Container for Clara..."
+echo "🎨 Building and Pushing ComfyUI Docker Container for angela..."
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,7 +17,7 @@ DATE_TAG=$(date +%Y%m%d)
 LATEST_TAG="latest"
 
 # Docker Hub repository name
-REPO_NAME="clara17verse/clara-comfyui"
+REPO_NAME="angela17verse/angela-comfyui"
 
 echo "🔨 Building ComfyUI container with custom nodes..."
 echo "   - Acly's ComfyUI Tooling Nodes"
@@ -84,7 +84,7 @@ if [ $? -eq 0 ]; then
   echo "   - ${REPO_NAME}:${DATE_TAG}"
   echo "   - ${REPO_NAME}:with-custom-nodes"
   echo ""
-  echo "🔗 Docker Hub: https://hub.docker.com/r/clara17verse/clara-comfyui"
+  echo "🔗 Docker Hub: https://hub.docker.com/r/angela17verse/angela-comfyui"
   echo ""
   echo "🚀 Users can now pull with:"
   echo "   docker pull ${REPO_NAME}:latest"

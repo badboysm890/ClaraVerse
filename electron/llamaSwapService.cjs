@@ -38,15 +38,15 @@ class LlamaSwapService {
     
     // Handle different base directory paths for development vs production
     this.baseDir = this.getBaseBinaryDirectory();
-    this.modelsDir = path.join(os.homedir(), '.clara', 'llama-models');
+    this.modelsDir = path.join(os.homedir(), '.angela', 'llama-models');
     
     // Use userData directory for config files to avoid read-only filesystem issues in AppImage
-    const userDataDir = app && app.getPath ? app.getPath('userData') : path.join(os.homedir(), '.clara');
+    const userDataDir = app && app.getPath ? app.getPath('userData') : path.join(os.homedir(), '.angela');
     this.configPath = path.join(userDataDir, 'llama-swap-config.yaml');
     this.logPath = path.join(userDataDir, 'llama-swap.log');
     
     // Settings directory for storing performance settings and individual model configurations
-    this.settingsDir = path.join(os.homedir(), '.clara', 'settings');
+    this.settingsDir = path.join(os.homedir(), '.angela', 'settings');
     
     log.info(`Base binary directory: ${this.baseDir}`);
     log.info(`Models directory: ${this.modelsDir}`);
@@ -163,7 +163,7 @@ class LlamaSwapService {
     
     // NEW: Check for backend override first (synchronous check for constructor)
     try {
-      const overridePath = path.join(os.homedir(), '.clara', 'settings', 'backend-override.json');
+      const overridePath = path.join(os.homedir(), '.angela', 'settings', 'backend-override.json');
       if (fsSync.existsSync(overridePath)) {
         const overrideData = JSON.parse(fsSync.readFileSync(overridePath, 'utf8'));
         if (overrideData.backendId && overrideData.backendId !== 'auto') {
@@ -819,7 +819,7 @@ class LlamaSwapService {
       const buffer = Buffer.from(await response.arrayBuffer());
       
       // Create temp file
-      const tempDir = path.join(require('os').tmpdir(), 'clara-cuda-runtime');
+      const tempDir = path.join(require('os').tmpdir(), 'angela-cuda-runtime');
       await fs.mkdir(tempDir, { recursive: true });
       const tempZipPath = path.join(tempDir, 'cuda-runtime.zip');
       
@@ -1034,7 +1034,7 @@ class LlamaSwapService {
     const buffer = Buffer.from(await response.arrayBuffer());
     
     // Create temp file
-    const tempDir = path.join(require('os').tmpdir(), 'clara-gpu-binaries');
+    const tempDir = path.join(require('os').tmpdir(), 'angela-gpu-binaries');
     await fs.mkdir(tempDir, { recursive: true });
     const tempZipPath = path.join(tempDir, `${targetFolder}.zip`);
     
@@ -1257,7 +1257,7 @@ class LlamaSwapService {
         await fs.mkdir(targetPath, { recursive: true });
         
         // Create a temporary directory for extraction
-        const tempDir = path.join(require('os').tmpdir(), 'clara-linux-extract');
+        const tempDir = path.join(require('os').tmpdir(), 'angela-linux-extract');
         await fs.mkdir(tempDir, { recursive: true });
         
         const { spawn } = require('child_process');
@@ -1550,7 +1550,7 @@ class LlamaSwapService {
       const buffer = Buffer.from(await response.arrayBuffer());
       
       // Create temp file
-      const tempDir = path.join(require('os').tmpdir(), 'clara-llamaswap');
+      const tempDir = path.join(require('os').tmpdir(), 'angela-llamaswap');
       await fs.mkdir(tempDir, { recursive: true });
       
       const platform = os.platform();
@@ -1599,7 +1599,7 @@ class LlamaSwapService {
    */
   getLlamaSwapInstallDirectory() {
     // Install to a dedicated directory in app data
-    const userDataDir = app && app.getPath ? app.getPath('userData') : path.join(os.homedir(), '.clara');
+    const userDataDir = app && app.getPath ? app.getPath('userData') : path.join(os.homedir(), '.angela');
     return path.join(userDataDir, 'llama-swap');
   }
 
@@ -2088,7 +2088,7 @@ class LlamaSwapService {
 
   async ensureDirectories() {
     try {
-      await fs.mkdir(path.join(os.homedir(), '.clara'), { recursive: true });
+      await fs.mkdir(path.join(os.homedir(), '.angela'), { recursive: true });
       await fs.mkdir(this.modelsDir, { recursive: true });
       await fs.mkdir(this.settingsDir, { recursive: true });
       
@@ -3224,7 +3224,7 @@ ${cmdLine}`;
     
     this.isStarting = true;
     this.startingTimestamp = Date.now();
-    this.setStartupPhase('Initializing Clara\'s Pocket...');
+    this.setStartupPhase('Initializing angela\'s Pocket...');
     
     try {
       // Reset retry flags for fresh start attempt
@@ -3419,7 +3419,7 @@ ${cmdLine}`;
       log.info('⏱️ Final preparation before spawning process...');
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second final delay
 
-      this.setStartupPhase('Launching Clara\'s Pocket...');
+      this.setStartupPhase('Launching angela\'s Pocket...');
       this.process = spawn(this.binaryPaths.llamaSwap, args, {
         stdio: ['ignore', 'pipe', 'pipe'],
         env: this.platformManager.getPlatformEnvironment(),
@@ -3488,7 +3488,7 @@ ${cmdLine}`;
           log.error('🔒 Permission denied - this may be due to macOS security restrictions.');
           log.error('💡 If you saw a firewall prompt, make sure you clicked "Allow".');
           log.error('🔧 To fix: Go to System Preferences → Security & Privacy → Firewall → Firewall Options');
-          log.error('📝 Find your Clara app and ensure it\'s set to "Allow incoming connections"');
+          log.error('📝 Find your angela app and ensure it\'s set to "Allow incoming connections"');
         }
         if (error.includes('bind') && error.includes('cannot assign requested address')) {
           log.error('🌐 Network binding failed - possible firewall or permission issue');
@@ -3781,7 +3781,7 @@ ${cmdLine}`;
     
     try {
       // Get the backend override
-      const overridePath = path.join(os.homedir(), '.clara', 'settings', 'backend-override.json');
+      const overridePath = path.join(os.homedir(), '.angela', 'settings', 'backend-override.json');
       if (fsSync.existsSync(overridePath)) {
         const overrideData = JSON.parse(fsSync.readFileSync(overridePath, 'utf8'));
         if (overrideData.backendId && overrideData.backendId !== 'auto') {
@@ -4805,7 +4805,7 @@ ${cmdLine}`;
       const os = require('os');
       
       // Create settings directory if it doesn't exist
-      const settingsDir = path.join(os.homedir(), '.clara', 'settings');
+      const settingsDir = path.join(os.homedir(), '.angela', 'settings');
       await fs.mkdir(settingsDir, { recursive: true });
       
       // Save performance settings to file
@@ -4830,7 +4830,7 @@ ${cmdLine}`;
       const path = require('path');
       const os = require('os');
       
-      const settingsPath = path.join(os.homedir(), '.clara', 'settings', 'performance-settings.json');
+      const settingsPath = path.join(os.homedir(), '.angela', 'settings', 'performance-settings.json');
       
       // Check if settings file exists
       try {
@@ -5604,7 +5604,7 @@ ${cmdLine}`;
       const app = require('electron').app;
       
       // Try to load custom model paths from file storage
-      const settingsPath = path.join(app.getPath('userData'), 'clara-settings.json');
+      const settingsPath = path.join(app.getPath('userData'), 'angela-settings.json');
       if (fsSync.existsSync(settingsPath)) {
         const settings = JSON.parse(fsSync.readFileSync(settingsPath, 'utf8'));
         if (settings.customModelPath) {
@@ -6206,7 +6206,7 @@ ${cmdLine}`;
       log.info('🔍 mappings type:', typeof mappings);
       log.info('🔍 mappings length/keys:', Array.isArray(mappings) ? mappings.length : Object.keys(mappings).length);
       
-      const settingsDir = path.join(os.homedir(), '.clara', 'settings');
+      const settingsDir = path.join(os.homedir(), '.angela', 'settings');
       log.info('🔍 Settings directory:', settingsDir);
       
       await fs.mkdir(settingsDir, { recursive: true });
@@ -6261,7 +6261,7 @@ ${cmdLine}`;
    */
   async loadMmprojMappings() {
     try {
-      const mappingsPath = path.join(os.homedir(), '.clara', 'settings', 'mmproj-mappings.json');
+      const mappingsPath = path.join(os.homedir(), '.angela', 'settings', 'mmproj-mappings.json');
       
       // Check if mappings file exists
       try {
@@ -6823,7 +6823,7 @@ ${cmdLine}`;
    */
   async setBackendOverride(backendId) {
     try {
-      const settingsDir = path.join(os.homedir(), '.clara', 'settings');
+      const settingsDir = path.join(os.homedir(), '.angela', 'settings');
       await fs.mkdir(settingsDir, { recursive: true });
       
       const overridePath = path.join(settingsDir, 'backend-override.json');
@@ -6861,7 +6861,7 @@ ${cmdLine}`;
    */
   async getBackendOverride() {
     try {
-      const overridePath = path.join(os.homedir(), '.clara', 'settings', 'backend-override.json');
+      const overridePath = path.join(os.homedir(), '.angela', 'settings', 'backend-override.json');
       
       if (!fsSync.existsSync(overridePath)) {
         return { success: true, backendId: null, isOverridden: false };
@@ -7374,7 +7374,7 @@ ${cmdLine}`;
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Start the process
-      this.setStartupPhase('Launching Clara\'s Pocket...');
+      this.setStartupPhase('Launching angela\'s Pocket...');
       this.process = spawn(this.binaryPaths.llamaSwap, args, {
         stdio: ['ignore', 'pipe', 'pipe'],
         env: this.platformManager.getPlatformEnvironment(),

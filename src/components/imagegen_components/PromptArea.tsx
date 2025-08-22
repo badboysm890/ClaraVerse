@@ -1,11 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Settings, RefreshCw, Wand2, ImagePlus, X, Sparkles } from 'lucide-react';
 
-// Import Clara types
-import { ClaraModel, ClaraProvider } from '../../types/clara_assistant_types';
+// Import angela types
+import { angelaModel, angelaProvider } from '../../types/angela_assistant_types';
 
 // Define missing constant
-const LAST_USED_LLM_KEY = 'clara-ollama-last-used-llm';
+const LAST_USED_LLM_KEY = 'angela-ollama-last-used-llm';
 
 
 
@@ -21,8 +21,8 @@ interface PromptAreaProps {
   onEnhancePrompt?: (prompt: string, imageData?: { preview: string; buffer: ArrayBuffer; base64: string }) => Promise<string>;
   isEnhancing?: boolean;
   isLLMConnected?: boolean;
-  availableModels?: ClaraModel[];
-  providers?: ClaraProvider[];
+  availableModels?: angelaModel[];
+  providers?: angelaProvider[];
   onModelSelect?: (modelId: string) => void;
   clearImage?: boolean;
   onImageClear?: () => void;

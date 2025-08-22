@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Test script for browser build of Clara Flow SDK
+ * Test script for browser build of angela Flow SDK
  * Verifies UMD build can be loaded and basic functionality works
  */
 
@@ -12,11 +12,11 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-console.log('🌐 Testing Clara Flow SDK Browser Build...\n');
+console.log('🌐 Testing angela Flow SDK Browser Build...\n');
 
 // Check if UMD files exist
-const umdPath = path.join(__dirname, 'dist', 'clara-flow-sdk.umd.js');
-const umdMinPath = path.join(__dirname, 'dist', 'clara-flow-sdk.umd.min.js');
+const umdPath = path.join(__dirname, 'dist', 'angela-flow-sdk.umd.js');
+const umdMinPath = path.join(__dirname, 'dist', 'angela-flow-sdk.umd.min.js');
 
 console.log('📁 Checking build files...');
 
@@ -37,8 +37,8 @@ if (fs.existsSync(umdMinPath)) {
 }
 
 // Check if source map files exist
-const umdMapPath = path.join(__dirname, 'dist', 'clara-flow-sdk.umd.js.map');
-const umdMinMapPath = path.join(__dirname, 'dist', 'clara-flow-sdk.umd.min.js.map');
+const umdMapPath = path.join(__dirname, 'dist', 'angela-flow-sdk.umd.js.map');
+const umdMinMapPath = path.join(__dirname, 'dist', 'angela-flow-sdk.umd.min.js.map');
 
 if (fs.existsSync(umdMapPath)) {
   console.log('✅ UMD source map exists');
@@ -65,15 +65,15 @@ if (umdContent.includes('(function (global, factory)')) {
 }
 
 // Check for global export
-if (umdContent.includes('ClaraFlowSDK')) {
-  console.log('✅ Global ClaraFlowSDK export detected');
+if (umdContent.includes('angelaFlowSDK')) {
+  console.log('✅ Global angelaFlowSDK export detected');
 } else {
-  console.log('❌ Global ClaraFlowSDK export not found');
+  console.log('❌ Global angelaFlowSDK export not found');
 }
 
 // Check for main exports
 const expectedExports = [
-  'ClaraFlowRunner',
+  'angelaFlowRunner',
   'BrowserUtils',
   'createFlowRunner',
   'validateFlow'
@@ -129,14 +129,14 @@ console.log('\n📝 Generating CDN usage examples...');
 
 const cdnExamples = {
   unpkg: {
-    latest: 'https://unpkg.com/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.js',
-    minified: 'https://unpkg.com/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.min.js',
-    specific: 'https://unpkg.com/clara-flow-sdk@1.4.0/dist/clara-flow-sdk.umd.js'
+    latest: 'https://unpkg.com/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.js',
+    minified: 'https://unpkg.com/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.min.js',
+    specific: 'https://unpkg.com/angela-flow-sdk@1.4.0/dist/angela-flow-sdk.umd.js'
   },
   jsdelivr: {
-    latest: 'https://cdn.jsdelivr.net/npm/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.js',
-    minified: 'https://cdn.jsdelivr.net/npm/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.min.js',
-    specific: 'https://cdn.jsdelivr.net/npm/clara-flow-sdk@1.4.0/dist/clara-flow-sdk.umd.js'
+    latest: 'https://cdn.jsdelivr.net/npm/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.js',
+    minified: 'https://cdn.jsdelivr.net/npm/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.min.js',
+    specific: 'https://cdn.jsdelivr.net/npm/angela-flow-sdk@1.4.0/dist/angela-flow-sdk.umd.js'
   }
 };
 
@@ -150,36 +150,36 @@ console.log('  jsDelivr (minified):', cdnExamples.jsdelivr.minified);
 const htmlTest = `<!DOCTYPE html>
 <html>
 <head>
-    <title>Clara Flow SDK Test</title>
+    <title>angela Flow SDK Test</title>
 </head>
 <body>
-    <h1>Clara Flow SDK Browser Test</h1>
+    <h1>angela Flow SDK Browser Test</h1>
     <div id="output"></div>
     
-    <script src="./dist/clara-flow-sdk.umd.js"></script>
+    <script src="./dist/angela-flow-sdk.umd.js"></script>
     <script>
         const output = document.getElementById('output');
         
         try {
             // Test SDK loading
-            if (typeof ClaraFlowSDK !== 'undefined') {
-                output.innerHTML += '<p>✅ ClaraFlowSDK loaded successfully</p>';
+            if (typeof angelaFlowSDK !== 'undefined') {
+                output.innerHTML += '<p>✅ angelaFlowSDK loaded successfully</p>';
                 
                 // Test exports
-                const exports = Object.keys(ClaraFlowSDK);
+                const exports = Object.keys(angelaFlowSDK);
                 output.innerHTML += '<p>📦 Available exports: ' + exports.join(', ') + '</p>';
                 
                 // Test initialization
-                const runner = new ClaraFlowSDK.ClaraFlowRunner();
-                output.innerHTML += '<p>✅ ClaraFlowRunner initialized</p>';
+                const runner = new angelaFlowSDK.angelaFlowRunner();
+                output.innerHTML += '<p>✅ angelaFlowRunner initialized</p>';
                 
                 // Test browser utils
-                const isBrowser = ClaraFlowSDK.BrowserUtils.isBrowser();
+                const isBrowser = angelaFlowSDK.BrowserUtils.isBrowser();
                 output.innerHTML += '<p>🌐 Is browser: ' + isBrowser + '</p>';
                 
                 output.innerHTML += '<p>🎉 All tests passed!</p>';
             } else {
-                output.innerHTML += '<p>❌ ClaraFlowSDK not found</p>';
+                output.innerHTML += '<p>❌ angelaFlowSDK not found</p>';
             }
         } catch (error) {
             output.innerHTML += '<p>❌ Error: ' + error.message + '</p>';
@@ -203,8 +203,8 @@ if (exportsFound === expectedExports.length && !nodeCodeFound) {
   console.log('\n🎉 Browser build test PASSED!');
   console.log('📦 Ready for CDN distribution');
   console.log('\n🔗 Usage:');
-  console.log('  <script src="https://unpkg.com/clara-flow-sdk@latest/dist/clara-flow-sdk.umd.js"></script>');
-  console.log('  <script>const runner = new ClaraFlowSDK.ClaraFlowRunner();</script>');
+  console.log('  <script src="https://unpkg.com/angela-flow-sdk@latest/dist/angela-flow-sdk.umd.js"></script>');
+  console.log('  <script>const runner = new angelaFlowSDK.angelaFlowRunner();</script>');
 } else {
   console.log('\n❌ Browser build test FAILED!');
   process.exit(1);

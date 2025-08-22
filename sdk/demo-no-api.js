@@ -1,14 +1,14 @@
 /**
- * Clara Flow SDK v2.0 - Real Workflow Demo (No API Required)
- * Shows how the SDK perfectly handles real Clara Studio workflows
+ * angela Flow SDK v2.0 - Real Workflow Demo (No API Required)
+ * Shows how the SDK perfectly handles real angela Studio workflows
  */
 
-import { ClaraFlowRunner } from './dist/index.js';
+import { angelaFlowRunner } from './dist/index.js';
 import fs from 'fs';
 
-console.log('🚀 Clara Flow SDK v2.0 - Real Workflow Demo\n');
+console.log('🚀 angela Flow SDK v2.0 - Real Workflow Demo\n');
 
-// Load the actual exported workflow from Clara Studio
+// Load the actual exported workflow from angela Studio
 const realWorkflow = JSON.parse(fs.readFileSync('agent_exported/Testing_SDK_flow_sdk.json', 'utf8'));
 
 // Create a mock version without LLM for demonstration
@@ -51,10 +51,10 @@ const mockWorkflow = {
 };
 
 async function demonstrateSDK() {
-  const runner = new ClaraFlowRunner({ enableLogging: true });
+  const runner = new angelaFlowRunner({ enableLogging: true });
 
   console.log('=' .repeat(70));
-  console.log('📋 REAL CLARA STUDIO WORKFLOW ANALYSIS');
+  console.log('📋 REAL angela STUDIO WORKFLOW ANALYSIS');
   console.log('=' .repeat(70));
   
   // Analyze the REAL workflow
@@ -117,7 +117,7 @@ async function demonstrateSDK() {
   console.log('🎯 DEVELOPER SUMMARY - SDK SUCCESS!');
   console.log('=' .repeat(70));
   console.log('✅ What the SDK automatically handled:');
-  console.log('   🔍 Detected Clara Studio export format');
+  console.log('   🔍 Detected angela Studio export format');
   console.log('   📋 Analyzed workflow structure (3 nodes, 2 connections)');
   console.log('   📥 Found input requirements (1 optional input with default)');  
   console.log('   🔄 Mapped node connections correctly');
@@ -128,10 +128,10 @@ async function demonstrateSDK() {
   console.log('🚀 For developers, this workflow is now a simple API:');
   console.log();
   console.log('   ```javascript');
-  console.log('   import { ClaraFlowRunner } from "clara-flow-sdk";');
+  console.log('   import { angelaFlowRunner } from "angela-flow-sdk";');
   console.log('   import workflow from "./Testing_SDK_flow_sdk.json";');
   console.log('   ');
-  console.log('   const runner = new ClaraFlowRunner();');
+  console.log('   const runner = new angelaFlowRunner();');
   console.log('   const result = await runner.run(workflow, {');
   console.log('     "Input": "Your message here"');
   console.log('   });');

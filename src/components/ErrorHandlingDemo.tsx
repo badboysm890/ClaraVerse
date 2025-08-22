@@ -11,7 +11,7 @@ const ErrorHandlingDemo: React.FC = () => {
   const errorExamples = [
     {
       title: "Authentication Error",
-      oldMessage: "I apologize, but I encountered an error while processing your request.  (If you are using clara core - probably the model is not loaded properly. head to settings and run the balanced settings)",
+      oldMessage: "I apologize, but I encountered an error while processing your request.  (If you are using angela core - probably the model is not loaded properly. head to settings and run the balanced settings)",
       newMessage: `**Authentication Error**
 
 There was an issue with the API authentication. Please check your API key configuration.
@@ -39,7 +39,7 @@ You can:
     },
     {
       title: "Rate Limit Error",
-      oldMessage: "I apologize, but I encountered an error while processing your request.  (If you are using clara core - probably the model is not loaded properly. head to settings and run the balanced settings)",
+      oldMessage: "I apologize, but I encountered an error while processing your request.  (If you are using angela core - probably the model is not loaded properly. head to settings and run the balanced settings)",
       newMessage: `**Rate Limit Exceeded**
 
 Too many requests have been made. Please wait a moment before trying again.
@@ -67,7 +67,7 @@ You can:
     },
     {
       title: "Context Length Error",
-      oldMessage: "I apologize, but I encountered an error while processing your request.  (If you are using clara core - probably the model is not loaded properly. head to settings and run the balanced settings)",
+      oldMessage: "I apologize, but I encountered an error while processing your request.  (If you are using angela core - probably the model is not loaded properly. head to settings and run the balanced settings)",
       newMessage: `**Context Length Exceeded**
 
 The conversation has become too long for the current model. Please start a new chat or try a model with a larger context window.
@@ -95,7 +95,7 @@ You can:
     },
     {
       title: "Connection Error",
-      oldMessage: "I apologize, but I encountered an error while processing your request.  (If you are using clara core - probably the model is not loaded properly. head to settings and run the balanced settings)",
+      oldMessage: "I apologize, but I encountered an error while processing your request.  (If you are using angela core - probably the model is not loaded properly. head to settings and run the balanced settings)",
       newMessage: `**Connection Error**
 
 Unable to connect to the AI service. Please check your internet connection and service configuration.
@@ -122,7 +122,7 @@ You can:
       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h3 className="text-lg font-semibold text-blue-800 mb-2">🔧 Enhanced Error Handling Demo</h3>
         <p className="text-blue-700 mb-3">
-          Clara now shows detailed server error responses instead of generic error messages.
+          angela now shows detailed server error responses instead of generic error messages.
         </p>
         <button
           onClick={() => setShowDemo(true)}

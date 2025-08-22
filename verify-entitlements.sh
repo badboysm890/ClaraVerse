@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to the app (adjust as needed)
-APP_PATH="./release/mac-universal/Clara.app"
+APP_PATH="./release/mac-universal/angela.app"
 
 if [ ! -d "$APP_PATH" ]; then
   echo "Error: App not found at $APP_PATH"
@@ -11,7 +11,7 @@ fi
 echo "==== Verifying entitlements in app bundle ===="
 
 # Check main app executable
-MAIN_EXEC="$APP_PATH/Contents/MacOS/Clara"
+MAIN_EXEC="$APP_PATH/Contents/MacOS/angela"
 echo "Checking main executable: $MAIN_EXEC"
 codesign -d --entitlements :- "$MAIN_EXEC" | grep -i 'audio\|microphone'
 

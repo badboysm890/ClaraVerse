@@ -55,7 +55,7 @@ interface FeatureConfig {
   comfyUI: boolean;
   n8n: boolean;
   ragAndTts: boolean;
-  claraCore: boolean;
+  angelaCore: boolean;
 }
 
 interface MenuItem {
@@ -68,13 +68,13 @@ interface MenuItem {
 const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled = false }: SidebarProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeDownloads, setActiveDownloads] = useState<Record<string, DownloadProgress>>({});
-  const [claraBackgroundActivity, setClaraBackgroundActivity] = useState(false);
+  const [angelaBackgroundActivity, setangelaBackgroundActivity] = useState(false);
   const [enhancedServiceStatus, setEnhancedServiceStatus] = useState<EnhancedServiceStatus>({});
   const [featureConfig, setFeatureConfig] = useState<FeatureConfig>({
     comfyUI: true,
     n8n: true,
     ragAndTts: true,
-    claraCore: true
+    angelaCore: true
   });
 
   // Load feature configuration on mount
@@ -105,14 +105,14 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
     return () => window.removeEventListener('feature-config-updated', handleFeatureConfigUpdate);
   }, []);
 
-  // Listen for Clara background activity changes
+  // Listen for angela background activity changes
   useEffect(() => {
-    const handleClaraActivity = (event: CustomEvent) => {
-      setClaraBackgroundActivity(event.detail.active);
+    const handleangelaActivity = (event: CustomEvent) => {
+      setangelaBackgroundActivity(event.detail.active);
     };
 
-    window.addEventListener('clara-background-activity', handleClaraActivity as EventListener);
-    return () => window.removeEventListener('clara-background-activity', handleClaraActivity as EventListener);
+    window.addEventListener('angela-background-activity', handleangelaActivity as EventListener);
+    return () => window.removeEventListener('angela-background-activity', handleangelaActivity as EventListener);
   }, []);
 
   // Listen for real-time service status changes
@@ -368,7 +368,7 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
 
   const mainMenuItems: MenuItem[] = [
     { icon: Home, label: 'Dashboard', id: 'dashboard' },
-    { icon: Bot, label: 'Chat', id: 'clara' },
+    { icon: Bot, label: 'Chat', id: 'angela' },
     { icon: BrainCircuit, label: 'Agents', id: 'agents' },
     { icon: BookOpen, label: 'Notebooks', id: 'notebooks' },
     ...(alphaFeaturesEnabled ? [{ icon: Zap, label: 'Lumaui (Alpha)', id: 'lumaui' }] : []),
@@ -421,13 +421,13 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
           onClick={() => onPageChange('dashboard')}
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          <img src={logo} alt="Clara Logo" className="w-8 h-8 flex-shrink-0" />
+          <img src={logo} alt="angela Logo" className="w-8 h-8 flex-shrink-0" />
           <h1 
             className={`text-2xl font-semibold text-gray-800 dark:text-gray-100 whitespace-nowrap overflow-hidden transition-all duration-300 ${
               isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
             }`}
           >
-            Clara
+            angela
           </h1>
         </button>
       </div>
@@ -449,8 +449,8 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
               >
                 <div className="relative">
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {/* Background activity indicator for Clara */}
-                  {item.id === 'clara' && claraBackgroundActivity && (
+                  {/* Background activity indicator for angela */}
+                  {item.id === 'angela' && angelaBackgroundActivity && (
                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   )}
                   {/* Simple ping indicators for n8n and image-gen when responding */}
@@ -465,7 +465,7 @@ const Sidebar = ({ activePage = 'dashboard', onPageChange, alphaFeaturesEnabled 
                 >
                   {item.label}
                   {/* Background activity text indicator when expanded */}
-                  {item.id === 'clara' && claraBackgroundActivity && isExpanded && (
+                  {item.id === 'angela' && angelaBackgroundActivity && isExpanded && (
                     <span className="ml-2 text-xs text-green-500 font-medium">●</span>
                   )}
                 </span>

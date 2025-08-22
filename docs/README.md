@@ -1,5 +1,5 @@
 ---
-title: "ClaraVerse Documentation"
+title: "angelaVerse Documentation"
 description: "Your Complete AI Development Suite - 100% Local, Privacy-First"
 category: "overview"
 order: 1
@@ -7,17 +7,17 @@ lastUpdated: "2024-01-15"
 contributors: ["badboysm890"]
 ---
 
-# 🌟 ClaraVerse Documentation
+# 🌟 angelaVerse Documentation
 
 > **Your Complete AI Development Suite - 100% Local, Privacy-First**
 
-Welcome to ClaraVerse, the most comprehensive local AI development environment that brings together all the tools you need for AI-powered development, automation, and creativity - without ever sending your data to the cloud.
+Welcome to angelaVerse, the most comprehensive local AI development environment that brings together all the tools you need for AI-powered development, automation, and creativity - without ever sending your data to the cloud.
 
-## 🚀 What is ClaraVerse?
+## 🚀 What is angelaVerse?
 
-ClaraVerse is not just another AI chat interface. It's a complete AI superstack that runs entirely on your machine, providing:
+angelaVerse is not just another AI chat interface. It's a complete AI superstack that runs entirely on your machine, providing:
 
-- **🤖 Advanced AI Assistant** - Clara, your intelligent coding companion
+- **🤖 Advanced AI Assistant** - angela, your intelligent coding companion
 - **🎨 Web Development Suite** - LumaUI for full-stack development
 - **🔧 Agent Builder** - Create and deploy custom AI agents
 - **🖼️ Image Generation** - Local Stable Diffusion with ComfyUI
@@ -51,9 +51,9 @@ The Dashboard is your customizable home base featuring:
 - Webhook Widget: External service integration
 ```
 
-### 🤖 Clara Assistant - Your AI Coding Companion
+### 🤖 angela Assistant - Your AI Coding Companion
 
-Clara is an advanced AI assistant with autonomous capabilities:
+angela is an advanced AI assistant with autonomous capabilities:
 
 **🧠 Intelligent Features:**
 - **Multi-Provider Support** - OpenAI, Anthropic, Ollama, OpenRouter
@@ -65,7 +65,7 @@ Clara is an advanced AI assistant with autonomous capabilities:
 
 **🛠️ Advanced Capabilities:**
 ```typescript
-// Clara's toolkit includes:
+// angela's toolkit includes:
 - Code analysis and generation
 - File system operations
 - Web research and data processing
@@ -77,7 +77,7 @@ Clara is an advanced AI assistant with autonomous capabilities:
 ```
 
 **🎨 Artifact System:**
-Clara can automatically generate:
+angela can automatically generate:
 - Interactive charts and graphs
 - Mermaid diagrams and flowcharts
 - Data visualizations
@@ -190,7 +190,7 @@ Jupyter notebook integration for data science and exploration:
 
 ## 🛡️ Privacy & Security
 
-ClaraVerse is built with privacy as a core principle:
+angelaVerse is built with privacy as a core principle:
 
 **🔒 Local-First Architecture:**
 - **No Cloud Dependencies** - Everything runs on your machine
@@ -221,18 +221,18 @@ ClaraVerse is built with privacy as a core principle:
 
 ### ⚡ Quick Start
 
-1. **Download ClaraVerse** from the releases page
+1. **Download angelaVerse** from the releases page
 2. **Install** the application for your platform
-3. **Launch** ClaraVerse and complete the onboarding
+3. **Launch** angelaVerse and complete the onboarding
 4. **Configure** your AI providers in Settings
-5. **Start Creating** - Choose your first project or chat with Clara!
+5. **Start Creating** - Choose your first project or chat with angela!
 
 ### 🎯 First Steps
 
 **For Developers:**
 1. Open **LumaUI** → Create a new React project
 2. Use **Smart Scaffolding** to generate a complete app
-3. Chat with **Clara** for coding assistance
+3. Chat with **angela** for coding assistance
 
 **For Automation:**
 1. Open **N8N** → Create your first workflow
@@ -252,7 +252,7 @@ Experimental features for early adopters:
 
 - **Advanced Agent Orchestration** - Multi-agent systems
 - **Custom Model Training** - Train your own AI models
-- **Plugin Architecture** - Extend ClaraVerse with custom plugins
+- **Plugin Architecture** - Extend angelaVerse with custom plugins
 - **Team Collaboration** - Share projects and agents
 - **Cloud Synchronization** - Optional cloud backup
 
@@ -265,7 +265,7 @@ Experimental features for early adopters:
 - Widget personalization
 
 **Configuration:**
-- Custom system prompts for Clara
+- Custom system prompts for angela
 - Provider-specific settings
 - Keyboard shortcuts
 - Startup preferences
@@ -288,7 +288,7 @@ Experimental features for early adopters:
 
 ### 🎯 Contributing
 
-ClaraVerse is open source and welcomes contributions:
+angelaVerse is open source and welcomes contributions:
 
 - **Code Contributions**: Features, bug fixes, improvements
 - **Documentation**: Help improve our docs
@@ -307,11 +307,11 @@ ClaraVerse is open source and welcomes contributions:
 
 ### 🎯 Future Vision
 
-ClaraVerse aims to be the complete local AI development environment, providing everything you need to build, deploy, and manage AI-powered applications without compromising on privacy or requiring expensive cloud services.
+angelaVerse aims to be the complete local AI development environment, providing everything you need to build, deploy, and manage AI-powered applications without compromising on privacy or requiring expensive cloud services.
 
 ---
 
-## 🌟 Why Choose ClaraVerse?
+## 🌟 Why Choose angelaVerse?
 
 - **🔒 Privacy-First** - Your data stays on your machine
 - **💰 Cost-Effective** - No expensive cloud bills
@@ -322,4 +322,4 @@ ClaraVerse aims to be the complete local AI development environment, providing e
 
 ---
 
-*Ready to transform your development workflow? [Download ClaraVerse](https://github.com/badboysm890/claraverse/releases) and join the future of local AI development!* 
+*Ready to transform your development workflow? [Download angelaVerse](https://github.com/badboysm890/angelaverse/releases) and join the future of local AI development!* 

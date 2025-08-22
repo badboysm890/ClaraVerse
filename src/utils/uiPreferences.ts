@@ -60,7 +60,7 @@ export const LETTER_SPACING_OPTIONS = [
 
 // Popular accent color options
 export const ACCENT_COLOR_OPTIONS = [
-  { value: '#ec4899', label: 'Sakura Pink', description: 'Classic Clara pink' },
+  { value: '#ec4899', label: 'Sakura Pink', description: 'Classic angela pink' },
   { value: '#3b82f6', label: 'Blue', description: 'Professional blue' },
   { value: '#8b5cf6', label: 'Purple', description: 'Royal purple' },
   { value: '#06b6d4', label: 'Cyan', description: 'Ocean cyan' },

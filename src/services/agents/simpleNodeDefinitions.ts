@@ -11,7 +11,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Provides input values to the workflow - supports text, JSON, and numbers',
     icon: 'input',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [],
     outputs: [
       {
@@ -66,7 +66,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Parse JSON data and optionally extract specific fields',
     icon: 'braces',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'input',
@@ -118,7 +118,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Displays the final result of the workflow',
     icon: 'external-link',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'input',
@@ -168,7 +168,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Conditional logic based on expression evaluation',
     icon: 'git-branch',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'input',
@@ -234,7 +234,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Large Language Model chat interface with multiple inputs and image support',
     icon: 'brain',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'system',
@@ -354,7 +354,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Generate structured JSON outputs using OpenAI structured response format',
     icon: 'chart',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'prompt',
@@ -462,7 +462,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Accepts image files and outputs base64 encoded data',
     icon: 'image',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [],
     outputs: [
       {
@@ -526,7 +526,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Upload PDF files and extract text content',
     icon: 'file-text',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [],
     outputs: [
       {
@@ -592,7 +592,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Upload any file and output in various formats (base64, binary, text, etc.)',
     icon: 'upload',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [],
     outputs: [
       {
@@ -690,7 +690,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Combine two text inputs with configurable separation options for prompt building',
     icon: 'type',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'text1',
@@ -798,7 +798,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Provides static text content with fixed values set during workflow creation',
     icon: 'file-text',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [],
     outputs: [
       {
@@ -893,7 +893,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Transcribe binary audio data using OpenAI Whisper API',
     icon: 'mic',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'audioData',
@@ -1024,7 +1024,7 @@ export const simpleNodeDefinitions: NodeDefinition[] = [
     description: 'Production-grade HTTP/REST API client with comprehensive features',
     icon: 'globe',
     version: '1.0.0',
-    author: 'Clara',
+    author: 'angela',
     inputs: [
       {
         id: 'url',

@@ -1,8 +1,8 @@
 @echo off
-:: ComfyUI Docker Build Script for Clara (Windows)
+:: ComfyUI Docker Build Script for angela (Windows)
 setlocal enabledelayedexpansion
 
-echo 🎨 Building Clara ComfyUI Docker Image...
+echo 🎨 Building angela ComfyUI Docker Image...
 
 :: Change to project root (parent directory of scripts)
 cd /d "%~dp0.."
@@ -21,7 +21,7 @@ if "%ARCH%"=="AMD64" (
 echo 🔧 Detected architecture: %ARCH% (Docker: %DOCKER_ARCH%)
 
 :: Set image name with architecture tag
-set "IMAGE_NAME=clara17verse/clara-comfyui"
+set "IMAGE_NAME=angela17verse/angela-comfyui"
 set "TAG=latest-%DOCKER_ARCH%"
 set "FULL_IMAGE_NAME=%IMAGE_NAME%:%TAG%"
 
@@ -39,7 +39,7 @@ if %ERRORLEVEL% equ 0 (
     docker images "%IMAGE_NAME%"
     
     echo.
-    echo 🚀 You can now start Clara and use the bundled ComfyUI!
+    echo 🚀 You can now start angela and use the bundled ComfyUI!
     echo    • ComfyUI will be available at http://localhost:8188
     echo    • Access ComfyUI Manager through the Image Generation page
     echo    • First startup may take a few minutes to download models
@@ -54,12 +54,12 @@ if /i "%test_image%"=="y" (
     echo 🧪 Testing ComfyUI container...
     
     :: Stop any existing container
-    docker stop clara_comfyui_test >nul 2>&1
-    docker rm clara_comfyui_test >nul 2>&1
+    docker stop angela_comfyui_test >nul 2>&1
+    docker rm angela_comfyui_test >nul 2>&1
     
     :: Run test container
     echo 🔄 Starting test container...
-    docker run -d --name clara_comfyui_test --platform linux/%DOCKER_ARCH% -p 8188:8188 --gpus all "%FULL_IMAGE_NAME%"
+    docker run -d --name angela_comfyui_test --platform linux/%DOCKER_ARCH% -p 8188:8188 --gpus all "%FULL_IMAGE_NAME%"
     
     echo ⏳ Waiting for ComfyUI to start (30 seconds)...
     timeout /t 30 /nobreak >nul
@@ -71,10 +71,10 @@ if /i "%test_image%"=="y" (
         echo 🌐 Access it at: http://localhost:8188
         echo.
         echo 🛑 To stop the test container:
-        echo    docker stop clara_comfyui_test && docker rm clara_comfyui_test
+        echo    docker stop angela_comfyui_test && docker rm angela_comfyui_test
     ) else (
         echo ❌ ComfyUI test failed - container may still be starting
-        echo 📋 Check logs with: docker logs clara_comfyui_test
+        echo 📋 Check logs with: docker logs angela_comfyui_test
     )
 )
 

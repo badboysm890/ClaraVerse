@@ -52,7 +52,7 @@ const UPDATE_CONSTANTS = {
 };
 
 // Update preferences management
-const UPDATE_PREFERENCES_KEY = 'clara-update-preferences';
+const UPDATE_PREFERENCES_KEY = 'angela-update-preferences';
 const DEFAULT_UPDATE_PREFERENCES = {
   autoCheck: true,
   checkFrequency: 'daily', // 'daily', 'weekly', 'monthly', 'manual'
@@ -131,7 +131,7 @@ async function makeRobustRequest(url, options = {}) {
     ...options,
     signal: controller?.signal,
     headers: {
-      'User-Agent': 'Clara-App-Updater',
+      'User-Agent': 'angela-App-Updater',
       'Accept': 'application/vnd.github.v3+json',
       ...options.headers
     }
@@ -369,7 +369,7 @@ class PlatformUpdateService {
   constructor() {
     this.platform = process.platform;
     this.currentVersion = getSafeCurrentVersion();
-    this.githubRepo = 'badboysm890/ClaraVerse';
+    this.githubRepo = 'badboysm890/angelaVerse';
     this.isChecking = false; // Prevent concurrent checks
     this.downloadProgress = null; // Track download progress
     this.backgroundDownload = null; // Background download state
@@ -710,7 +710,7 @@ function shouldAutoCheck(preferences = getUpdatePreferences()) {
         return await dialog.showMessageBox({
           type: 'info',
           title: 'No Updates Available',
-          message: 'You are running the latest version of Clara.',
+          message: 'You are running the latest version of angela.',
           detail: `Current version: ${this.currentVersion}`,
           buttons: ['OK'],
           defaultId: 0
@@ -726,7 +726,7 @@ function shouldAutoCheck(preferences = getUpdatePreferences()) {
         return await dialog.showMessageBox({
           type: 'info',
           title: 'Update Available',
-          message: `Clara ${latestVersion} is available`,
+          message: `angela ${latestVersion} is available`,
           detail: `You have ${this.currentVersion}. Would you like to download and install the update automatically?\n\n${truncatedNotes ? `What's new:\n${truncatedNotes}` : 'Click "View Release Notes" for details.'}`,
           buttons: ['Download & Install', 'View Release Notes', 'Later'],
           defaultId: 0,
@@ -755,7 +755,7 @@ function shouldAutoCheck(preferences = getUpdatePreferences()) {
         return await dialog.showMessageBox({
           type: 'info',
           title: 'Update Available',
-          message: `Clara ${latestVersion} is available`,
+          message: `angela ${latestVersion} is available`,
           detail: `You have ${this.currentVersion}. A new version is available for download.\n\nOn ${platformName}, updates need to be installed manually for security reasons.\n\n${truncatedNotes ? `What's new:\n${truncatedNotes}` : 'Click "View Release Notes" for details.'}`,
           buttons: ['Download Now', 'View Release Notes', 'Later'],
           defaultId: 0,
@@ -906,7 +906,7 @@ function setupAutoUpdater(mainWindow) {
           dialog.showMessageBox({
             type: 'info',
             title: 'No Updates Available',
-            message: 'You are running the latest version of Clara.',
+            message: 'You are running the latest version of angela.',
             buttons: ['OK'],
             defaultId: 0
           }).catch(error => {
@@ -1200,7 +1200,7 @@ class LlamacppUpdateService {
       const buffer = Buffer.from(await response.arrayBuffer());
       
       // Create temporary file
-      const tempDir = path.join(require('os').tmpdir(), 'clara-llamacpp-update');
+      const tempDir = path.join(require('os').tmpdir(), 'angela-llamacpp-update');
       await fs.mkdir(tempDir, { recursive: true });
       const tempZipPath = path.join(tempDir, 'llamacpp-binaries.zip');
       
@@ -1232,15 +1232,15 @@ class LlamacppUpdateService {
         const platformInfo = this.getPlatformInfo();
         const targetPlatformDir = path.join(this.binariesPath, platformInfo.platformDir);
         
-        // Backup current official llama.cpp files only (preserving Clara's custom files)
+        // Backup current official llama.cpp files only (preserving angela's custom files)
         const backupDir = path.join(this.binariesPath, `${platformInfo.platformDir}-backup-${Date.now()}`);
         if (fsSync.existsSync(targetPlatformDir)) {
           await fs.mkdir(backupDir, { recursive: true });
           
-          // Only backup official llama.cpp files, leave Clara's custom files alone
+          // Only backup official llama.cpp files, leave angela's custom files alone
           const files = await fs.readdir(targetPlatformDir);
           for (const file of files) {
-            // Only backup official llama.cpp files (not Clara's custom binaries)
+            // Only backup official llama.cpp files (not angela's custom binaries)
             if (this.isOfficialLlamacppFile(file)) {
               const sourcePath = path.join(targetPlatformDir, file);
               const backupPath = path.join(backupDir, file);
@@ -1293,7 +1293,7 @@ class LlamacppUpdateService {
         await this.validateInstallation(targetPlatformDir);
         
         logger.info(`Successfully updated llama.cpp binaries and libraries to version ${updateInfo.latestVersion}`);
-        logger.info(`Clara's custom binaries (like llama-swap) were preserved and not modified`);
+        logger.info(`angela's custom binaries (like llama-swap) were preserved and not modified`);
         if (cudaRuntimeFiles.length > 0) {
           logger.info(`CUDA runtime binaries were also updated for optimal GPU acceleration`);
         }
@@ -1309,7 +1309,7 @@ class LlamacppUpdateService {
       // Cleanup
       await fs.rm(tempDir, { recursive: true, force: true });
       
-      const successMessage = `Successfully updated llama.cpp binaries and libraries to version ${updateInfo.latestVersion}. Clara's custom binaries were preserved. Services have been restarted.`;
+      const successMessage = `Successfully updated llama.cpp binaries and libraries to version ${updateInfo.latestVersion}. angela's custom binaries were preserved. Services have been restarted.`;
       const cudaMessage = cudaRuntimeFiles.length > 0 ? ` CUDA runtime binaries were also updated for optimal GPU acceleration.` : '';
       
       return { 
@@ -1339,7 +1339,7 @@ class LlamacppUpdateService {
       const buffer = Buffer.from(await response.arrayBuffer());
       
       // Create temporary file
-      const tempDir = path.join(require('os').tmpdir(), 'clara-llamacpp-update');
+      const tempDir = path.join(require('os').tmpdir(), 'angela-llamacpp-update');
       await fs.mkdir(tempDir, { recursive: true });
       const tempZipPath = path.join(tempDir, 'llamacpp-binaries.zip');
       
@@ -1376,12 +1376,12 @@ class LlamacppUpdateService {
         const platformInfo = this.getPlatformInfo();
         const targetPlatformDir = path.join(this.binariesPath, platformInfo.platformDir);
         
-        // Backup current official llama.cpp files only (preserving Clara's custom files)
+        // Backup current official llama.cpp files only (preserving angela's custom files)
         const backupDir = path.join(this.binariesPath, `${platformInfo.platformDir}-backup-${Date.now()}`);
         if (fsSync.existsSync(targetPlatformDir)) {
           await fs.mkdir(backupDir, { recursive: true });
           
-          // Only backup official llama.cpp files, leave Clara's custom files alone
+          // Only backup official llama.cpp files, leave angela's custom files alone
           const files = await fs.readdir(targetPlatformDir);
           for (const file of files) {
             if (this.isOfficialLlamacppFile(file)) {
@@ -1445,7 +1445,7 @@ class LlamacppUpdateService {
       // Cleanup
       await fs.rm(tempDir, { recursive: true, force: true });
       
-      const successMessage = `Successfully updated llama.cpp binaries and libraries to version ${updateInfo.latestVersion}. Clara's custom binaries were preserved. Services have been restarted.`;
+      const successMessage = `Successfully updated llama.cpp binaries and libraries to version ${updateInfo.latestVersion}. angela's custom binaries were preserved. Services have been restarted.`;
       const cudaMessage = cudaRuntimeFiles.length > 0 ? ` CUDA runtime binaries were also updated for optimal GPU acceleration (Windows fallback).` : '';
       
       return { 
@@ -1648,10 +1648,10 @@ class LlamacppUpdateService {
   }
 
   // Check if a file is an official llama.cpp file (binaries, libraries, headers, etc.)
-  // Now includes ALL files except Clara's custom binaries
+  // Now includes ALL files except angela's custom binaries
   isOfficialLlamacppFile(fileName) {
-    // Exclude Clara's custom binaries - these are the ONLY files we don't want to touch
-    const claraCustomBinaries = [
+    // Exclude angela's custom binaries - these are the ONLY files we don't want to touch
+    const angelaCustomBinaries = [
       'llama-swap',
       'llama-swap.exe',
       'llama-swap-darwin',
@@ -1660,8 +1660,8 @@ class LlamacppUpdateService {
       'llama-swap-win32-x64.exe'
     ];
     
-    // Don't touch Clara's custom binaries (llamaswap files)
-    if (claraCustomBinaries.some(custom => fileName.includes(custom))) {
+    // Don't touch angela's custom binaries (llamaswap files)
+    if (angelaCustomBinaries.some(custom => fileName.includes(custom))) {
       return false;
     }
     
@@ -1724,8 +1724,8 @@ class LlamacppUpdateService {
         if (entry.isDirectory()) {
           await searchDirectory(fullPath);
         } else if (entry.isFile()) {
-          // Skip Clara's custom llamaswap binaries
-          const claraCustomBinaries = [
+          // Skip angela's custom llamaswap binaries
+          const angelaCustomBinaries = [
             'llama-swap',
             'llama-swap.exe',
             'llama-swap-darwin',
@@ -1735,8 +1735,8 @@ class LlamacppUpdateService {
           ];
           
           // Don't include llamaswap files
-          if (claraCustomBinaries.some(custom => entry.name.includes(custom))) {
-            logger.info(`Skipping Clara custom binary: ${entry.name}`);
+          if (angelaCustomBinaries.some(custom => entry.name.includes(custom))) {
+            logger.info(`Skipping angela custom binary: ${entry.name}`);
             continue;
           }
           

@@ -9,7 +9,7 @@ interface ExportModalProps {
   hasCustomNodes: boolean;
 }
 
-type ExportFormat = 'clara-native' | 'clara-sdk' | 'sdk-code';
+type ExportFormat = 'angela-native' | 'angela-sdk' | 'sdk-code';
 
 interface ExportOption {
   id: ExportFormat;
@@ -32,30 +32,30 @@ const ExportModal: React.FC<ExportModalProps> = ({
   currentFlow,
   hasCustomNodes
 }) => {
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('clara-sdk');
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('angela-sdk');
   const [isExporting, setIsExporting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
 
   const exportOptions: ExportOption[] = [
     {
-      id: 'clara-native',
+      id: 'angela-native',
       name: 'Standard JSON',
-      description: 'Classic Clara Agent Studio format for sharing and backup',
+      description: 'Classic angela Agent Studio format for sharing and backup',
       icon: <FileText className="w-5 h-5" />,
       features: [
-        'Compatible with all Clara versions',
+        'Compatible with all angela versions',
         'Lightweight file size',
         'Easy to share and backup',
         'Standard JSON format'
       ],
-      useCase: 'Best for sharing flows between Clara installations',
+      useCase: 'Best for sharing flows between angela installations',
       fileExtension: '.json',
       color: 'blue',
       gradient: 'from-blue-500 to-blue-600'
     },
     {
-      id: 'clara-sdk',
+      id: 'angela-sdk',
       name: 'SDK Enhanced',
       description: 'JSON format with embedded custom nodes for SDK execution',
       icon: <Download className="w-5 h-5" />,
@@ -66,7 +66,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
         'SDK compatible',
         'Preserves all functionality'
       ],
-      useCase: 'Perfect for running flows with the Clara SDK',
+      useCase: 'Perfect for running flows with the angela SDK',
       fileExtension: '.json',
       color: 'green',
       gradient: 'from-green-500 to-green-600',
@@ -113,7 +113,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
 
   const handleCopyInstallCommand = () => {
     if (selectedFormat === 'sdk-code') {
-      navigator.clipboard.writeText('npm install clara-flow-sdk');
+      navigator.clipboard.writeText('npm install angela-flow-sdk');
     }
   };
 
@@ -210,7 +210,7 @@ const ExportModal: React.FC<ExportModalProps> = ({
             </div>
 
             {/* Custom Nodes Warning */}
-            {hasCustomNodes && selectedFormat === 'clara-native' && (
+            {hasCustomNodes && selectedFormat === 'angela-native' && (
               <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
                 <div className="flex items-start gap-2">
                   <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
@@ -298,10 +298,10 @@ const ExportModal: React.FC<ExportModalProps> = ({
                 <div className="space-y-3 text-sm">
                   <div>
                     <p className="text-purple-800 dark:text-purple-200 mb-2">
-                      1. Install the Clara Flow SDK:
+                      1. Install the angela Flow SDK:
                     </p>
                     <div className="flex items-center gap-2 bg-gray-900 dark:bg-black rounded p-2 font-mono text-green-400">
-                      <span className="flex-1">npm install clara-flow-sdk</span>
+                      <span className="flex-1">npm install angela-flow-sdk</span>
                       <button
                         onClick={handleCopyInstallCommand}
                         className="p-1 hover:bg-gray-800 rounded transition-colors"

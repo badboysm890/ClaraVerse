@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClaraVerse - Feature Selection</title>
+    <title>angelaVerse - Feature Selection</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -214,7 +214,7 @@
                     <i data-lucide="sparkles" class="w-6 h-6 sm:w-7 sm:h-7 text-white"></i>
                 </div>
                                  <h1 class="font-quicksand text-2xl sm:text-3xl lg:text-4xl font-bold sakura-text-gradient">
-                     ClaraVerse
+                     angelaVerse
                  </h1>
             </div>
             
@@ -232,7 +232,7 @@
                  <!-- Core notice -->
          <div class="glass rounded-2xl p-3 sm:p-4 lg:p-5 mb-4 sm:mb-6 text-center text-xs sm:text-sm opacity-0 animate-slide-in-up animate-delay-600">
             <p class="text-white">
-                <span class="text-amber-400 font-semibold">Clara Core</span> (AI Assistant & Chat) is always enabled and provides the foundation for all other features.
+                <span class="text-amber-400 font-semibold">angela Core</span> (AI Assistant & Chat) is always enabled and provides the foundation for all other features.
             </p>
         </div>
 
@@ -412,8 +412,8 @@
         function toggleFeature(card) {
             const feature = card.dataset.feature;
             
-            // Don't allow disabling Clara Core
-            if (feature === 'claraCore') return;
+            // Don't allow disabling angela Core
+            if (feature === 'angelaCore') return;
             
             // Toggle selection with animation
             const isSelected = card.classList.toggle('selected');
@@ -476,8 +476,8 @@
                 selectedFeatures[feature] = card.classList.contains('selected');
             });
 
-            // Always ensure Clara Core is enabled
-            selectedFeatures.claraCore = true;
+            // Always ensure angela Core is enabled
+            selectedFeatures.angelaCore = true;
 
             console.log('Sending feature selection to main process:', selectedFeatures);
             

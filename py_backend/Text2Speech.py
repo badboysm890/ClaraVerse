@@ -36,7 +36,7 @@ try:
 except ImportError:
     KOKORO_ONNX_AVAILABLE = False
 
-logger = logging.getLogger("clara-text2speech")
+logger = logging.getLogger("angela-text2speech")
 
 class Text2Speech:
     def __init__(self, engine="auto", language="en", slow=False, voice="af_sarah", speed=1.0):

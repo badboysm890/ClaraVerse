@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 
 /**
- * Clara Flow SDK - Node.js Example
+ * angela Flow SDK - Node.js Example
  * 
- * This example demonstrates how to load and execute a Clara flow
+ * This example demonstrates how to load and execute a angela flow
  * in a Node.js environment using the SDK.
  */
 
-const { ClaraFlowRunner } = require('../dist/clara-flow-sdk.cjs.js');
+const { angelaFlowRunner } = require('../dist/angela-flow-sdk.cjs.js');
 const fs = require('fs');
 const path = require('path');
 
 async function runExample() {
-  console.log('🚀 Clara Flow SDK - Node.js Example\n');
+  console.log('🚀 angela Flow SDK - Node.js Example\n');
 
   try {
     // Initialize the flow runner with logging enabled
-    const runner = new ClaraFlowRunner({
+    const runner = new angelaFlowRunner({
       enableLogging: true,
       logLevel: 'info',
       timeout: 30000
@@ -29,7 +29,7 @@ async function runExample() {
       version: '1.0.0',
       name: 'Text Processing Flow',
       description: 'A simple flow that processes text input',
-      exportFormat: 'clara-sdk',
+      exportFormat: 'angela-sdk',
       nodes: [
         {
           id: 'input-1',
@@ -37,7 +37,7 @@ async function runExample() {
           name: 'Text Input',
           data: {
             inputType: 'string',
-            defaultValue: 'Hello, Clara SDK!'
+            defaultValue: 'Hello, angela SDK!'
           },
           position: { x: 100, y: 100 }
         },
@@ -126,7 +126,7 @@ async function runExample() {
 
     // Execute the flow with input data
     const inputs = {
-      'Text Input': 'Hello, Clara Flow SDK!'
+      'Text Input': 'Hello, angela Flow SDK!'
     };
 
     console.log('🔧 Executing flow with inputs:', inputs);
@@ -158,7 +158,7 @@ async function loadFlowFromFile(filePath) {
   try {
     const flowData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     
-    const runner = new ClaraFlowRunner({
+    const runner = new angelaFlowRunner({
       enableLogging: true
     });
 
@@ -177,7 +177,7 @@ async function loadFlowFromFile(filePath) {
 async function batchProcessing() {
   console.log('\n🔄 Batch processing example');
   
-  const runner = new ClaraFlowRunner({
+  const runner = new angelaFlowRunner({
     enableLogging: false, // Disable logging for batch processing
     timeout: 10000
   });
@@ -205,7 +205,7 @@ async function batchProcessing() {
 async function validateCustomNodes() {
   console.log('\n🔍 Custom node validation example');
   
-  const runner = new ClaraFlowRunner();
+  const runner = new angelaFlowRunner();
   
   // Validate a flow before execution
   const validation = runner.validateFlow(sampleFlow);

@@ -117,11 +117,11 @@ const ImageGenHeader: React.FC<ImageGenHeaderProps> = ({
         <button
           onClick={onSwitchToComfyUI}
           className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-          title={showComfyUIInterface ? "Switch back to Clara ImageGen" : "Switch to ComfyUI Interface"}
+          title={showComfyUIInterface ? "Switch back to angela ImageGen" : "Switch to ComfyUI Interface"}
         >
           <ArrowLeftRight className="w-4 h-4" />
           <span className="text-sm font-medium">
-            {showComfyUIInterface ? "Back to Clara" : "ComfyUI Interface"}
+            {showComfyUIInterface ? "Back to angela" : "ComfyUI Interface"}
           </span>
         </button>
 

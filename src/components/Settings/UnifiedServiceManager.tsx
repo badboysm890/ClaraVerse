@@ -105,7 +105,7 @@ const UnifiedServiceManager: React.FC = () => {
     comfyUI: true,
     n8n: true,
     ragAndTts: true,
-    claraCore: true
+    angelaCore: true
   });
   const [savingFeatureConfig, setSavingFeatureConfig] = useState(false);
 
@@ -129,8 +129,8 @@ const UnifiedServiceManager: React.FC = () => {
       setSavingFeatureConfig(true);
       const newConfig = { ...featureConfig, ...updates };
       
-      // Clara Core is always enabled
-      newConfig.claraCore = true;
+      // angela Core is always enabled
+      newConfig.angelaCore = true;
       
       setFeatureConfig(newConfig);
       
@@ -476,8 +476,8 @@ const UnifiedServiceManager: React.FC = () => {
   // Core Services
   const coreServices: CoreService[] = [
     {
-      id: 'clara-core',
-      name: 'Clara Core',
+      id: 'angela-core',
+      name: 'angela Core',
       description: 'AI engine with local model management and llama.cpp',
       icon: Bot,
       status: 'running',
@@ -590,7 +590,7 @@ const UnifiedServiceManager: React.FC = () => {
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 {service.name}
-                {service.id === 'clara-core' && (
+                {service.id === 'angela-core' && (
                   <span className={`px-2 py-1 ${colors.status} text-xs font-medium rounded-full`}>
                     Built-in
                   </span>
@@ -614,7 +614,7 @@ const UnifiedServiceManager: React.FC = () => {
             }`}>
               {isRunning ? 'Running' : 'Stopped'}
             </span>
-            {service.id === 'clara-core' && (
+            {service.id === 'angela-core' && (
               <span className={`px-3 py-1 ${colors.status} text-xs font-medium rounded-full`}>
                 Built-in
               </span>
@@ -1263,7 +1263,7 @@ const UnifiedServiceManager: React.FC = () => {
                 Service Management
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Monitor and control all ClaraVerse services from one place
+                Monitor and control all angelaVerse services from one place
               </p>
             </div>
           </div>
@@ -1305,7 +1305,7 @@ const UnifiedServiceManager: React.FC = () => {
               Core Services
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Essential services that power Clara's AI capabilities
+              Essential services that power angela's AI capabilities
             </p>
           </div>
         </div>

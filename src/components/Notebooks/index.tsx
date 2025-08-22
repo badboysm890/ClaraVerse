@@ -15,7 +15,7 @@ import {
 import CreateNotebookModal from './CreateNotebookModal';
 import NotebookDetails from './NotebookDetails';
 import PythonStartupModal from '../PythonStartupModal';
-import { claraNotebookService, NotebookResponse, ProviderConfig } from '../../services/claraNotebookService';
+import { angelaNotebookService, NotebookResponse, ProviderConfig } from '../../services/angelaNotebookService';
 import { ProvidersProvider } from '../../contexts/ProvidersContext';
 import { db } from '../../db';
 
@@ -58,7 +58,7 @@ const NotebooksContent: React.FC<{ onPageChange: (page: string) => void; userNam
 
   // Subscribe to backend health changes
   useEffect(() => {
-    const unsubscribe = claraNotebookService.onHealthChange(setIsBackendHealthy);
+    const unsubscribe = angelaNotebookService.onHealthChange(setIsBackendHealthy);
     return unsubscribe;
   }, []);
 
@@ -109,7 +109,7 @@ const NotebooksContent: React.FC<{ onPageChange: (page: string) => void; userNam
     try {
       setIsLoading(true);
       setError(null);
-      const data = await claraNotebookService.listNotebooks();
+      const data = await angelaNotebookService.listNotebooks();
       setNotebooks(data.map(notebook => ({ ...notebook, isLoadingDocuments: true })));
       
       // Load document status for each notebook
@@ -126,7 +126,7 @@ const NotebooksContent: React.FC<{ onPageChange: (page: string) => void; userNam
     // Load document status for each notebook in parallel
     const statusPromises = notebookList.map(async (notebook) => {
       try {
-        const documents = await claraNotebookService.listDocuments(notebook.id);
+        const documents = await angelaNotebookService.listDocuments(notebook.id);
         const completedCount = documents.filter(doc => doc.status === 'completed').length;
         return { id: notebook.id, completedDocumentCount: completedCount };
       } catch (error) {
@@ -162,7 +162,7 @@ const NotebooksContent: React.FC<{ onPageChange: (page: string) => void; userNam
     }
 
     try {
-      const newNotebook = await claraNotebookService.createNotebook({
+      const newNotebook = await angelaNotebookService.createNotebook({
         name,
         description: description || undefined,
         llm_provider: llmProvider,
@@ -188,7 +188,7 @@ const NotebooksContent: React.FC<{ onPageChange: (page: string) => void; userNam
     }
 
     try {
-      await claraNotebookService.deleteNotebook(id);
+      await angelaNotebookService.deleteNotebook(id);
       
       // Remove from local state
       setNotebooks(prev => prev.filter(notebook => notebook.id !== id));
@@ -227,7 +227,7 @@ const NotebooksContent: React.FC<{ onPageChange: (page: string) => void; userNam
 
   const refreshDocumentStatusForNotebook = async (notebookId: string) => {
     try {
-      const documents = await claraNotebookService.listDocuments(notebookId);
+      const documents = await angelaNotebookService.listDocuments(notebookId);
       const completedCount = documents.filter(doc => doc.status === 'completed').length;
       
       setNotebooks(prev => prev.map(notebook => 

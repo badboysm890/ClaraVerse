@@ -37,7 +37,7 @@ async function optimizeComfyUI() {
     // Stop existing ComfyUI container if running
     console.log('🛑 Stopping existing ComfyUI container...');
     try {
-      const container = dockerSetup.docker.getContainer('clara_comfyui');
+      const container = dockerSetup.docker.getContainer('angela_comfyui');
       const containerInfo = await container.inspect();
       
       if (containerInfo.State.Running) {
@@ -121,7 +121,7 @@ async function optimizeComfyUI() {
       console.log('   • Memory usage: Optimized for 24GB VRAM');
     } else {
       console.log('❌ ComfyUI health check failed');
-      console.log('   Check Docker logs: docker logs clara_comfyui');
+      console.log('   Check Docker logs: docker logs angela_comfyui');
     }
 
   } catch (error) {

@@ -93,7 +93,7 @@ export interface PersonalInfo {
 export interface Provider {
   id: string;
   name: string;
-  type: 'claras-pocket' | 'openai' | 'openai_compatible' | 'ollama' | 'openrouter';
+  type: 'angelas-pocket' | 'openai' | 'openai_compatible' | 'ollama' | 'openrouter';
   baseUrl?: string;
   apiKey?: string;
   isEnabled: boolean;
@@ -144,9 +144,9 @@ export interface Tool {
   isEnabled: boolean;
 }
 
-const DB_PREFIX = 'clara_db_';
+const DB_PREFIX = 'angela_db_';
 
-const DEFAULT_SYSTEM_PROMPT = `You are Clara, a helpful and friendly AI assistant with advanced artifact generation capabilities. Your responses automatically create beautiful, interactive components that enhance user experience.
+const DEFAULT_SYSTEM_PROMPT = `You are angela, a helpful and friendly AI assistant with advanced artifact generation capabilities. Your responses automatically create beautiful, interactive components that enhance user experience.
 
 ## 🎨 COMPREHENSIVE ARTIFACT CREATION SYSTEM
 
@@ -1207,16 +1207,16 @@ export class LocalStorageDB {
 
   async addProvider(provider: Omit<Provider, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
-      // Prevent multiple Clara's Pocket providers with double-check
-      if (provider.type === 'claras-pocket') {
-        console.log('Checking for existing Clara\'s Pocket providers before adding...');
+      // Prevent multiple angela's Pocket providers with double-check
+      if (provider.type === 'angelas-pocket') {
+        console.log('Checking for existing angela\'s Pocket providers before adding...');
         const providers = await this.getAllProviders();
-        const existingClarasPocket = providers.find(p => p.type === 'claras-pocket');
-        if (existingClarasPocket) {
-          console.log(`Clara's Pocket provider already exists: ${existingClarasPocket.name} (ID: ${existingClarasPocket.id})`);
-          throw new Error("Clara's Pocket provider already exists. Only one instance is allowed.");
+        const existingangelasPocket = providers.find(p => p.type === 'angelas-pocket');
+        if (existingangelasPocket) {
+          console.log(`angela's Pocket provider already exists: ${existingangelasPocket.name} (ID: ${existingangelasPocket.id})`);
+          throw new Error("angela's Pocket provider already exists. Only one instance is allowed.");
         }
-        console.log('No existing Clara\'s Pocket provider found, proceeding with creation...');
+        console.log('No existing angela\'s Pocket provider found, proceeding with creation...');
       }
 
       const id = this.generateId();
@@ -1230,12 +1230,12 @@ export class LocalStorageDB {
       };
 
       // Double-check again right before adding (race condition protection)
-      if (provider.type === 'claras-pocket') {
+      if (provider.type === 'angelas-pocket') {
         const recentProviders = await this.getAllProviders();
-        const stillNoExisting = recentProviders.find(p => p.type === 'claras-pocket');
+        const stillNoExisting = recentProviders.find(p => p.type === 'angelas-pocket');
         if (stillNoExisting) {
-          console.log(`Race condition detected: Clara's Pocket provider was created during our check: ${stillNoExisting.name} (ID: ${stillNoExisting.id})`);
-          throw new Error("Clara's Pocket provider was created by another process. Only one instance is allowed.");
+          console.log(`Race condition detected: angela's Pocket provider was created during our check: ${stillNoExisting.name} (ID: ${stillNoExisting.id})`);
+          throw new Error("angela's Pocket provider was created by another process. Only one instance is allowed.");
         }
       }
 
@@ -1361,14 +1361,14 @@ export class LocalStorageDB {
     try {
       const providers = await this.getAllProviders();
       
-      // Clean up any duplicate Clara's Pocket providers (keep only the first one)
-      const clarasPocketProviders = providers.filter(p => p.type === 'claras-pocket');
-      if (clarasPocketProviders.length > 1) {
-        console.log(`Found ${clarasPocketProviders.length} duplicate Clara's Pocket providers, cleaning up...`);
+      // Clean up any duplicate angela's Pocket providers (keep only the first one)
+      const angelasPocketProviders = providers.filter(p => p.type === 'angelas-pocket');
+      if (angelasPocketProviders.length > 1) {
+        console.log(`Found ${angelasPocketProviders.length} duplicate angela's Pocket providers, cleaning up...`);
         // Keep the first one, delete the rest
-        for (let i = 1; i < clarasPocketProviders.length; i++) {
-          console.log(`Deleting duplicate Clara's Pocket provider: ${clarasPocketProviders[i].name} (ID: ${clarasPocketProviders[i].id})`);
-          await this.deleteProvider(clarasPocketProviders[i].id);
+        for (let i = 1; i < angelasPocketProviders.length; i++) {
+          console.log(`Deleting duplicate angela's Pocket provider: ${angelasPocketProviders[i].name} (ID: ${angelasPocketProviders[i].id})`);
+          await this.deleteProvider(angelasPocketProviders[i].id);
         }
         console.log('Cleanup completed');
       }
@@ -1376,15 +1376,15 @@ export class LocalStorageDB {
       // Get fresh providers list after cleanup
       const updatedProviders = await this.getAllProviders();
       
-      // Check if Clara's Core exists
-      const clarasCoreExists = updatedProviders.some(p => p.type === 'claras-pocket');
+      // Check if angela's Core exists
+      const angelasCoreExists = updatedProviders.some(p => p.type === 'angelas-pocket');
       
-      // Create Clara's Core if it doesn't exist - this should be the primary provider
-      if (!clarasCoreExists) {
-        console.log('No Clara\'s Core found, creating one...');
+      // Create angela's Core if it doesn't exist - this should be the primary provider
+      if (!angelasCoreExists) {
+        console.log('No angela\'s Core found, creating one...');
         await this.addProvider({
-          name: "Clara's Core",
-          type: 'claras-pocket',
+          name: "angela's Core",
+          type: 'angelas-pocket',
           baseUrl: 'http://localhost:8091/v1',
           isEnabled: true,
           isPrimary: true,
@@ -1392,9 +1392,9 @@ export class LocalStorageDB {
             description: 'Local LLM service powered by llama.cpp'
           }
         });
-        console.log('Clara\'s Core created successfully');
+        console.log('angela\'s Core created successfully');
       } else {
-        console.log('Clara\'s Core already exists, skipping creation');
+        console.log('angela\'s Core already exists, skipping creation');
       }
 
       // Check for existing Ollama installation
@@ -1416,7 +1416,7 @@ export class LocalStorageDB {
               baseUrl: 'http://localhost:11434/v1',
               apiKey: 'ollama', // Ollama doesn't require a real API key
               isEnabled: true,
-              isPrimary: false, // Clara's Core should remain primary
+              isPrimary: false, // angela's Core should remain primary
               config: {
                 description: 'Local Ollama installation detected automatically'
               }
@@ -1432,20 +1432,20 @@ export class LocalStorageDB {
         console.log('Ollama provider already exists, skipping creation');
       }
       
-      // Ensure at least one provider is primary (should be Clara's Core)
+      // Ensure at least one provider is primary (should be angela's Core)
       const finalProviders = await this.getAllProviders();
       const primaryProvider = finalProviders.find(p => p.isPrimary);
       if (!primaryProvider) {
-        console.log('No primary provider found, setting Clara\'s Core as primary...');
-        const clarasCoreProvider = finalProviders.find(p => p.type === 'claras-pocket');
-        if (clarasCoreProvider) {
-          await this.setPrimaryProvider(clarasCoreProvider.id);
-          console.log('Clara\'s Core set as primary provider');
+        console.log('No primary provider found, setting angela\'s Core as primary...');
+        const angelasCoreProvider = finalProviders.find(p => p.type === 'angelas-pocket');
+        if (angelasCoreProvider) {
+          await this.setPrimaryProvider(angelasCoreProvider.id);
+          console.log('angela\'s Core set as primary provider');
         } else {
           // Fallback: set first enabled provider as primary
           const enabledProvider = finalProviders.find(p => p.isEnabled);
           if (enabledProvider) {
-            console.log('No Clara\'s Core found, setting first enabled provider as primary...');
+            console.log('No angela\'s Core found, setting first enabled provider as primary...');
             await this.setPrimaryProvider(enabledProvider.id);
           }
         }

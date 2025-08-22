@@ -5,8 +5,8 @@
 /* Import global scrollbar hiding first to ensure it takes precedence */
 @import './styles/scrollbar-global.css';
 
-/* Clara specific styles */
-@import './styles/claraSidebar.css';
+/* angela specific styles */
+@import './styles/angelaSidebar.css';
 
 @tailwind base;
 @tailwind components;

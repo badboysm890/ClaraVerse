@@ -1,5 +1,5 @@
 /**
- * ClaraVerse Service Definitions
+ * angelaVerse Service Definitions
  * Centralized configuration for all services
  * Replaces scattered service configurations across multiple files
  */
@@ -14,7 +14,7 @@ const isMac = platform === 'darwin';
 const isLinux = platform === 'linux';
 
 // Base paths
-const appDataPath = path.join(os.homedir(), '.clara');
+const appDataPath = path.join(os.homedir(), '.angela');
 const pythonBackendDataPath = path.join(appDataPath, 'python_backend_data');
 
 /**
@@ -61,16 +61,16 @@ const SERVICE_DEFINITIONS = {
     dependencies: ['docker'],
     
     dockerContainer: {
-      name: 'clara_python',
-      image: 'clara17verse/clara-backend:latest',
+      name: 'angela_python',
+      image: 'angela17verse/angela-backend:latest',
       ports: { '5001': '5000' },
       volumes: [
-        `${pythonBackendDataPath}:/home/clara`,
-        'clara_python_models:/app/models'
+        `${pythonBackendDataPath}:/home/angela`,
+        'angela_python_models:/app/models'
       ],
       environment: [
         'PYTHONUNBUFFERED=1',
-        'CLARA_ENV=production'
+        'angela_ENV=production'
       ]
     },
     
@@ -89,9 +89,9 @@ const SERVICE_DEFINITIONS = {
     }
   },
 
-  // LlamaSwap Service (Clara's AI model manager)
+  // LlamaSwap Service (angela's AI model manager)
   llamaswap: {
-    name: "Clara's Core AI Engine",
+    name: "angela's Core AI Engine",
     type: 'binary',
     critical: true,
     autoRestart: true,
@@ -166,8 +166,8 @@ const SERVICE_DEFINITIONS = {
     },
     
     dockerContainer: {
-      name: 'clara_comfyui',
-      image: 'clara17verse/clara-comfyui:with-custom-nodes',
+      name: 'angela_comfyui',
+      image: 'angela17verse/angela-comfyui:with-custom-nodes',
       ports: { '8188': '8188' },
       volumes: [
         `${path.join(appDataPath, 'comfyui_models')}:/app/ComfyUI/models`,
@@ -228,7 +228,7 @@ const SERVICE_DEFINITIONS = {
     },
     
     dockerContainer: {
-      name: 'clara_n8n',
+      name: 'angela_n8n',
       image: 'n8nio/n8n:latest',
       ports: { '5678': '5678' },
       volumes: [
@@ -332,8 +332,8 @@ function getEnabledServices(selectedFeatures = {}) {
   // Core services (always enabled)
   const coreServices = ['docker', 'python-backend'];
   
-  // Clara Core AI (always enabled if selected)
-  if (selectedFeatures.claraCore !== false) {
+  // angela Core AI (always enabled if selected)
+  if (selectedFeatures.angelaCore !== false) {
     coreServices.push('llamaswap', 'mcp');
   }
   

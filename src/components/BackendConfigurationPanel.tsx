@@ -1006,7 +1006,7 @@ const BackendConfigurationPanel: React.FC = () => {
           )}
         </div>
 
-        {/* ClaraCore Optimizer Section */}
+        {/* angelaCore Optimizer Section */}
         <div className="space-y-4">
           <button
             onClick={() => toggleSection('optimizer')}

@@ -7,11 +7,11 @@
  * and shows how to fix it.
  */
 
-import { ClaraFlowRunner } from './dist/index.esm.js';
+import { angelaFlowRunner } from './dist/index.esm.js';
 
 console.log('🔍 Debug: LLM Output Issue\n');
 
-const runner = new ClaraFlowRunner({
+const runner = new angelaFlowRunner({
   enableLogging: true,
   logLevel: 'debug'
 });
@@ -32,7 +32,7 @@ await runner.registerCustomNode({
       // This mimics your problematic output
       return {
         "1748778913858-yc1sdo01m": "hi",
-        "1748778928358-6ddp1i7z5": "You are Clara and you are the girl friend of the user and alwau act like one",
+        "1748778928358-6ddp1i7z5": "You are angela and you are the girl friend of the user and alwau act like one",
         "1748778916835-87arlbn16": {
           "response": "hi there! 😊 How's your day going so far?",
           "usage": {

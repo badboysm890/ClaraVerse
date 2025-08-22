@@ -45,7 +45,7 @@ export interface ImportedWorkflow {
 }
 
 export interface ExportFormat {
-  format: 'clara-native' | 'json' | 'n8n-compatible';
+  format: 'angela-native' | 'json' | 'n8n-compatible';
   data: any;
   metadata: {
     exportedAt: string;
@@ -416,7 +416,7 @@ export class AgentWorkflowStorage {
   /**
    * Export workflow in specified format
    */
-  async exportWorkflow(id: string, format: ExportFormat['format'] = 'clara-native'): Promise<ExportFormat | null> {
+  async exportWorkflow(id: string, format: ExportFormat['format'] = 'angela-native'): Promise<ExportFormat | null> {
     try {
       const workflow = await this.getWorkflow(id);
       if (!workflow) return null;
@@ -424,7 +424,7 @@ export class AgentWorkflowStorage {
       let exportData: any;
 
       switch (format) {
-        case 'clara-native':
+        case 'angela-native':
           exportData = workflow;
           break;
         case 'json':
@@ -442,8 +442,8 @@ export class AgentWorkflowStorage {
         data: exportData,
         metadata: {
           exportedAt: new Date().toISOString(),
-          exportedBy: 'Clara Agent Builder',
-          platform: 'clara',
+          exportedBy: 'angela Agent Builder',
+          platform: 'angela',
           version: this.CURRENT_VERSION,
           checksum: this.generateChecksum(exportData)
         }
@@ -471,17 +471,17 @@ export class AgentWorkflowStorage {
       }
 
       switch (sourceFormat) {
-        case 'clara-native':
+        case 'angela-native':
           flow = data;
           break;
-        case 'clara-native-nested':
+        case 'angela-native-nested':
           flow = data.flow;
           // Extract custom nodes if present
           if (data.customNodes && Array.isArray(data.customNodes)) {
             customNodes = data.customNodes;
           }
           break;
-        case 'clara-sdk':
+        case 'angela-sdk':
           flow = data.flow;
           // Extract custom nodes if present
           if (data.customNodes && Array.isArray(data.customNodes)) {
@@ -568,14 +568,14 @@ export class AgentWorkflowStorage {
   private detectFormat(data: any): string {
     if (typeof data === 'string') return 'json';
     
-    // Check for new clara-sdk format (with nested flow structure)
-    if (data.format === 'clara-sdk' && data.flow) return 'clara-sdk';
+    // Check for new angela-sdk format (with nested flow structure)
+    if (data.format === 'angela-sdk' && data.flow) return 'angela-sdk';
     
-    // Check for clara-native format (with nested flow structure)
-    if (data.format === 'clara-native' && data.flow) return 'clara-native-nested';
+    // Check for angela-native format (with nested flow structure)
+    if (data.format === 'angela-native' && data.flow) return 'angela-native-nested';
     
     // Check for direct flow structure (old format)
-    if (data.nodes && data.connections && data.id) return 'clara-native';
+    if (data.nodes && data.connections && data.id) return 'angela-native';
     
     // Check for n8n format
     if (data.nodes && Array.isArray(data.nodes) && data.nodes[0]?.type) return 'n8n';
@@ -584,7 +584,7 @@ export class AgentWorkflowStorage {
   }
 
   /**
-   * Convert Clara workflow to n8n format (basic conversion)
+   * Convert angela workflow to n8n format (basic conversion)
    */
   private convertToN8NFormat(workflow: AgentFlow): any {
     // This is a simplified conversion - in production you'd want more sophisticated mapping
@@ -592,7 +592,7 @@ export class AgentWorkflowStorage {
       name: workflow.name,
       nodes: workflow.nodes.map(node => ({
         name: node.name,
-        type: this.mapClaraTypeToN8N(node.type),
+        type: this.mapangelaTypeToN8N(node.type),
         position: [node.position.x, node.position.y],
         parameters: node.data || {}
       })),
@@ -604,7 +604,7 @@ export class AgentWorkflowStorage {
   }
 
   /**
-   * Convert n8n workflow to Clara format (basic conversion)
+   * Convert n8n workflow to angela format (basic conversion)
    */
   private convertFromN8NFormat(n8nWorkflow: any): AgentFlow {
     return {
@@ -632,9 +632,9 @@ export class AgentWorkflowStorage {
   }
 
   /**
-   * Map Clara node types to n8n types
+   * Map angela node types to n8n types
    */
-  private mapClaraTypeToN8N(claraType: string): string {
+  private mapangelaTypeToN8N(angelaType: string): string {
     const typeMap: Record<string, string> = {
       'input': 'Set',
       'output': 'Set',
@@ -642,11 +642,11 @@ export class AgentWorkflowStorage {
       'json-parse': 'Code',
       'if-else': 'If'
     };
-    return typeMap[claraType] || 'Code';
+    return typeMap[angelaType] || 'Code';
   }
 
   /**
-   * Map n8n node types to Clara types
+   * Map n8n node types to angela types
    */
   private mapN8NTypeToCrara(n8nType: string): string {
     const typeMap: Record<string, string> = {
@@ -659,7 +659,7 @@ export class AgentWorkflowStorage {
   }
 
   /**
-   * Convert Clara connections to n8n format
+   * Convert angela connections to n8n format
    */
   private convertConnectionsToN8N(connections: Connection[]): any {
     // Simplified conversion - n8n has a different connection structure
@@ -680,7 +680,7 @@ export class AgentWorkflowStorage {
   }
 
   /**
-   * Convert n8n connections to Clara format
+   * Convert n8n connections to angela format
    */
   private convertN8NConnectionsToCrara(n8nConnections: any): Connection[] {
     const connections: Connection[] = [];

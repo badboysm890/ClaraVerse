@@ -8,8 +8,8 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: clara17verse/clara-backend
-  DOCKER_USERNAME: clara17verse
+  IMAGE_NAME: angela17verse/angela-backend
+  DOCKER_USERNAME: angela17verse
   # The token should be stored as a GitHub secret, not directly in the workflow
 
 jobs:

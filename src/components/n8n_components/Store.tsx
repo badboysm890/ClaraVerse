@@ -226,7 +226,7 @@ const Store: React.FC<StoreProps> = ({ onBack }) => {
       <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 animate-spin text-pink-500" />
-          <p className="text-lg text-gray-600 dark:text-gray-300">Loading ClaraVerse Store...</p>
+          <p className="text-lg text-gray-600 dark:text-gray-300">Loading angelaVerse Store...</p>
         </div>
       </div>
     );
@@ -248,7 +248,7 @@ const Store: React.FC<StoreProps> = ({ onBack }) => {
             <div className="flex items-center gap-2 px-4 py-1.5 bg-white/90 dark:bg-black/80 backdrop-blur-sm rounded-full">
               <StoreIcon className="w-5 h-5 text-pink-500 dark:text-pink-400" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                ClaraVerse Store
+                angelaVerse Store
               </span>
             </div>
           </div>

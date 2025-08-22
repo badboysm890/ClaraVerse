@@ -299,7 +299,7 @@ const UpdatesTab: React.FC<UpdatesTabProps> = ({ alphaFeaturesEnabled, setAlphaF
 
       if (result.success) {
         await checkForLlamacppUpdates();
-        console.log('Official Llama.cpp Binaries Updated:', result.message || `Successfully updated official binaries to version ${result.version}. Clara's custom binaries were preserved.`);
+        console.log('Official Llama.cpp Binaries Updated:', result.message || `Successfully updated official binaries to version ${result.version}. angela's custom binaries were preserved.`);
       } else {
         console.error('Binary update failed:', result.error);
       }
@@ -328,7 +328,7 @@ const UpdatesTab: React.FC<UpdatesTabProps> = ({ alphaFeaturesEnabled, setAlphaF
             Updates
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Keep Clara up to date with the latest features and improvements
+            Keep angela up to date with the latest features and improvements
           </p>
         </div>
       </div>
@@ -355,7 +355,7 @@ const UpdatesTab: React.FC<UpdatesTabProps> = ({ alphaFeaturesEnabled, setAlphaF
               Current Version
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Clara {updateInfo?.currentVersion || '1.0.0'} on {updateInfo ? getPlatformName(updateInfo.platform) : 'Unknown Platform'}
+              angela {updateInfo?.currentVersion || '1.0.0'} on {updateInfo ? getPlatformName(updateInfo.platform) : 'Unknown Platform'}
             </p>
           </div>
           <button
@@ -403,14 +403,14 @@ const UpdatesTab: React.FC<UpdatesTabProps> = ({ alphaFeaturesEnabled, setAlphaF
                 </div>
                 <div className="flex-1">
                   <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                    New Version Available: Clara {updateInfo.latestVersion || 'Unknown'}
+                    New Version Available: angela {updateInfo.latestVersion || 'Unknown'}
                   </h4>
 
                   {/* Platform-specific messaging */}
                   {updateInfo.isOTASupported ? (
                     <div className="space-y-3">
                       <p className="text-sm text-blue-700 dark:text-blue-300">
-                        🍎 Automatic updates are supported on macOS. Click "Download & Install" to update Clara automatically.
+                        🍎 Automatic updates are supported on macOS. Click "Download & Install" to update angela automatically.
                       </p>
                       <div className="flex gap-3">
                         <button
@@ -500,7 +500,7 @@ const UpdatesTab: React.FC<UpdatesTabProps> = ({ alphaFeaturesEnabled, setAlphaF
                     You're Up to Date!
                   </h4>
                   <p className="text-sm text-green-700 dark:text-green-300">
-                    Clara {updateInfo.currentVersion || 'Unknown'} is the latest version.
+                    angela {updateInfo.currentVersion || 'Unknown'} is the latest version.
                   </p>
                 </div>
               </div>
@@ -551,7 +551,7 @@ const UpdatesTab: React.FC<UpdatesTabProps> = ({ alphaFeaturesEnabled, setAlphaF
               Llama.cpp Binary Updates
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Keep official llama.cpp inference binaries up to date (Clara's custom binaries are preserved)
+              Keep official llama.cpp inference binaries up to date (angela's custom binaries are preserved)
             </p>
           </div>
         </div>
@@ -629,7 +629,7 @@ const UpdatesTab: React.FC<UpdatesTabProps> = ({ alphaFeaturesEnabled, setAlphaF
                           <strong>📋 What will be updated:</strong> Official llama.cpp binaries (llama-server, llama-cli, etc.)
                         </p>
                         <p className="text-orange-700 dark:text-orange-300 mt-1">
-                          <strong>🔒 What stays untouched:</strong> Clara's custom binaries (llama-swap and others)
+                          <strong>🔒 What stays untouched:</strong> angela's custom binaries (llama-swap and others)
                         </p>
                       </div>
                       
@@ -717,7 +717,7 @@ const UpdatesTab: React.FC<UpdatesTabProps> = ({ alphaFeaturesEnabled, setAlphaF
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
               <div>
-                <strong>Clara's Custom Binaries:</strong> llama-swap and other Clara-specific tools remain untouched and preserved.
+                <strong>angela's Custom Binaries:</strong> llama-swap and other angela-specific tools remain untouched and preserved.
               </div>
             </div>
             <div className="flex items-start gap-3">

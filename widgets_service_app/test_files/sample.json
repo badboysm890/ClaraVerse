@@ -1,5 +1,5 @@
 {
-  "name": "Clara File Parser Test",
+  "name": "angela File Parser Test",
   "version": "1.0.0",
   "description": "This is a sample JSON file for testing the file parser",
   "features": [
@@ -14,6 +14,6 @@
   },
   "metadata": {
     "created": "2025-08-12",
-    "author": "Clara Assistant"
+    "author": "angela Assistant"
   }
 }

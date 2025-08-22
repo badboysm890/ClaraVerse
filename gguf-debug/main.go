@@ -29,7 +29,7 @@ func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("🔍 GGUF Parser Investigation Tool")
 		fmt.Println("Usage: go run main.go <path_to_gguf_file>")
-		fmt.Println("Example: go run main.go \"C:\\Users\\Admin\\.clara\\llama-modelsss\\Qwen\\Qwen_Qwen3-30B-A3B-Instruct-2507-Q5_K_M.gguf\"")
+		fmt.Println("Example: go run main.go \"C:\\Users\\Admin\\.angela\\llama-modelsss\\Qwen\\Qwen_Qwen3-30B-A3B-Instruct-2507-Q5_K_M.gguf\"")
 		return
 	}
 

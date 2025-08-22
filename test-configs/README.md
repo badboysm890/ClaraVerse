@@ -49,8 +49,8 @@ python llama_config_tester.py
 Before running, verify the paths in the scripts match your setup:
 
 ```python
-model_path = "/Users/badfy17g/.clara/llama-models/Qwen3-30B-A3B-Q4_K_M.gguf"
-llama_server_path = "/Users/badfy17g/ClaraVerse/electron/llamacpp-binaries/darwin-arm64/llama-server"
+model_path = "/Users/badfy17g/.angela/llama-models/Qwen3-30B-A3B-Q4_K_M.gguf"
+llama_server_path = "/Users/badfy17g/angelaVerse/electron/llamacpp-binaries/darwin-arm64/llama-server"
 ```
 
 The scripts automatically check for alternative model paths from your config.yaml.
@@ -180,7 +180,7 @@ Both files are updated in real-time as tests complete, so you can monitor progre
 
 ## Integration with Your Existing Setup
 
-This testing suite is completely isolated and won't affect your current Clara setup:
+This testing suite is completely isolated and won't affect your current angela setup:
 
 - **Separate Directory**: All files are in `test-configs/`
 - **Different Ports**: Uses port 8081 (your current setup uses 9999)

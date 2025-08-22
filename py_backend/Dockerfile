@@ -1,12 +1,12 @@
 FROM python:3.11-slim
 
 # Add labels for the image
-LABEL org.opencontainers.image.title="Clara Backend"
-LABEL org.opencontainers.image.description="Clara AI Assistant Backend Service"
-LABEL org.opencontainers.image.authors="Clara Team"
-LABEL org.opencontainers.image.source="https://github.com/clara17verse/clara"
+LABEL org.opencontainers.image.title="angela Backend"
+LABEL org.opencontainers.image.description="angela AI Assistant Backend Service"
+LABEL org.opencontainers.image.authors="angela Team"
+LABEL org.opencontainers.image.source="https://github.com/angela17verse/angela"
 LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.vendor="Clara"
+LABEL org.opencontainers.image.vendor="angela"
 LABEL org.opencontainers.image.version="1.0.0"
 
 WORKDIR /app
@@ -48,11 +48,11 @@ ENV HOST="0.0.0.0" \
     NUMPY_ALLOCATE_DEFAULT=0
 
 # Create a non-root user
-RUN useradd -m -r -u 1000 clara && \
-    chown -R clara:clara /app
+RUN useradd -m -r -u 1000 angela && \
+    chown -R angela:angela /app
 
 # Switch to non-root user
-USER clara
+USER angela
 
 # Expose port
 EXPOSE 5000

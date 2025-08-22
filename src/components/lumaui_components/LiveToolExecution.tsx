@@ -251,7 +251,7 @@ const LiveToolExecution: React.FC<LiveToolExecutionProps> = ({
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-              Clara is working
+              angela is working
             </span>
             <Sparkles className="w-4 h-4 text-sakura-500 animate-pulse" />
           </div>
