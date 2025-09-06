@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/badboysm890-claraverse-badge.png)](https://mseep.ai/app/badboysm890-claraverse)
+
 <div align="center">
 
 <br/>
