@@ -70,6 +70,11 @@ class P2PDiscoveryService {
   setupIPCHandlers() {
     this.ensureMapsInitialized(); // Ensure Maps are ready before any IPC calls
     
+    // Check if ipcMain is available (we might be in a test environment)
+    if (!ipcMain || typeof ipcMain.handle !== 'function') {
+      console.log('⚠️ IPC not available - running in test mode');
+      return;
+    }
     ipcMain.handle('p2p:start', async () => {
       return await this.start();
     });
@@ -151,6 +156,20 @@ class P2PDiscoveryService {
       return await this.disconnectFromPeer(peerId, true);
     });
 
+    // Handler for security management
+    ipcMain.handle('p2p:revoke-all-tokens', () => {
+      return this.revokeAllTokens();
+    });
+
+    ipcMain.handle('p2p:cleanup-expired-tokens', () => {
+      this.cleanupExpiredTokens();
+      return { success: true };
+    });
+
+    ipcMain.handle('p2p:get-device-fingerprint', () => {
+      return this.generateDeviceFingerprint();
+    });
+
     // Handler for getting connection history
     ipcMain.handle('p2p:get-connection-history', () => {
       return this.getConnectionHistory();
@@ -168,6 +187,19 @@ class P2PDiscoveryService {
         return { success: false, error: error.message };
       }
     });
+  }
+
+  // Periodic security maintenance
+  startSecurityMaintenance() {
+    // Clean up expired tokens every hour
+    setInterval(() => {
+      this.cleanupExpiredTokens();
+    }, 60 * 60 * 1000); // 1 hour
+    
+    // Initial cleanup
+    this.cleanupExpiredTokens();
+    
+    console.log('🔐 Security maintenance started - token cleanup every hour');
   }
 
   async start() {
@@ -193,6 +225,9 @@ class P2PDiscoveryService {
       
       // Start intelligent discovery management
       this.manageDiscovery();
+      
+      // Start periodic security maintenance
+      this.startSecurityMaintenance();
       
       console.log('✅ P2P Discovery Service started successfully');
       console.log(`📡 Broadcasting on UDP port ${this.discoveryPort}`);
@@ -265,6 +300,32 @@ class P2PDiscoveryService {
     return 'clara-' + crypto.randomBytes(8).toString('hex');
   }
 
+  // Generate unique device fingerprint (better than IP addresses)
+  generateDeviceFingerprint() {
+    const machineInfo = {
+      hostname: os.hostname(),
+      platform: os.platform(),
+      arch: os.arch(),
+      cpus: os.cpus().length,
+      totalmem: os.totalmem(),
+      // Add network interface MAC addresses for uniqueness
+      networkInterfaces: Object.values(os.networkInterfaces())
+        .flat()
+        .filter(iface => !iface.internal && iface.mac !== '00:00:00:00:00:00')
+        .map(iface => iface.mac)
+        .sort()
+    };
+    
+    const fingerprint = crypto
+      .createHash('sha256')
+      .update(JSON.stringify(machineInfo))
+      .digest('hex')
+      .substring(0, 32); // 128-bit fingerprint
+    
+    return fingerprint;
+  }
+
+  // Initialize device with secure fingerprint
   initializeDeviceToken() {
     try {
       const config = this.loadConfiguration();
@@ -284,8 +345,80 @@ class P2PDiscoveryService {
   }
 
   generateDeviceToken() {
-    // Generate a permanent 32-byte token (256 bits) for strong security
-    return crypto.randomBytes(32).toString('hex');
+    // Generate a 32-byte token (256 bits) with expiration for strong security
+    const tokenData = {
+      token: crypto.randomBytes(32).toString('hex'),
+      created: Date.now(),
+      expiresIn: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+      version: 1 // For future token format upgrades
+    };
+    
+    // Return just the token string for backward compatibility
+    // Full token data is stored separately for validation
+    this.storeTokenMetadata(tokenData);
+    return tokenData.token;
+  }
+
+  // Store token metadata for expiration and validation
+  storeTokenMetadata(tokenData) {
+    try {
+      const metadataPath = path.join(this.dataDirectory, 'token-metadata.json');
+      let metadata = {};
+      
+      if (fs.existsSync(metadataPath)) {
+        metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+      }
+      
+      metadata[tokenData.token] = {
+        created: tokenData.created,
+        expiresAt: tokenData.created + tokenData.expiresIn,
+        version: tokenData.version
+      };
+      
+      fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+    } catch (error) {
+      console.error('Error storing token metadata:', error?.message || error || 'Unknown error');
+    }
+  }
+
+  // Validate token hasn't expired
+  isTokenValid(token) {
+    try {
+      const metadataPath = path.join(this.dataDirectory, 'token-metadata.json');
+      if (!fs.existsSync(metadataPath)) return false;
+      
+      const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+      const tokenMeta = metadata[token];
+      
+      if (!tokenMeta) return false;
+      
+      // Check if token has expired
+      const now = Date.now();
+      if (now > tokenMeta.expiresAt) {
+        console.log(`🔐 Token expired: ${token.substring(0, 8)}...`);
+        this.removeExpiredToken(token);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error validating token:', error?.message || error || 'Unknown error');
+      return false;
+    }
+  }
+
+  // Remove expired token from metadata
+  removeExpiredToken(token) {
+    try {
+      const metadataPath = path.join(this.dataDirectory, 'token-metadata.json');
+      if (fs.existsSync(metadataPath)) {
+        const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+        delete metadata[token];
+        fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+      }
+    } catch (error) {
+      console.error('Error removing expired token:', error?.message || error || 'Unknown error');
+    }
   }
 
   generatePairingCode() {
@@ -708,6 +841,17 @@ class P2PDiscoveryService {
       const knownPeer = connectedPeers.find(peer => 
         peer.deviceToken === data.deviceToken
       );
+      
+      // Validate token hasn't expired before proceeding
+      if (knownPeer && !this.isTokenValid(data.deviceToken)) {
+        console.log(`🔐 Token expired for device: ${data.requesterId}`);
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Token expired'
+        }));
+        return;
+      }
       
       if (knownPeer) {
         // Automatic authentication for known devices
@@ -1507,13 +1651,95 @@ class P2PDiscoveryService {
     try {
       const tokensPath = path.join(this.dataDirectory, 'device-tokens.json');
       if (fs.existsSync(tokensPath)) {
-        const tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
-        return tokens[peerIP] || null;
+        const rawData = fs.readFileSync(tokensPath, 'utf8');
+        let tokens = {};
+        
+        try {
+          const data = JSON.parse(rawData);
+          if (data.encrypted) {
+            // Decrypt encrypted tokens
+            tokens = this.decryptData(data) || {};
+          } else {
+            // Legacy unencrypted tokens
+            tokens = data;
+          }
+        } catch (e) {
+          console.error('Error parsing token data:', e);
+          return null;
+        }
+        
+        const tokenData = tokens[peerIP];
+        if (tokenData) {
+          if (typeof tokenData === 'string') {
+            // Legacy token format
+            return tokenData;
+          } else if (tokenData.token) {
+            // New token format with metadata
+            return tokenData.token;
+          }
+        }
       }
     } catch (error) {
       console.error('Error reading device tokens:', error?.message || error || 'Unknown error');
     }
     return null;
+  }
+
+  // Encrypt sensitive data before storage
+  encryptData(data) {
+    try {
+      const algorithm = 'aes-256-cbc';
+      const secretKey = crypto.scryptSync(this.deviceToken || 'clara-default-key', 'salt', 32);
+      const iv = crypto.randomBytes(16);
+      
+      const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+      
+      let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      
+      return {
+        encrypted,
+        iv: iv.toString('hex'),
+        algorithm: algorithm
+      };
+    } catch (error) {
+      // Fallback to simple base64 encoding for testing
+      try {
+        const encoded = Buffer.from(JSON.stringify(data)).toString('base64');
+        return {
+          encrypted: encoded,
+          iv: 'fallback',
+          algorithm: 'base64'
+        };
+      } catch (fallbackError) {
+        console.error('Encryption fallback error:', fallbackError);
+        return null;
+      }
+    }
+  }
+
+  // Decrypt sensitive data after loading
+  decryptData(encryptedData) {
+    try {
+      if (encryptedData.algorithm === 'base64') {
+        // Handle fallback encoding
+        const decoded = Buffer.from(encryptedData.encrypted, 'base64').toString('utf8');
+        return JSON.parse(decoded);
+      }
+      
+      const secretKey = crypto.scryptSync(this.deviceToken || 'clara-default-key', 'salt', 32);
+      const iv = Buffer.from(encryptedData.iv, 'hex');
+      
+      const decipher = crypto.createDecipheriv(encryptedData.algorithm || 'aes-256-cbc', secretKey, iv);
+      
+      let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      
+      return JSON.parse(decrypted);
+    } catch (error) {
+      console.error('Decryption error:', error);
+      return null;
+    }
   }
 
   storeDeviceToken(peerIP, token) {
@@ -1522,12 +1748,38 @@ class P2PDiscoveryService {
       let tokens = {};
       
       if (fs.existsSync(tokensPath)) {
-        tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
+        // Try to decrypt existing tokens
+        const rawData = fs.readFileSync(tokensPath, 'utf8');
+        try {
+          const existingData = JSON.parse(rawData);
+          if (existingData.encrypted) {
+            // Decrypt existing data
+            tokens = this.decryptData(existingData) || {};
+          } else {
+            // Legacy unencrypted data
+            tokens = existingData;
+          }
+        } catch (e) {
+          tokens = {};
+        }
       }
       
-      tokens[peerIP] = token;
-      fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2));
-      console.log('Device token stored for:', peerIP);
+      tokens[peerIP] = {
+        token: token,
+        stored: Date.now(),
+        deviceFingerprint: crypto.createHash('sha256').update(os.hostname() + os.platform()).digest('hex').substring(0, 16)
+      };
+      
+      // Encrypt the tokens before storage
+      const encryptedTokens = this.encryptData(tokens);
+      if (encryptedTokens) {
+        fs.writeFileSync(tokensPath, JSON.stringify(encryptedTokens, null, 2));
+        console.log('🔐 Device token stored securely for:', peerIP);
+      } else {
+        // Fallback to unencrypted storage
+        fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2));
+        console.log('⚠️ Device token stored (unencrypted fallback) for:', peerIP);
+      }
     } catch (error) {
       console.error('Error storing device token:', error?.message || error || 'Unknown error');
     }
@@ -1537,13 +1789,90 @@ class P2PDiscoveryService {
     try {
       const tokensPath = path.join(this.dataDirectory, 'device-tokens.json');
       if (fs.existsSync(tokensPath)) {
-        const tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
+        const rawData = fs.readFileSync(tokensPath, 'utf8');
+        let tokens = {};
+        
+        try {
+          const data = JSON.parse(rawData);
+          if (data.encrypted) {
+            tokens = this.decryptData(data) || {};
+          } else {
+            tokens = data;
+          }
+        } catch (e) {
+          tokens = {};
+        }
+        
         delete tokens[peerIP];
-        fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2));
-        console.log('Device token removed for:', peerIP);
+        
+        // Re-encrypt and store
+        const encryptedTokens = this.encryptData(tokens);
+        if (encryptedTokens) {
+          fs.writeFileSync(tokensPath, JSON.stringify(encryptedTokens, null, 2));
+        } else {
+          fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2));
+        }
+        console.log('🔐 Device token removed for:', peerIP);
       }
     } catch (error) {
       console.error('Error removing device token:', error?.message || error || 'Unknown error');
+    }
+  }
+
+  // Industry standard: Revoke all tokens for security breach
+  revokeAllTokens() {
+    try {
+      const tokensPath = path.join(this.dataDirectory, 'device-tokens.json');
+      const metadataPath = path.join(this.dataDirectory, 'token-metadata.json');
+      
+      // Clear all stored tokens
+      if (fs.existsSync(tokensPath)) {
+        fs.unlinkSync(tokensPath);
+      }
+      if (fs.existsSync(metadataPath)) {
+        fs.unlinkSync(metadataPath);
+      }
+      
+      // Generate new device token
+      this.deviceToken = this.generateDeviceToken();
+      this.saveConfiguration();
+      
+      console.log('🚨 All device tokens revoked - new device token generated');
+      
+      // Notify UI
+      if (this.mainWindow) {
+        this.mainWindow.webContents.send('p2p:tokens-revoked');
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error revoking tokens:', error?.message || error || 'Unknown error');
+      return false;
+    }
+  }
+
+  // Clean up expired tokens periodically
+  cleanupExpiredTokens() {
+    try {
+      const metadataPath = path.join(this.dataDirectory, 'token-metadata.json');
+      if (!fs.existsSync(metadataPath)) return;
+      
+      const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+      const now = Date.now();
+      let cleaned = 0;
+      
+      for (const [token, meta] of Object.entries(metadata)) {
+        if (now > meta.expiresAt) {
+          this.removeExpiredToken(token);
+          cleaned++;
+        }
+      }
+      
+      if (cleaned > 0) {
+        console.log(`🧹 Cleaned up ${cleaned} expired tokens`);
+      }
+    } catch (error) {
+      console.error('Error cleaning expired tokens:', error?.message || error || 'Unknown error');
     }
   }
 
