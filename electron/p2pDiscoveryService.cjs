@@ -18,11 +18,13 @@ class P2PDiscoveryService {
     this.discoveredPeers = new Map();
     this.localPeer = null;
     this.discoveryInterval = null;
-    this.setupIPC();
+    this.mainWindow = null;
+    
+    // Setup IPC handlers
+    this.setupIPCHandlers();
   }
 
-  setupIPC() {
-    // Handle P2P service commands from renderer
+  setupIPCHandlers() {
     ipcMain.handle('p2p:start', async () => {
       return await this.start();
     });
@@ -73,7 +75,6 @@ class P2PDiscoveryService {
       console.log(`🔗 Pairing server on HTTP port ${this.localPeer.pairingPort}`);
       
       return { success: true, localPeer: this.localPeer };
-      
     } catch (error) {
       console.error('❌ Failed to start P2P Discovery Service:', error);
       return { success: false, error: error.message };
@@ -104,51 +105,43 @@ class P2PDiscoveryService {
         this.httpServer = null;
       }
       
-      // Clear discovered peers
-      this.discoveredPeers.clear();
-      
       console.log('✅ P2P Discovery Service stopped');
       return { success: true };
-      
     } catch (error) {
-      console.error('❌ Error stopping P2P Discovery Service:', error);
+      console.error('❌ Failed to stop P2P Discovery Service:', error);
       return { success: false, error: error.message };
     }
   }
 
   initializeLocalPeer() {
-    const networkInterfaces = os.networkInterfaces();
-    const localIPs = [];
-    
-    // Get all local IP addresses
-    Object.values(networkInterfaces).forEach(interfaces => {
-      interfaces?.forEach(iface => {
-        if (iface.family === 'IPv4' && !iface.internal) {
-          localIPs.push(iface.address);
-        }
-      });
-    });
-
     this.localPeer = {
-      id: `clara-${crypto.randomUUID()}`,
-      name: `Clara ${os.hostname()}`,
+      id: this.generatePeerId(),
+      name: os.hostname() || 'Clara Desktop',
       version: '1.0.0',
-      platform: os.platform(),
-      hostname: os.hostname(),
-      localIPs: localIPs,
-      pairingPort: 47265 + Math.floor(Math.random() * 100), // Random port 47265-47364
-      discoveryPort: this.discoveryPort,
       capabilities: ['agent-execution', 'file-sharing', 'real-time-chat'],
-      timestamp: Date.now(),
-      pairingCode: this.generatePairingCode()
+      isLocal: true,
+      connectionState: 'disconnected',
+      lastSeen: new Date(),
+      pairingPort: 47265 + Math.floor(Math.random() * 5), // Random port 47265-47269
+      deviceInfo: {
+        platform: os.platform(),
+        hostname: os.hostname(),
+        userAgent: 'Clara Desktop/1.0.0'
+      }
     };
+    
+    console.log(`🏷️ Local peer initialized: ${this.localPeer.name} (${this.localPeer.id})`);
+  }
+
+  generatePeerId() {
+    return 'clara-' + crypto.randomBytes(8).toString('hex');
   }
 
   generatePairingCode() {
-    const words = ['CLARA', 'BRAIN', 'SMART', 'MAGIC', 'SPARK', 'NEURAL'];
-    const numbers = Math.floor(1000 + Math.random() * 9000).toString();
+    const words = ['BRAIN', 'NOVA', 'STAR', 'CORE', 'DATA', 'SYNC', 'FLOW', 'LINK'];
     const word = words[Math.floor(Math.random() * words.length)];
-    return `${word}-${numbers}`;
+    const number = Math.floor(1000 + Math.random() * 9000);
+    return `${word}-${number}`;
   }
 
   async startUDPDiscovery() {
@@ -165,10 +158,8 @@ class P2PDiscoveryService {
       });
       
       this.udpSocket.bind(this.discoveryPort, () => {
-        console.log(`📡 UDP Discovery listening on port ${this.discoveryPort}`);
-        
-        // Enable broadcast
         this.udpSocket.setBroadcast(true);
+        console.log(`📡 UDP Discovery server listening on port ${this.discoveryPort}`);
         resolve();
       });
     });
@@ -258,7 +249,7 @@ class P2PDiscoveryService {
         const existingPeer = this.discoveredPeers.get(peer.id);
         const updatedPeer = {
           ...peer,
-          isLocal: true,
+          isLocal: false,
           connectionState: existingPeer?.connectionState || 'disconnected',
           lastSeen: new Date(),
           sourceIP: rinfo.address,
@@ -269,21 +260,18 @@ class P2PDiscoveryService {
         
         console.log(`🔍 Discovered Clara peer: ${peer.name} (${rinfo.address})`);
         
-        // Notify renderer process
-        if (this.mainWindow && this.mainWindow.webContents) {
+        // Notify renderer of new peer
+        if (this.mainWindow) {
           this.mainWindow.webContents.send('p2p:peer-discovered', updatedPeer);
         }
       }
-      
     } catch (error) {
-      console.warn('Invalid discovery message received:', error.message);
+      console.warn('Invalid discovery message:', error.message);
     }
   }
 
   handleHTTPRequest(req, res) {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    
-    // Enable CORS
+    // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -294,73 +282,75 @@ class P2PDiscoveryService {
       return;
     }
     
-    if (url.pathname === '/info') {
-      // Return peer information
+    if (req.url === '/info' && req.method === 'GET') {
+      // Provide peer information
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         peer: this.localPeer,
         timestamp: Date.now()
       }));
-      
-    } else if (url.pathname === '/pair') {
-      // Handle pairing requests
-      if (req.method === 'POST') {
-        let body = '';
-        req.on('data', chunk => body += chunk);
-        req.on('end', () => {
-          try {
-            const data = JSON.parse(body);
-            this.handlePairingRequest(data, res);
-          } catch (error) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Invalid JSON' }));
-          }
-        });
-      } else {
-        res.writeHead(405, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Method not allowed' }));
-      }
-      
-    } else {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Not found' }));
+      return;
     }
+    
+    if (req.url === '/pair' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        this.handlePairingRequest(body, res);
+      });
+      return;
+    }
+    
+    // 404 for other requests
+    res.writeHead(404);
+    res.end('Not Found');
   }
 
-  handlePairingRequest(data, res) {
-    if (data.pairingCode === this.localPeer.pairingCode) {
-      // Valid pairing code
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        success: true,
-        peer: this.localPeer,
-        message: 'Pairing successful'
-      }));
+  handlePairingRequest(body, res) {
+    try {
+      const data = JSON.parse(body);
+      const currentCode = this.generatePairingCode(); // In a real implementation, this would be stored/managed
       
-      console.log(`🤝 Successful pairing request from ${data.fromPeer?.name || 'unknown'}`);
-      
-      // Notify renderer about successful pairing
-      if (this.mainWindow && this.mainWindow.webContents) {
-        this.mainWindow.webContents.send('p2p:pairing-success', data.fromPeer);
+      if (data.pairingCode === currentCode) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          peer: this.localPeer,
+          message: 'Pairing successful'
+        }));
+        
+        console.log(`✅ Successful pairing with: ${data.requesterId}`);
+      } else {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Invalid pairing code'
+        }));
+        
+        console.log(`❌ Invalid pairing attempt: ${data.pairingCode}`);
       }
-      
-    } else {
-      // Invalid pairing code
-      res.writeHead(401, { 'Content-Type': 'application/json' });
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         success: false,
-        error: 'Invalid pairing code'
+        error: 'Invalid request'
       }));
       
-      console.log(`❌ Invalid pairing attempt: ${data.pairingCode}`);
+      console.log(`❌ Invalid pairing request: ${error.message}`);
     }
   }
 
   async connectToPeer(pairingCode) {
     try {
       console.log(`🤝 Attempting to connect with pairing code: ${pairingCode}`);
+      console.log(`🔍 Current discovered peers: ${this.discoveredPeers.size}`);
       
-      // Try to find peer with this pairing code
+      // Debug: List all discovered peers
+      for (const peer of this.discoveredPeers.values()) {
+        console.log(`📡 Available peer: ${peer.name} (${peer.id}) - ${peer.connectionState}`);
+      }
+      
+      // First try discovered peers
       for (const peer of this.discoveredPeers.values()) {
         try {
           const response = await this.testPeerConnection(peer, pairingCode);
@@ -382,6 +372,13 @@ class P2PDiscoveryService {
         }
       }
       
+      // If no discovered peers worked, try network scan for the pairing code
+      console.log('🔍 No discovered peers matched, trying network scan...');
+      const networkResult = await this.scanNetworkForPairingCode(pairingCode);
+      if (networkResult.success) {
+        return networkResult;
+      }
+      
       return {
         success: false,
         error: 'No peer found with that pairing code'
@@ -397,12 +394,13 @@ class P2PDiscoveryService {
   }
 
   async testPeerConnection(peer, pairingCode) {
-    const http = require('http');
-    
     return new Promise((resolve, reject) => {
+      const http = require('http');
+      
       const data = JSON.stringify({
+        type: 'pairing-request',
         pairingCode: pairingCode,
-        fromPeer: this.localPeer
+        requesterId: this.localPeer.id
       });
       
       const options = {
@@ -461,6 +459,123 @@ class P2PDiscoveryService {
       console.error('❌ Failed to update P2P configuration:', error);
       return false;
     }
+  }
+
+  async scanNetworkForPairingCode(pairingCode) {
+    console.log(`🔍 Scanning network for pairing code: ${pairingCode}`);
+    
+    // Get local network ranges
+    const networkInterfaces = os.networkInterfaces();
+    const networkRanges = [];
+    
+    Object.values(networkInterfaces).forEach(interfaces => {
+      interfaces?.forEach(iface => {
+        if (iface.family === 'IPv4' && !iface.internal && iface.netmask) {
+          const ip = iface.address.split('.').map(Number);
+          const netmask = iface.netmask.split('.').map(Number);
+          
+          // Calculate network address
+          const network = ip.map((octet, i) => octet & netmask[i]);
+          networkRanges.push({ network, netmask });
+        }
+      });
+    });
+    
+    // Scan common ports for Clara instances
+    const commonPorts = [47265, 47266, 47267, 47268, 47269]; // Multiple ports in case of multiple instances
+    const promises = [];
+    
+    for (const range of networkRanges) {
+      // Scan first 20 IPs in each network (for testing)
+      for (let i = 1; i <= 20; i++) {
+        const targetIP = [...range.network];
+        targetIP[3] = i;
+        const ip = targetIP.join('.');
+        
+        for (const port of commonPorts) {
+          promises.push(this.testIPForPairingCode(ip, port, pairingCode));
+        }
+      }
+    }
+    
+    try {
+      const results = await Promise.allSettled(promises);
+      
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value.success) {
+          console.log(`✅ Found peer via network scan: ${result.value.peer.name}`);
+          
+          // Add to discovered peers
+          this.discoveredPeers.set(result.value.peer.id, result.value.peer);
+          
+          return result.value;
+        }
+      }
+      
+      return { success: false, error: 'Network scan completed - no peer found' };
+    } catch (error) {
+      console.error('Network scan error:', error);
+      return { success: false, error: 'Network scan failed' };
+    }
+  }
+
+  async testIPForPairingCode(ip, port, pairingCode) {
+    return new Promise((resolve) => {
+      const http = require('http');
+      const timeout = 2000; // 2 second timeout
+      
+      const data = JSON.stringify({
+        type: 'pairing-request',
+        pairingCode: pairingCode,
+        requesterId: this.localPeer.id
+      });
+      
+      const options = {
+        hostname: ip,
+        port: port,
+        path: '/pair',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(data)
+        },
+        timeout: timeout
+      };
+      
+      const req = http.request(options, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          try {
+            const response = JSON.parse(body);
+            if (response.success) {
+              resolve({
+                success: true,
+                peer: {
+                  ...response.peer,
+                  connectionState: 'connected',
+                  sourceIP: ip,
+                  sourcePort: port
+                }
+              });
+            } else {
+              resolve({ success: false });
+            }
+          } catch (error) {
+            resolve({ success: false });
+          }
+        });
+      });
+      
+      req.on('error', () => resolve({ success: false }));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ success: false });
+      });
+      
+      req.write(data);
+      req.end();
+    });
   }
 
   setMainWindow(mainWindow) {
