@@ -116,7 +116,7 @@ class P2PService extends SimpleEventEmitter {
       deviceInfo: {
         platform: this.detectPlatform(),
         hostname: 'localhost',
-        userAgent: navigator.userAgent
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'
       }
     };
   }
@@ -132,7 +132,9 @@ class P2PService extends SimpleEventEmitter {
    * Detect the current platform
    */
   private detectPlatform(): string {
-    const platform = navigator.platform.toLowerCase();
+    if (typeof navigator === 'undefined') return 'unknown';
+    
+    const platform = navigator.platform?.toLowerCase() || '';
     if (platform.includes('mac')) return 'darwin';
     if (platform.includes('win')) return 'win32';
     return 'linux';
@@ -143,23 +145,40 @@ class P2PService extends SimpleEventEmitter {
    */
   async start(): Promise<void> {
     try {
-      this.isEnabled = true;
-      this.config.enabled = true;
-      
       console.log('🌐 Starting Clara P2P Service...');
       
-      // Start local network discovery
-      if (this.config.discoveryEnabled) {
-        await this.startDiscovery();
+      // Use Electron backend if available, otherwise simulate
+      if ((window as any).electronAPI?.invoke) {
+        const result = await (window as any).electronAPI.invoke('p2p:start');
+        if (result.success) {
+          this.isEnabled = true;
+          this.config.enabled = true;
+          this.localPeer = result.localPeer;
+          this.emit('service-started', this.localPeer);
+          
+          // Start listening for peer discoveries from backend
+          this.setupBackendListeners();
+          
+          console.log('✅ Clara P2P Service started successfully (Electron backend)');
+        } else {
+          throw new Error(result.error);
+        }
+      } else {
+        // Fallback to simulation for web environments
+        this.isEnabled = true;
+        this.config.enabled = true;
+        
+        if (this.config.discoveryEnabled) {
+          await this.startDiscovery();
+        }
+        
+        if (this.config.allowIncoming) {
+          await this.startPairingServer();
+        }
+        
+        this.emit('service-started', this.localPeer);
+        console.log('✅ Clara P2P Service started successfully (simulation mode)');
       }
-      
-      // Start pairing server if allowing incoming connections
-      if (this.config.allowIncoming) {
-        await this.startPairingServer();
-      }
-      
-      this.emit('service-started', this.localPeer);
-      console.log('✅ Clara P2P Service started successfully');
       
     } catch (error) {
       console.error('❌ Failed to start P2P service:', error);
@@ -175,33 +194,61 @@ class P2PService extends SimpleEventEmitter {
     try {
       console.log('🛑 Stopping Clara P2P Service...');
       
-      this.isEnabled = false;
-      this.config.enabled = false;
-      
-      // Close all connections
-      for (const [peerId, connection] of this.connections) {
-        connection.close();
-        this.connections.delete(peerId);
-        this.dataChannels.delete(peerId);
+      // Use Electron backend if available
+      if ((window as any).electronAPI?.invoke) {
+        const result = await (window as any).electronAPI.invoke('p2p:stop');
+        if (result.success) {
+          this.isEnabled = false;
+          this.config.enabled = false;
+          this.peers.clear();
+          this.currentPairingCode = null;
+          this.emit('service-stopped');
+          console.log('✅ P2P Service stopped (Electron backend)');
+        }
+      } else {
+        // Fallback simulation cleanup
+        this.isEnabled = false;
+        this.config.enabled = false;
+        
+        if (this.discoveryInterval) {
+          clearInterval(this.discoveryInterval);
+          this.discoveryInterval = null;
+        }
+        
+        this.peers.clear();
+        this.currentPairingCode = null;
+        
+        this.emit('service-stopped');
+        console.log('✅ P2P Service stopped (simulation mode)');
       }
-      
-      // Stop discovery
-      if (this.discoveryInterval) {
-        clearInterval(this.discoveryInterval);
-        this.discoveryInterval = null;
-      }
-      
-      // Clear peers
-      this.peers.clear();
-      this.currentPairingCode = null;
-      
-      this.emit('service-stopped');
-      console.log('✅ P2P Service stopped');
       
     } catch (error) {
       console.error('❌ Error stopping P2P service:', error);
       this.emit('service-error', error);
     }
+  }
+
+  /**
+   * Setup listeners for backend events
+   */
+  private setupBackendListeners(): void {
+    if (!(window as any).electronAPI?.on) return;
+    
+    // Listen for peer discoveries from Electron backend
+    (window as any).electronAPI.on('p2p:peer-discovered', (peer: ClaraPeer) => {
+      this.peers.set(peer.id, peer);
+      this.emit('peer-discovered', peer);
+      console.log('🔍 Peer discovered via Electron backend:', peer.name);
+    });
+    
+    // Listen for pairing successes
+    (window as any).electronAPI.on('p2p:pairing-success', (peer: ClaraPeer) => {
+      if (peer) {
+        this.peers.set(peer.id, { ...peer, connectionState: 'connected' });
+        this.emit('peer-connected', peer);
+        console.log('🤝 Peer connected via pairing:', peer.name);
+      }
+    });
   }
 
   /**
@@ -283,30 +330,43 @@ class P2PService extends SimpleEventEmitter {
     try {
       console.log('🤝 Attempting to connect with pairing code:', pairingCode);
       
-      // Simulate connection process
-      const mockPeer: ClaraPeer = {
-        id: 'clara-remote-' + Date.now(),
-        name: 'Clara Mobile',
-        version: '1.0.0',
-        capabilities: ['agent-execution'],
-        isLocal: false,
-        connectionState: 'connecting',
-        lastSeen: new Date(),
-        deviceInfo: {
-          platform: 'android',
-          userAgent: 'Clara Mobile App'
+      // Use Electron backend if available
+      if ((window as any).electronAPI?.invoke) {
+        const result = await (window as any).electronAPI.invoke('p2p:connect-to-peer', pairingCode);
+        if (result.success) {
+          const peer = result.peer;
+          this.peers.set(peer.id, peer);
+          this.emit('peer-connected', peer);
+          console.log('✅ Connected to peer via Electron backend:', peer.name);
+        } else {
+          throw new Error(result.error);
         }
-      };
-      
-      this.peers.set(mockPeer.id, mockPeer);
-      this.emit('peer-connecting', mockPeer);
-      
-      // Simulate connection time
-      setTimeout(() => {
-        mockPeer.connectionState = 'connected';
-        this.emit('peer-connected', mockPeer);
-        console.log('✅ Connected to peer:', mockPeer.name);
-      }, 2000);
+      } else {
+        // Fallback simulation
+        const mockPeer: ClaraPeer = {
+          id: 'clara-remote-' + Date.now(),
+          name: 'Clara Mobile',
+          version: '1.0.0',
+          capabilities: ['agent-execution'],
+          isLocal: false,
+          connectionState: 'connecting',
+          lastSeen: new Date(),
+          deviceInfo: {
+            platform: 'android',
+            userAgent: 'Clara Mobile App'
+          }
+        };
+        
+        this.peers.set(mockPeer.id, mockPeer);
+        this.emit('peer-connecting', mockPeer);
+        
+        // Simulate connection time
+        setTimeout(() => {
+          mockPeer.connectionState = 'connected';
+          this.emit('peer-connected', mockPeer);
+          console.log('✅ Connected to peer (simulation):', mockPeer.name);
+        }, 2000);
+      }
       
     } catch (error) {
       console.error('❌ Failed to connect to peer:', error);
@@ -391,6 +451,20 @@ class P2PService extends SimpleEventEmitter {
 
   // Getters
   getLocalPeer(): ClaraPeer | null {
+    // Ensure localPeer is properly initialized
+    if (!this.localPeer) {
+      this.initializeLocalPeer();
+    }
+    
+    // Ensure deviceInfo exists
+    if (this.localPeer && !this.localPeer.deviceInfo) {
+      this.localPeer.deviceInfo = {
+        platform: this.detectPlatform(),
+        hostname: 'localhost',
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'
+      };
+    }
+    
     return this.localPeer;
   }
 
@@ -416,18 +490,27 @@ class P2PService extends SimpleEventEmitter {
 
   // Configuration methods
   async updateConfig(updates: Partial<P2PConfig>): Promise<void> {
-    this.config = { ...this.config, ...updates };
-    
-    // Update local peer name if changed
-    if (updates.deviceName && this.localPeer) {
-      this.localPeer.name = updates.deviceName;
-    }
-    
-    // Restart service if needed
-    if (this.isEnabled && (updates.enabled === false)) {
-      await this.stop();
-    } else if (!this.isEnabled && updates.enabled === true) {
-      await this.start();
+    // Use Electron backend if available
+    if ((window as any).electronAPI?.invoke) {
+      await (window as any).electronAPI.invoke('p2p:update-config', updates);
+      console.log('📝 P2P configuration updated via Electron backend:', updates);
+    } else {
+      // Fallback simulation
+      this.config = { ...this.config, ...updates };
+      
+      // Update local peer name if changed
+      if (updates.deviceName && this.localPeer) {
+        this.localPeer.name = updates.deviceName;
+      }
+      
+      // Restart service if needed
+      if (this.isEnabled && (updates.enabled === false)) {
+        await this.stop();
+      } else if (!this.isEnabled && updates.enabled === true) {
+        await this.start();
+      }
+      
+      console.log('📝 P2P configuration updated (simulation):', this.config);
     }
     
     this.emit('config-updated', this.config);
@@ -437,10 +520,30 @@ class P2PService extends SimpleEventEmitter {
    * Generate a new pairing code
    */
   refreshPairingCode(): string {
-    this.currentPairingCode = this.generatePairingCode();
-    this.emit('pairing-code-refreshed', this.currentPairingCode);
-    console.log('🔄 New pairing code generated:', this.currentPairingCode);
-    return this.currentPairingCode;
+    // Use Electron backend if available
+    if ((window as any).electronAPI?.invoke) {
+      (window as any).electronAPI.invoke('p2p:generate-pairing-code').then((code: string) => {
+        this.currentPairingCode = code;
+        this.emit('pairing-code-refreshed', code);
+        console.log('🔄 New pairing code generated via Electron backend:', code);
+      }).catch((error: any) => {
+        console.error('Failed to generate pairing code via backend, using fallback:', error);
+        this.currentPairingCode = this.generatePairingCode();
+        this.emit('pairing-code-refreshed', this.currentPairingCode);
+      });
+      
+      // Return current code or generate a temporary one while waiting for backend
+      if (!this.currentPairingCode) {
+        this.currentPairingCode = this.generatePairingCode();
+        this.emit('pairing-code-refreshed', this.currentPairingCode);
+      }
+    } else {
+      // Fallback simulation
+      this.currentPairingCode = this.generatePairingCode();
+      this.emit('pairing-code-refreshed', this.currentPairingCode);
+      console.log('🔄 New pairing code generated (simulation):', this.currentPairingCode);
+    }
+    return this.currentPairingCode || 'CLARA-0000';
   }
 }
 

@@ -95,6 +95,12 @@ const ConnectivitySettings: React.FC = () => {
     // Load initial state
     setPeers(p2pService.getPeers());
 
+    // Generate initial pairing code if none exists
+    if (!pairingCode) {
+      const initialCode = p2pService.refreshPairingCode();
+      setPairingCode(initialCode);
+    }
+
     // Cleanup
     return () => {
       p2pService.removeAllListeners();
@@ -298,7 +304,7 @@ const ConnectivitySettings: React.FC = () => {
                     {localPeer.name}
                   </h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {localPeer.deviceInfo.platform} • Version {localPeer.version}
+                    {localPeer.deviceInfo?.platform || 'Unknown'} • Version {localPeer.version}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-500">
                     ID: {localPeer.id}

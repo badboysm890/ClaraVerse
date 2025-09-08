@@ -45,6 +45,9 @@ const { getPlatformCompatibility, getCompatibleServices } = require('./serviceDe
 // Network Service Manager to prevent UI refreshes during crashes
 const NetworkServiceManager = require('./networkServiceManager.cjs');
 
+// P2P Discovery Service for decentralized Clara
+const { P2PDiscoveryService } = require('./p2pDiscoveryService.cjs');
+
 // Global helper functions for container configuration
 // These functions can be called from anywhere and will create container configs if needed
 
@@ -275,6 +278,7 @@ let updateService;
 let comfyUIModelService;
 let widgetService;
 let schedulerService;
+let p2pDiscoveryService;
 let initializationInProgress = false;
 let initializationComplete = false;
 
@@ -5472,6 +5476,19 @@ async function initializeInBackground(selectedFeatures) {
     } catch (error) {
       log.error('❌ Failed to initialize scheduler service:', error);
       // Continue without scheduler if it fails
+    }
+    
+    // Initialize P2P Discovery Service
+    sendStatusUpdate('initializing-p2p', { message: 'Initializing P2P connectivity...' });
+    try {
+      if (!p2pDiscoveryService) {
+        p2pDiscoveryService = new P2PDiscoveryService();
+        p2pDiscoveryService.setMainWindow(mainWindow);
+        log.info('✅ P2P Discovery Service initialized successfully');
+      }
+    } catch (error) {
+      log.error('❌ Failed to initialize P2P Discovery Service:', error);
+      // Continue without P2P if it fails
     }
     
     sendStatusUpdate('ready', { message: 'All services initialized' });
