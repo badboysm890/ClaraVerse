@@ -123,6 +123,29 @@ class P2PDiscoveryService {
     ipcMain.handle('p2p:disconnect-peer', async (event, peerId) => {
       return await this.disconnectFromPeer(peerId);
     });
+
+    // Handler for unpairing a device (removes stored token)
+    ipcMain.handle('p2p:unpair-device', async (event, peerId) => {
+      return await this.disconnectFromPeer(peerId, true);
+    });
+
+    // Handler for getting connection history
+    ipcMain.handle('p2p:get-connection-history', () => {
+      return this.getConnectionHistory();
+    });
+
+    // Handler for clearing connection history
+    ipcMain.handle('p2p:clear-connection-history', () => {
+      try {
+        const historyPath = path.join(this.dataDirectory, 'connection-history.json');
+        if (fs.existsSync(historyPath)) {
+          fs.unlinkSync(historyPath);
+        }
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    });
   }
 
   async start() {
@@ -910,16 +933,74 @@ class P2PDiscoveryService {
         this.logger.log('Connecting with stored device token');
         const success = await this.testTokenAuthentication(peer, storedToken);
         if (success) {
-          return success;
+          return { success: true, peer: success };
+        } else {
+          // Token failed - remove it and try new pairing
+          this.removeStoredDeviceToken(peer.ip);
+          this.logger.log('Stored token failed, removed and trying new pairing');
         }
       }
 
-      // No stored token - initiate new device pairing
-      this.logger.log('No stored token found, initiating new device pairing');
-      return await this.initiateNewDevicePairing(peer);
+      // No stored token or token failed - initiate new device pairing
+      this.logger.log('Initiating new device pairing for:', peer.name || peer.ip);
+      const result = await this.requestNewDeviceAccess(peer);
+      return result;
     } catch (error) {
       this.logger.error('Error in connectToPeer:', error.message);
-      return false;
+      return { success: false, error: error.message };
+    }
+  }
+
+  async requestNewDeviceAccess(peer) {
+    try {
+      // Generate a device token for this connection
+      const deviceToken = this.generateDeviceToken();
+      
+      // Send new device request to peer
+      const requestData = JSON.stringify({
+        type: 'new-device-request',
+        deviceToken: deviceToken,
+        deviceInfo: {
+          name: this.localPeer.name,
+          platform: process.platform,
+          version: this.localPeer.version,
+          id: this.localPeer.id,
+          ip: peer.ip // Include IP for the receiving end
+        },
+        timestamp: Date.now()
+      });
+
+      const response = await this.sendHttpRequest(peer.ip, peer.pairingPort, '/device-pairing', requestData);
+      
+      if (response && response.success) {
+        // Store the device token for future use
+        this.storeDeviceToken(peer.ip, deviceToken);
+        
+        // Create connected peer object
+        const connectedPeer = {
+          ...peer,
+          connectionState: 'connected',
+          connectedAt: new Date(),
+          deviceToken: deviceToken
+        };
+        
+        // Add to connected peers
+        this.connectedPeers.set(peer.id, connectedPeer);
+        this.saveConnectedPeers();
+        
+        // Add to connection history
+        this.addConnectionHistory(connectedPeer, 'connect', true);
+        
+        this.logger.log('✅ Successfully connected to:', peer.name);
+        return { success: true, peer: connectedPeer };
+      } else {
+        this.addConnectionHistory(peer, 'connect', false);
+        return { success: false, error: response?.error || 'Device pairing request rejected' };
+      }
+    } catch (error) {
+      this.logger.error('Error in requestNewDeviceAccess:', error.message);
+      this.addConnectionHistory(peer, 'connect', false);
+      return { success: false, error: error.message };
     }
   }
 
@@ -1257,9 +1338,9 @@ class P2PDiscoveryService {
     }
   }
 
-  async disconnectFromPeer(peerId) {
+  async disconnectFromPeer(peerId, unpair = false) {
     try {
-      const peer = this.discoveredPeers.get(peerId);
+      const peer = this.discoveredPeers.get(peerId) || this.connectedPeers.get(peerId);
       if (!peer) {
         return { success: false, error: 'Peer not found' };
       }
@@ -1267,9 +1348,27 @@ class P2PDiscoveryService {
       // Update peer state to disconnected
       peer.connectionState = 'disconnected';
       peer.lastDisconnected = new Date();
+      
+      if (unpair) {
+        // Remove device token for unpairing (user wants to remove device completely)
+        this.removeStoredDeviceToken(peer.ip);
+        peer.isAutoConnect = false;
+        peer.deviceToken = null;
+        this.addConnectionHistory(peer, 'unpair', true);
+        console.log(`🔓 Unpaired device: ${peer.name}`);
+      } else {
+        // Just disconnect but keep pairing for auto-reconnect
+        this.addConnectionHistory(peer, 'disconnect', true);
+        console.log(`🔌 Disconnected from peer: ${peer.name}`);
+      }
+      
+      // Update discovered peers
       this.discoveredPeers.set(peerId, peer);
+      
+      // Remove from connected peers
+      this.connectedPeers.delete(peerId);
 
-      // Save updated peer state (this will now exclude the disconnected peer)
+      // Save updated peer state
       this.saveConnectedPeers();
 
       // Notify frontend
@@ -1280,12 +1379,134 @@ class P2PDiscoveryService {
       // Re-evaluate discovery needs
       this.manageDiscovery();
 
-      console.log(`🔌 Disconnected from peer: ${peer.name}`);
       return { success: true };
 
     } catch (error) {
       console.error('Failed to disconnect from peer:', error);
       return { success: false, error: error.message };
+    }
+  }
+
+  // Device Token Management
+  generateDeviceToken() {
+    return crypto.randomBytes(32).toString('hex');
+  }
+
+  getStoredDeviceToken(peerIP) {
+    try {
+      const tokensPath = path.join(this.dataDirectory, 'device-tokens.json');
+      if (fs.existsSync(tokensPath)) {
+        const tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
+        return tokens[peerIP] || null;
+      }
+    } catch (error) {
+      this.logger.error('Error reading device tokens:', error.message);
+    }
+    return null;
+  }
+
+  storeDeviceToken(peerIP, token) {
+    try {
+      const tokensPath = path.join(this.dataDirectory, 'device-tokens.json');
+      let tokens = {};
+      
+      if (fs.existsSync(tokensPath)) {
+        tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
+      }
+      
+      tokens[peerIP] = token;
+      fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2));
+      this.logger.log('Device token stored for:', peerIP);
+    } catch (error) {
+      this.logger.error('Error storing device token:', error.message);
+    }
+  }
+
+  removeStoredDeviceToken(peerIP) {
+    try {
+      const tokensPath = path.join(this.dataDirectory, 'device-tokens.json');
+      if (fs.existsSync(tokensPath)) {
+        const tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
+        delete tokens[peerIP];
+        fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2));
+        this.logger.log('Device token removed for:', peerIP);
+      }
+    } catch (error) {
+      this.logger.error('Error removing device token:', error.message);
+    }
+  }
+
+  // Connection History Management
+  addConnectionHistory(peer, action, success = true) {
+    try {
+      const historyPath = path.join(this.dataDirectory, 'connection-history.json');
+      let history = [];
+      
+      if (fs.existsSync(historyPath)) {
+        history = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+      }
+      
+      const entry = {
+        timestamp: new Date().toISOString(),
+        peerName: peer.name || peer.ip,
+        peerIP: peer.ip,
+        action: action, // 'connect', 'disconnect', 'reject', 'token-failed'
+        success: success,
+        platform: peer.deviceInfo?.platform || 'unknown'
+      };
+      
+      history.unshift(entry); // Add to beginning
+      
+      // Keep only last 100 entries
+      if (history.length > 100) {
+        history = history.slice(0, 100);
+      }
+      
+      fs.writeFileSync(historyPath, JSON.stringify(history, null, 2));
+    } catch (error) {
+      this.logger.error('Error adding connection history:', error.message);
+    }
+  }
+
+  getConnectionHistory() {
+    try {
+      const historyPath = path.join(this.dataDirectory, 'connection-history.json');
+      if (fs.existsSync(historyPath)) {
+        return JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+      }
+    } catch (error) {
+      this.logger.error('Error reading connection history:', error.message);
+    }
+    return [];
+  }
+
+  // Prevent duplicate device discovery
+  addDiscoveredPeer(peerData) {
+    const existingPeer = this.discoveredPeers.get(peerData.id);
+    
+    if (existingPeer) {
+      // Update existing peer info but keep connection state
+      existingPeer.lastSeen = new Date();
+      existingPeer.deviceInfo = peerData.deviceInfo;
+      existingPeer.capabilities = peerData.capabilities;
+      return existingPeer;
+    } else {
+      // New peer discovery
+      const peer = {
+        ...peerData,
+        lastSeen: new Date(),
+        connectionState: 'disconnected'
+      };
+      
+      this.discoveredPeers.set(peerData.id, peer);
+      this.addConnectionHistory(peer, 'discovered');
+      
+      // Emit to frontend
+      if (this.mainWindow) {
+        this.mainWindow.webContents.send('p2p:peer-discovered', peer);
+      }
+      
+      return peer;
     }
   }
 
