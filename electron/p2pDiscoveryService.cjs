@@ -65,8 +65,8 @@ class P2PDiscoveryService {
       return this.localPeer;
     });
 
-    ipcMain.handle('p2p:connect-to-peer', async (event, pairingCode) => {
-      return await this.connectToPeer(pairingCode);
+    ipcMain.handle('p2p:connect-to-peer', async (event, peer) => {
+      return await this.connectToPeer(peer);
     });
 
     ipcMain.handle('p2p:generate-pairing-code', () => {
@@ -117,6 +117,11 @@ class P2PDiscoveryService {
         this.manageDiscovery();
       }
       return { success: true };
+    });
+
+    // Handler for disconnecting from a peer
+    ipcMain.handle('p2p:disconnect-peer', async (event, peerId) => {
+      return await this.disconnectFromPeer(peerId);
     });
   }
 
@@ -450,6 +455,8 @@ class P2PDiscoveryService {
     try {
       // Check if this peer was previously connected
       const connectedPeers = this.loadConnectedPeers();
+      console.log(`🔍 Checking ${connectedPeers.length} previously connected peers for auto-connect`);
+      
       if (!connectedPeers || !Array.isArray(connectedPeers)) {
         return; // No previous connections or invalid data
       }
@@ -458,6 +465,7 @@ class P2PDiscoveryService {
       
       if (previousConnection && discoveredPeer.connectionState !== 'connected') {
         console.log(`🔄 Auto-connecting to previously paired device: ${discoveredPeer.name}`);
+        console.log(`🔐 Previous connection has token: ${previousConnection.deviceToken ? 'YES' : 'NO'}`);
         
         // Try token authentication first (for known peers)
         if (previousConnection.deviceToken) {
@@ -589,27 +597,18 @@ class P2PDiscoveryService {
       return;
     }
     
-    if (req.url === '/pairing-code' && req.method === 'GET') {
-      // Provide current pairing code (for new connections)
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        pairingCode: this.currentPairingCode,
-        timestamp: Date.now()
-      }));
-      return;
-    }
-    
     if (req.url === '/pair' && req.method === 'POST') {
+      // Direct pairing for new devices (generates tokens automatically)
       let body = '';
       req.on('data', chunk => body += chunk);
       req.on('end', () => {
-        this.handlePairingRequest(body, res);
+        this.handleNewDevicePairing(body, res);
       });
       return;
     }
     
     if (req.url === '/auth-token' && req.method === 'POST') {
-      // NEW: Token-based authentication for known peers
+      // Token-based authentication for known peers
       let body = '';
       req.on('data', chunk => body += chunk);
       req.on('end', () => {
@@ -623,29 +622,14 @@ class P2PDiscoveryService {
     res.end('Not Found');
   }
 
-  handlePairingRequest(body, res) {
+  handleNewDevicePairing(body, res) {
     try {
       const data = JSON.parse(body);
       
-      // Use stored pairing code, generate one if not exists
-      if (!this.currentPairingCode) {
-        this.generatePairingCode();
-      }
+      console.log(`� New device pairing request from: ${data.requesterName} (${data.requesterId})`);
       
-      console.log(`🔍 Checking pairing code: ${data.pairingCode} against ${this.currentPairingCode}`);
-      
-      if (data.pairingCode === this.currentPairingCode) {
-        // Show confirmation dialog to user
-        this.showPairingConfirmation(data, res);
-      } else {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: false,
-          error: 'Invalid pairing code'
-        }));
-        
-        console.log(`❌ Invalid pairing attempt: ${data.pairingCode} (expected: ${this.currentPairingCode})`);
-      }
+      // Show confirmation dialog for new device
+      this.showNewDeviceConfirmation(data, res);
     } catch (error) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
@@ -728,8 +712,11 @@ class P2PDiscoveryService {
     }
   }
 
-  async showPairingConfirmation(data, res) {
+  async showNewDeviceConfirmation(data, res) {
     try {
+      console.log(`⚠️  PAIRING CONFIRMATION REQUESTED - This should only happen for NEW devices!`);
+      console.log(`📱 Device: ${data.requesterName} (${data.requesterId})`);
+      
       if (this.mainWindow) {
         // Show confirmation dialog in the main window
         const { dialog } = require('electron');
@@ -738,9 +725,9 @@ class P2PDiscoveryService {
           type: 'question',
           buttons: ['Accept', 'Deny'],
           defaultId: 0,
-          title: 'Clara P2P Connection Request',
-          message: 'Another Clara device wants to connect',
-          detail: `Device ID: ${data.requesterId}\nWould you like to accept this connection?`,
+          title: 'Clara - New Device Connection',
+          message: `New Clara device wants to connect`,
+          detail: `Device: ${data.requesterName}\nID: ${data.requesterId}\n\nThis is a one-time confirmation. Future connections will be automatic.`,
           icon: null
         });
         
@@ -913,6 +900,27 @@ class P2PDiscoveryService {
       req.write(data);
       req.end();
     });
+  }
+
+  async connectToPeer(peer) {
+    try {
+      // Use stored device token for connection
+      const storedToken = this.getStoredDeviceToken(peer.ip);
+      if (storedToken) {
+        this.logger.log('Connecting with stored device token');
+        const success = await this.testTokenAuthentication(peer, storedToken);
+        if (success) {
+          return success;
+        }
+      }
+
+      // No stored token - initiate new device pairing
+      this.logger.log('No stored token found, initiating new device pairing');
+      return await this.initiateNewDevicePairing(peer);
+    } catch (error) {
+      this.logger.error('Error in connectToPeer:', error.message);
+      return false;
+    }
   }
 
   async testTokenAuthentication(peer, deviceToken) {
@@ -1229,14 +1237,16 @@ class P2PDiscoveryService {
     try {
       const fs = require('fs');
       
-      // Get only connected peers that should auto-reconnect
+      // Get peers that should auto-reconnect (connected or previously connected)
       const connectedPeers = Array.from(this.discoveredPeers.values())
-        .filter(peer => peer.isAutoConnect && peer.connectionState === 'connected')
+        .filter(peer => peer.isAutoConnect && (peer.connectionState === 'connected' || peer.deviceToken))
         .map(peer => ({
           id: peer.id,
           name: peer.name,
           deviceToken: peer.deviceToken, // Save the device token!
-          lastConnected: new Date(),
+          lastConnected: peer.lastConnected || new Date(),
+          lastDisconnected: peer.lastDisconnected,
+          connectionState: peer.connectionState,
           isAutoConnect: true
         }));
       
@@ -1244,6 +1254,38 @@ class P2PDiscoveryService {
       console.log(`💾 Saved ${connectedPeers.length} connected peers with tokens`);
     } catch (error) {
       console.warn('Failed to save connected peers:', error.message);
+    }
+  }
+
+  async disconnectFromPeer(peerId) {
+    try {
+      const peer = this.discoveredPeers.get(peerId);
+      if (!peer) {
+        return { success: false, error: 'Peer not found' };
+      }
+
+      // Update peer state to disconnected
+      peer.connectionState = 'disconnected';
+      peer.lastDisconnected = new Date();
+      this.discoveredPeers.set(peerId, peer);
+
+      // Save updated peer state (this will now exclude the disconnected peer)
+      this.saveConnectedPeers();
+
+      // Notify frontend
+      if (this.mainWindow) {
+        this.mainWindow.webContents.send('p2p:peer-disconnected', peer);
+      }
+
+      // Re-evaluate discovery needs
+      this.manageDiscovery();
+
+      console.log(`🔌 Disconnected from peer: ${peer.name}`);
+      return { success: true };
+
+    } catch (error) {
+      console.error('Failed to disconnect from peer:', error);
+      return { success: false, error: error.message };
     }
   }
 

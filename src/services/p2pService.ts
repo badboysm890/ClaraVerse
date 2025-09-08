@@ -347,37 +347,28 @@ class P2PService extends SimpleEventEmitter {
   }
 
   /**
-   * Connect to a peer using a pairing code
+   * Connect to a discovered peer
    */
-  async connectToPeer(pairingCode: string): Promise<void> {
+  async connectToPeer(peer: ClaraPeer): Promise<void> {
     try {
-      console.log('🤝 Attempting to connect with pairing code:', pairingCode);
+      console.log('🤝 Attempting to connect to peer:', peer.name);
       
       // Use Electron backend if available
       if ((window as any).electronAPI?.invoke) {
-        const result = await (window as any).electronAPI.invoke('p2p:connect-to-peer', pairingCode);
+        const result = await (window as any).electronAPI.invoke('p2p:connect-to-peer', peer);
         if (result.success) {
-          const peer = result.peer;
-          this.peers.set(peer.id, peer);
-          this.emit('peer-connected', peer);
-          console.log('✅ Connected to peer via Electron backend:', peer.name);
+          const connectedPeer = result.peer;
+          this.peers.set(connectedPeer.id, connectedPeer);
+          this.emit('peer-connected', connectedPeer);
+          console.log('✅ Connected to peer via Electron backend:', connectedPeer.name);
         } else {
           throw new Error(result.error);
         }
       } else {
         // Fallback simulation
         const mockPeer: ClaraPeer = {
-          id: 'clara-remote-' + Date.now(),
-          name: 'Clara Mobile',
-          version: '1.0.0',
-          capabilities: ['agent-execution'],
-          isLocal: false,
-          connectionState: 'connecting',
-          lastSeen: new Date(),
-          deviceInfo: {
-            platform: 'android',
-            userAgent: 'Clara Mobile App'
-          }
+          ...peer,
+          connectionState: 'connecting'
         };
         
         this.peers.set(mockPeer.id, mockPeer);
@@ -393,7 +384,7 @@ class P2PService extends SimpleEventEmitter {
       
     } catch (error) {
       console.error('❌ Failed to connect to peer:', error);
-      this.emit('connection-failed', { pairingCode, error });
+      this.emit('connection-failed', { peer, error });
       throw error;
     }
   }
@@ -403,28 +394,38 @@ class P2PService extends SimpleEventEmitter {
    */
   async disconnectFromPeer(peerId: string): Promise<void> {
     try {
-      const peer = this.peers.get(peerId);
-      if (!peer) return;
-      
-      // Close WebRTC connection
-      const connection = this.connections.get(peerId);
-      if (connection) {
-        connection.close();
-        this.connections.delete(peerId);
+      // Call backend to handle disconnection
+      if ((window as any).electronAPI) {
+        const result = await (window as any).electronAPI.invoke('p2p:disconnect-peer', peerId);
+        if (!result.success) {
+          throw new Error(result.error || 'Backend disconnect failed');
+        }
       }
-      
-      // Close data channel
-      this.dataChannels.delete(peerId);
-      
-      // Update peer state
-      peer.connectionState = 'disconnected';
-      
-      this.emit('peer-disconnected', peer);
-      console.log('🔌 Disconnected from peer:', peer.name);
+
+      // Also handle frontend WebRTC cleanup
+      const peer = this.peers.get(peerId);
+      if (peer) {
+        // Close WebRTC connection
+        const connection = this.connections.get(peerId);
+        if (connection) {
+          connection.close();
+          this.connections.delete(peerId);
+        }
+        
+        // Close data channel
+        this.dataChannels.delete(peerId);
+        
+        // Update peer state
+        peer.connectionState = 'disconnected';
+        
+        this.emit('peer-disconnected', peer);
+        console.log('🔌 Disconnected from peer:', peer.name);
+      }
       
     } catch (error) {
       console.error('❌ Error disconnecting from peer:', error);
       this.emit('disconnection-error', { peerId, error });
+      throw error; // Re-throw so the UI can handle it
     }
   }
 

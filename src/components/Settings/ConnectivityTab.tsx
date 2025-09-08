@@ -164,9 +164,14 @@ const ConnectivitySettings: React.FC = () => {
       const handleElectronPeerDiscovered = (event: any, peer: ClaraPeer) => {
         handlePeerDiscovered(peer);
       };
+
+      const handleElectronPeerDisconnected = (event: any, peer: ClaraPeer) => {
+        handlePeerDisconnected(peer);
+      };
       
       (window as any).electronAPI.on('p2p:peer-connected', handleElectronPeerConnected);
       (window as any).electronAPI.on('p2p:peer-discovered', handleElectronPeerDiscovered);
+      (window as any).electronAPI.on('p2p:peer-disconnected', handleElectronPeerDisconnected);
     }
 
     // Cleanup
@@ -177,6 +182,7 @@ const ConnectivitySettings: React.FC = () => {
       if ((window as any).electronAPI) {
         (window as any).electronAPI.removeAllListeners('p2p:peer-connected');
         (window as any).electronAPI.removeAllListeners('p2p:peer-discovered');
+        (window as any).electronAPI.removeAllListeners('p2p:peer-disconnected');
       }
     };
   }, []);
@@ -272,7 +278,9 @@ const ConnectivitySettings: React.FC = () => {
   // Disconnect from peer
   const handleDisconnectPeer = async (peerId: string) => {
     try {
+      console.log('🔌 Attempting to disconnect peer:', peerId);
       await p2pService.disconnectFromPeer(peerId);
+      console.log('✅ Disconnect successful');
     } catch (error) {
       console.error('Disconnect failed:', error);
       alert('Failed to disconnect. Please try again.');
@@ -284,38 +292,14 @@ const ConnectivitySettings: React.FC = () => {
     try {
       setIsConnecting(true);
       
-      // For discovered peers, we need to initiate connection without a pairing code
-      // We'll use the peer's current pairing code if available
       console.log('🔗 Connecting to discovered peer:', peer.name);
-      
-      // Get the peer's pairing code from their service
-      const pairingCode = await getDiscoveredPeerPairingCode(peer);
-      if (pairingCode) {
-        await p2pService.connectToPeer(pairingCode);
-      } else {
-        throw new Error('Could not get pairing code from discovered peer');
-      }
+      await p2pService.connectToPeer(peer);
     } catch (error) {
       console.error('Connection to discovered peer failed:', error);
       alert(`Failed to connect to ${peer.name}. Please try again.`);
     } finally {
       setIsConnecting(false);
     }
-  };
-
-  // Get pairing code from a discovered peer
-  const getDiscoveredPeerPairingCode = async (peer: ClaraPeer): Promise<string | null> => {
-    try {
-      // Make HTTP request to peer to get their current pairing code
-      const response = await fetch(`http://${peer.sourceIP}:${peer.pairingPort}/pairing-code`);
-      if (response.ok) {
-        const data = await response.json();
-        return data.pairingCode;
-      }
-    } catch (error) {
-      console.warn('Failed to get pairing code from peer:', error);
-    }
-    return null;
   };
 
   // Get device icon based on platform
