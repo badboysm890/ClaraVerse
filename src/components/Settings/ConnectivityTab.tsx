@@ -45,6 +45,18 @@ const ConnectivitySettings: React.FC = () => {
 
   // Effect to listen for P2P service events
   useEffect(() => {
+    // Sync initial service state with backend
+    const syncServiceState = async () => {
+      try {
+        const actualStatus = await p2pService.getServiceStatus();
+        setIsServiceEnabled(actualStatus);
+      } catch (error) {
+        console.warn('Failed to sync service state:', error);
+      }
+    };
+    
+    syncServiceState();
+
     const handleServiceStarted = (peer: ClaraPeer) => {
       setLocalPeer(peer);
       setIsServiceEnabled(true);
@@ -163,6 +175,9 @@ const ConnectivitySettings: React.FC = () => {
       } else {
         await p2pService.start();
       }
+      // Update local state to reflect actual backend state
+      const actualStatus = await p2pService.getServiceStatus();
+      setIsServiceEnabled(actualStatus);
     } catch (error) {
       console.error('Error toggling P2P service:', error);
       alert('Failed to toggle P2P service. Please try again.');

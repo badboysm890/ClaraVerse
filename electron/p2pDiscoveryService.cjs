@@ -400,6 +400,8 @@ class P2PDiscoveryService {
         if (previousConnection.deviceToken) {
           try {
             console.log(`🔐 Attempting token authentication for: ${discoveredPeer.name}`);
+            // Set the device token on the peer before authentication
+            discoveredPeer.deviceToken = previousConnection.deviceToken;
             const result = await this.testTokenAuthentication(discoveredPeer, previousConnection.deviceToken);
             if (result.success) {
               // Update peer status
@@ -407,7 +409,6 @@ class P2PDiscoveryService {
               discoveredPeer.isAutoConnect = true;
               discoveredPeer.connectedAt = new Date();
               discoveredPeer.lastConnected = new Date();
-              discoveredPeer.deviceToken = previousConnection.deviceToken;
               this.discoveredPeers.set(discoveredPeer.id, discoveredPeer);
               
               // Save updated connection
@@ -424,6 +425,8 @@ class P2PDiscoveryService {
           } catch (error) {
             console.log(`❌ Token authentication failed for ${discoveredPeer.name}: ${error.message}`);
           }
+        } else {
+          console.log(`⚠️ No device token found for ${discoveredPeer.name}, falling back to pairing code`);
         }
         
         // Fallback to pairing code (legacy method)
@@ -853,8 +856,10 @@ class P2PDiscoveryService {
       const postData = JSON.stringify({
         requesterId: this.localPeer.id,
         requesterName: this.localPeer.name,
-        deviceToken: this.deviceToken // Send our device token
+        deviceToken: this.deviceToken // Send our device token for authentication
       });
+      
+      console.log(`🔐 Sending token auth request to ${peer.name} with our token: ${this.deviceToken.substring(0, 8)}...`);
       
       const options = {
         hostname: peer.sourceIP || peer.ipAddress,
@@ -878,23 +883,27 @@ class P2PDiscoveryService {
         res.on('end', () => {
           try {
             const response = JSON.parse(responseData);
+            console.log(`🔐 Token auth response from ${peer.name}: ${response.success ? 'SUCCESS' : 'FAILED'}`);
             resolve({
               success: response.success,
               deviceToken: response.deviceToken, // Store their token
               response: response
             });
           } catch (error) {
+            console.log(`❌ Invalid token auth response from ${peer.name}: ${error.message}`);
             resolve({ success: false, error: 'Invalid response format' });
           }
         });
       });
       
       req.on('error', (error) => {
+        console.log(`❌ Token auth connection error to ${peer.name}: ${error.message}`);
         resolve({ success: false, error: error.message });
       });
       
       req.on('timeout', () => {
         req.destroy();
+        console.log(`❌ Token auth timeout to ${peer.name}`);
         resolve({ success: false, error: 'Connection timeout' });
       });
       
@@ -1152,12 +1161,13 @@ class P2PDiscoveryService {
         .map(peer => ({
           id: peer.id,
           name: peer.name,
+          deviceToken: peer.deviceToken, // Save the device token!
           lastConnected: new Date(),
           isAutoConnect: true
         }));
       
       fs.writeFileSync(this.connectedPeersFile, JSON.stringify(connectedPeers, null, 2));
-      console.log(`💾 Saved ${connectedPeers.length} connected peers`);
+      console.log(`💾 Saved ${connectedPeers.length} connected peers with tokens`);
     } catch (error) {
       console.warn('Failed to save connected peers:', error.message);
     }

@@ -97,13 +97,31 @@ class P2PService extends SimpleEventEmitter {
   private connections: Map<string, RTCPeerConnection> = new Map();
   private dataChannels: Map<string, RTCDataChannel> = new Map();
   private localPeer: ClaraPeer | null = null;
-  private discoveryInterval: number | null = null;
+  private discoveryInterval: NodeJS.Timeout | null = null;
   private currentPairingCode: string | null = null;
   private isEnabled = false;
 
   constructor() {
     super();
     this.initializeLocalPeer();
+    this.syncWithBackend(); // Sync initial state with Electron backend
+  }
+
+  /**
+   * Sync initial state with Electron backend
+   */
+  private async syncWithBackend(): Promise<void> {
+    try {
+      if ((window as any).electronAPI?.invoke) {
+        const settings = await (window as any).electronAPI.invoke('p2p:get-settings');
+        if (settings && settings.isEnabled !== undefined) {
+          this.isEnabled = settings.isEnabled;
+          console.log('🔄 Synced P2P state with backend - isEnabled:', this.isEnabled);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to sync with backend, using default state:', error);
+    }
   }
 
   /**
@@ -490,6 +508,24 @@ class P2PService extends SimpleEventEmitter {
   }
 
   isServiceEnabled(): boolean {
+    return this.isEnabled;
+  }
+
+  /**
+   * Get current service status from backend if available
+   */
+  async getServiceStatus(): Promise<boolean> {
+    try {
+      if ((window as any).electronAPI?.invoke) {
+        const settings = await (window as any).electronAPI.invoke('p2p:get-settings');
+        if (settings && settings.isEnabled !== undefined) {
+          this.isEnabled = settings.isEnabled;
+          return this.isEnabled;
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to get service status from backend:', error);
+    }
     return this.isEnabled;
   }
 
