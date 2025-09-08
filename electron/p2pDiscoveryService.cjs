@@ -264,11 +264,13 @@ class P2PDiscoveryService {
         const existingPeer = this.discoveredPeers.get(peer.id);
         const updatedPeer = {
           ...peer,
-          isLocal: false,
+          isLocal: true, // This peer is on the local network
           connectionState: existingPeer?.connectionState || 'disconnected',
           lastSeen: new Date(),
           sourceIP: rinfo.address,
-          sourcePort: rinfo.port
+          sourcePort: rinfo.port,
+          // Use the pairing port from the peer data, not the UDP port
+          pairingPort: peer.pairingPort
         };
         
         this.discoveredPeers.set(peer.id, updatedPeer);
@@ -302,6 +304,16 @@ class P2PDiscoveryService {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         peer: this.localPeer,
+        timestamp: Date.now()
+      }));
+      return;
+    }
+    
+    if (req.url === '/pairing-code' && req.method === 'GET') {
+      // Provide current pairing code
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        pairingCode: this.currentPairingCode,
         timestamp: Date.now()
       }));
       return;

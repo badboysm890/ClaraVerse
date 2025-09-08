@@ -121,7 +121,12 @@ const ConnectivitySettings: React.FC = () => {
         handlePeerConnected(peer);
       };
       
+      const handleElectronPeerDiscovered = (event: any, peer: ClaraPeer) => {
+        handlePeerDiscovered(peer);
+      };
+      
       (window as any).electronAPI.on('p2p:peer-connected', handleElectronPeerConnected);
+      (window as any).electronAPI.on('p2p:peer-discovered', handleElectronPeerDiscovered);
     }
 
     // Cleanup
@@ -131,6 +136,7 @@ const ConnectivitySettings: React.FC = () => {
       // Remove Electron listeners if they exist
       if ((window as any).electronAPI) {
         (window as any).electronAPI.removeAllListeners('p2p:peer-connected');
+        (window as any).electronAPI.removeAllListeners('p2p:peer-discovered');
       }
     };
   }, []);
@@ -202,6 +208,45 @@ const ConnectivitySettings: React.FC = () => {
       console.error('Disconnect failed:', error);
       alert('Failed to disconnect. Please try again.');
     }
+  };
+
+  // Connect to a discovered peer directly
+  const handleConnectToDiscoveredPeer = async (peer: ClaraPeer) => {
+    try {
+      setIsConnecting(true);
+      
+      // For discovered peers, we need to initiate connection without a pairing code
+      // We'll use the peer's current pairing code if available
+      console.log('🔗 Connecting to discovered peer:', peer.name);
+      
+      // Get the peer's pairing code from their service
+      const pairingCode = await getDiscoveredPeerPairingCode(peer);
+      if (pairingCode) {
+        await p2pService.connectToPeer(pairingCode);
+      } else {
+        throw new Error('Could not get pairing code from discovered peer');
+      }
+    } catch (error) {
+      console.error('Connection to discovered peer failed:', error);
+      alert(`Failed to connect to ${peer.name}. Please try again.`);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  // Get pairing code from a discovered peer
+  const getDiscoveredPeerPairingCode = async (peer: ClaraPeer): Promise<string | null> => {
+    try {
+      // Make HTTP request to peer to get their current pairing code
+      const response = await fetch(`http://${peer.sourceIP}:${peer.pairingPort}/pairing-code`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.pairingCode;
+      }
+    } catch (error) {
+      console.warn('Failed to get pairing code from peer:', error);
+    }
+    return null;
   };
 
   // Get device icon based on platform
@@ -611,10 +656,11 @@ const ConnectivitySettings: React.FC = () => {
                       </div>
 
                       <button
-                        onClick={() => alert('🤝 Direct connection pairing coming soon!')}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                        onClick={() => handleConnectToDiscoveredPeer(peer)}
+                        disabled={isConnecting}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                       >
-                        Connect
+                        {isConnecting ? 'Connecting...' : 'Connect'}
                       </button>
                     </div>
                   );

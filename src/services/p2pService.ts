@@ -45,6 +45,11 @@ export interface ClaraPeer {
     hostname?: string;
     userAgent?: string;
   };
+  sourceIP?: string;
+  sourcePort?: number;
+  pairingPort?: number;
+  isAutoConnect?: boolean;
+  connectedAt?: Date;
 }
 
 export interface P2PConfig {
