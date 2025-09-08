@@ -8,6 +8,8 @@ const { ipcMain } = require('electron');
 const dgram = require('dgram');
 const os = require('os');
 const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
 
 class P2PDiscoveryService {
   constructor() {
@@ -16,6 +18,7 @@ class P2PDiscoveryService {
     this.udpSocket = null;
     this.httpServer = null;
     this.discoveredPeers = new Map();
+    this.connectedPeers = new Map();
     this.localPeer = null;
     this.discoveryInterval = null;
     this.mainWindow = null;
@@ -23,8 +26,14 @@ class P2PDiscoveryService {
     this.discoveryActive = false; // Track if discovery is actively running
     this.currentPairingCode = null; // Legacy: Still used for initial pairing
     this.deviceToken = null; // NEW: Permanent device authentication token
-    this.connectedPeersFile = require('path').join(require('os').homedir(), '.clara', 'connected-peers.json');
-    this.configFile = require('path').join(require('os').homedir(), '.clara', 'p2p-config.json');
+    this.dataDirectory = path.join(os.homedir(), '.clara');
+    this.connectedPeersFile = path.join(this.dataDirectory, 'connected-peers.json');
+    this.configFile = path.join(this.dataDirectory, 'p2p-config.json');
+    
+    // Ensure data directory exists
+    if (!fs.existsSync(this.dataDirectory)) {
+      fs.mkdirSync(this.dataDirectory, { recursive: true });
+    }
     
     // Load configuration and previously connected peers
     this.loadConfiguration();
@@ -48,7 +57,19 @@ class P2PDiscoveryService {
     }
   }
 
+  // Ensure Maps are properly initialized
+  ensureMapsInitialized() {
+    if (!this.discoveredPeers) {
+      this.discoveredPeers = new Map();
+    }
+    if (!this.connectedPeers) {
+      this.connectedPeers = new Map();
+    }
+  }
+
   setupIPCHandlers() {
+    this.ensureMapsInitialized(); // Ensure Maps are ready before any IPC calls
+    
     ipcMain.handle('p2p:start', async () => {
       return await this.start();
     });
@@ -58,6 +79,7 @@ class P2PDiscoveryService {
     });
 
     ipcMain.handle('p2p:get-peers', () => {
+      this.ensureMapsInitialized();
       return Array.from(this.discoveredPeers.values());
     });
 
@@ -151,6 +173,9 @@ class P2PDiscoveryService {
   async start() {
     try {
       console.log('🌐 Starting real P2P Discovery Service...');
+      
+      // Ensure Maps are properly initialized
+      this.ensureMapsInitialized();
       
       this.isEnabled = true;
       this.initializeLocalPeer();
@@ -927,58 +952,81 @@ class P2PDiscoveryService {
 
   async connectToPeer(peer) {
     try {
+      console.log('🔗 connectToPeer called with peer:', JSON.stringify(peer, null, 2));
+      
+      // Determine the correct IP to use
+      const targetIP = peer.sourceIP || peer.ip || peer.ipAddress;
+      if (!targetIP) {
+        throw new Error('No IP address found in peer object');
+      }
+      
       // Use stored device token for connection
-      const storedToken = this.getStoredDeviceToken(peer.ip);
+      const storedToken = this.getStoredDeviceToken(targetIP);
       if (storedToken) {
-        this.logger.log('Connecting with stored device token');
+        console.log('Connecting with stored device token');
         const success = await this.testTokenAuthentication(peer, storedToken);
-        if (success) {
+        if (success && success.success) {
           return { success: true, peer: success };
         } else {
           // Token failed - remove it and try new pairing
-          this.removeStoredDeviceToken(peer.ip);
-          this.logger.log('Stored token failed, removed and trying new pairing');
+          this.removeStoredDeviceToken(targetIP);
+          console.log('Stored token failed, removed and trying new pairing');
         }
       }
 
       // No stored token or token failed - initiate new device pairing
-      this.logger.log('Initiating new device pairing for:', peer.name || peer.ip);
+      console.log('Initiating new device pairing for:', peer.name || targetIP);
       const result = await this.requestNewDeviceAccess(peer);
       return result;
     } catch (error) {
-      this.logger.error('Error in connectToPeer:', error.message);
-      return { success: false, error: error.message };
+      console.error('Error in connectToPeer:', error?.message || error || 'Unknown error');
+      return { success: false, error: error?.message || error?.toString() || 'Unknown error occurred' };
     }
   }
 
   async requestNewDeviceAccess(peer) {
     try {
+      // Ensure Maps are initialized
+      this.ensureMapsInitialized();
+      
       // Generate a device token for this connection
       const deviceToken = this.generateDeviceToken();
+      
+      // Determine the correct IP to use
+      const targetIP = peer.ip || peer.sourceIP || peer.ipAddress;
+      const targetPort = peer.pairingPort || 3001;
+      
+      if (!targetIP) {
+        throw new Error('No IP address found for peer');
+      }
       
       // Send new device request to peer
       const requestData = JSON.stringify({
         type: 'new-device-request',
         deviceToken: deviceToken,
+        requesterId: this.localPeer.id,
+        requesterName: this.localPeer.name,
         deviceInfo: {
           name: this.localPeer.name,
           platform: process.platform,
           version: this.localPeer.version,
           id: this.localPeer.id,
-          ip: peer.ip // Include IP for the receiving end
+          ip: targetIP // Include IP for the receiving end
         },
         timestamp: Date.now()
       });
 
-      const response = await this.sendHttpRequest(peer.ip, peer.pairingPort, '/device-pairing', requestData);
+      console.log(`🔗 Sending device pairing request to ${peer.name} at ${targetIP}:${targetPort}`);
+      const response = await this.sendHttpRequest(targetIP, targetPort, '/pair', requestData);
       
       if (response && response.success) {
         // Store the device token for future use
-        this.storeDeviceToken(peer.ip, deviceToken);
+        this.storeDeviceToken(targetIP, deviceToken);
         
         // Create connected peer object
         const connectedPeer = {
           ...peer,
+          ip: targetIP,
           connectionState: 'connected',
           connectedAt: new Date(),
           deviceToken: deviceToken
@@ -991,16 +1039,16 @@ class P2PDiscoveryService {
         // Add to connection history
         this.addConnectionHistory(connectedPeer, 'connect', true);
         
-        this.logger.log('✅ Successfully connected to:', peer.name);
+        console.log('✅ Successfully connected to:', peer.name);
         return { success: true, peer: connectedPeer };
       } else {
         this.addConnectionHistory(peer, 'connect', false);
         return { success: false, error: response?.error || 'Device pairing request rejected' };
       }
     } catch (error) {
-      this.logger.error('Error in requestNewDeviceAccess:', error.message);
+      console.error('Error in requestNewDeviceAccess:', error?.message || error || 'Unknown error');
       this.addConnectionHistory(peer, 'connect', false);
-      return { success: false, error: error.message };
+      return { success: false, error: error?.message || error?.toString() || 'Unknown error occurred' };
     }
   }
 
@@ -1011,13 +1059,13 @@ class P2PDiscoveryService {
       const postData = JSON.stringify({
         requesterId: this.localPeer.id,
         requesterName: this.localPeer.name,
-        deviceToken: this.deviceToken // Send our device token for authentication
+        deviceToken: deviceToken // Use the passed device token
       });
       
-      console.log(`🔐 Sending token auth request to ${peer.name} with our token: ${this.deviceToken.substring(0, 8)}...`);
+      console.log(`🔐 Sending token auth request to ${peer.name} with token: ${deviceToken.substring(0, 8)}...`);
       
       const options = {
-        hostname: peer.sourceIP || peer.ipAddress,
+        hostname: peer.sourceIP || peer.ip,
         port: peer.pairingPort,
         path: '/auth-token',
         method: 'POST',
@@ -1063,6 +1111,56 @@ class P2PDiscoveryService {
       });
       
       req.write(postData);
+      req.end();
+    });
+  }
+
+  async sendHttpRequest(hostname, port, path, data) {
+    return new Promise((resolve) => {
+      const http = require('http');
+      
+      const options = {
+        hostname: hostname,
+        port: port,
+        path: path,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(data)
+        },
+        timeout: 5000
+      };
+
+      const req = http.request(options, (res) => {
+        let responseData = '';
+        
+        res.on('data', (chunk) => {
+          responseData += chunk;
+        });
+        
+        res.on('end', () => {
+          try {
+            const response = JSON.parse(responseData);
+            resolve(response);
+          } catch (error) {
+            console.log(`❌ Invalid response from ${hostname}:${port}: ${error.message}`);
+            resolve({ success: false, error: 'Invalid response format' });
+          }
+        });
+      });
+      
+      req.on('error', (error) => {
+        console.log(`❌ Connection error to ${hostname}:${port}: ${error.message}`);
+        resolve({ success: false, error: error.message });
+      });
+      
+      req.on('timeout', () => {
+        req.destroy();
+        console.log(`❌ Connection timeout to ${hostname}:${port}`);
+        resolve({ success: false, error: 'Connection timeout' });
+      });
+      
+      req.write(data);
       req.end();
     });
   }
@@ -1301,6 +1399,11 @@ class P2PDiscoveryService {
             userAgent: 'Clara/1.0.0'
           };
           this.discoveredPeers.set(peer.id, peer);
+          
+          // If peer was previously connected, add to connectedPeers as well
+          if (peer.deviceToken) {
+            this.connectedPeers.set(peer.id, peer);
+          }
         });
         
         console.log(`📚 Loaded ${peers.length} previously connected peers`);
@@ -1340,6 +1443,9 @@ class P2PDiscoveryService {
 
   async disconnectFromPeer(peerId, unpair = false) {
     try {
+      // Ensure Maps are initialized
+      this.ensureMapsInitialized();
+      
       const peer = this.discoveredPeers.get(peerId) || this.connectedPeers.get(peerId);
       if (!peer) {
         return { success: false, error: 'Peer not found' };
@@ -1400,7 +1506,7 @@ class P2PDiscoveryService {
         return tokens[peerIP] || null;
       }
     } catch (error) {
-      this.logger.error('Error reading device tokens:', error.message);
+      console.error('Error reading device tokens:', error?.message || error || 'Unknown error');
     }
     return null;
   }
@@ -1416,9 +1522,9 @@ class P2PDiscoveryService {
       
       tokens[peerIP] = token;
       fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2));
-      this.logger.log('Device token stored for:', peerIP);
+      console.log('Device token stored for:', peerIP);
     } catch (error) {
-      this.logger.error('Error storing device token:', error.message);
+      console.error('Error storing device token:', error?.message || error || 'Unknown error');
     }
   }
 
@@ -1429,10 +1535,10 @@ class P2PDiscoveryService {
         const tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
         delete tokens[peerIP];
         fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2));
-        this.logger.log('Device token removed for:', peerIP);
+        console.log('Device token removed for:', peerIP);
       }
     } catch (error) {
-      this.logger.error('Error removing device token:', error.message);
+      console.error('Error removing device token:', error?.message || error || 'Unknown error');
     }
   }
 
@@ -1448,8 +1554,8 @@ class P2PDiscoveryService {
       
       const entry = {
         timestamp: new Date().toISOString(),
-        peerName: peer.name || peer.ip,
-        peerIP: peer.ip,
+        peerName: peer.name || peer.sourceIP || peer.ip || 'unknown',
+        peerIP: peer.sourceIP || peer.ip || peer.ipAddress || 'unknown',
         action: action, // 'connect', 'disconnect', 'reject', 'token-failed'
         success: success,
         platform: peer.deviceInfo?.platform || 'unknown'
@@ -1464,7 +1570,7 @@ class P2PDiscoveryService {
       
       fs.writeFileSync(historyPath, JSON.stringify(history, null, 2));
     } catch (error) {
-      this.logger.error('Error adding connection history:', error.message);
+      console.error('Error adding connection history:', error?.message || error || 'Unknown error');
     }
   }
 
@@ -1475,7 +1581,7 @@ class P2PDiscoveryService {
         return JSON.parse(fs.readFileSync(historyPath, 'utf8'));
       }
     } catch (error) {
-      this.logger.error('Error reading connection history:', error.message);
+      console.error('Error reading connection history:', error?.message || error || 'Unknown error');
     }
     return [];
   }
