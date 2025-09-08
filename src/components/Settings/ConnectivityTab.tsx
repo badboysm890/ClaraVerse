@@ -45,6 +45,20 @@ const ConnectivitySettings: React.FC = () => {
 
   // Effect to listen for P2P service events
   useEffect(() => {
+    // Notify backend that connectivity tab is open
+    if (window.electronAPI) {
+      window.electronAPI.invoke('p2p:connectivity-tab-opened');
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      if (window.electronAPI) {
+        window.electronAPI.invoke('p2p:connectivity-tab-closed');
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     // Sync initial service state with backend
     const syncServiceState = async () => {
       try {
@@ -446,7 +460,7 @@ const ConnectivitySettings: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-500">
-                    Capabilities: {localPeer.capabilities.length}
+                    Capabilities: {localPeer.capabilities?.length || 0}
                   </p>
                 </div>
               </div>
@@ -583,7 +597,7 @@ const ConnectivitySettings: React.FC = () => {
 
               <div className="space-y-3">
                 {connectedPeers.map((peer) => {
-                  const DeviceIcon = getDeviceIcon(peer.deviceInfo.platform);
+                  const DeviceIcon = getDeviceIcon(peer.deviceInfo?.platform || 'unknown');
                   const status = getConnectionStatus(peer.connectionState);
                   const StatusIcon = status.icon;
 
@@ -601,7 +615,7 @@ const ConnectivitySettings: React.FC = () => {
                           {peer.name}
                         </h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {peer.deviceInfo.platform} • {peer.isLocal ? 'Local Network' : 'Remote'}
+                          {peer.deviceInfo?.platform || 'Unknown'} • {peer.isLocal ? 'Local Network' : 'Remote'}
                         </p>
                         <div className="flex items-center gap-4 mt-1">
                           <div className="flex items-center gap-1">
@@ -611,7 +625,7 @@ const ConnectivitySettings: React.FC = () => {
                             </span>
                           </div>
                           <span className="text-xs text-gray-500 dark:text-gray-500">
-                            {peer.capabilities.length} capabilities
+                            {peer.capabilities?.length || 0} capabilities
                           </span>
                         </div>
                       </div>
@@ -637,44 +651,6 @@ const ConnectivitySettings: React.FC = () => {
             </div>
           )}
 
-          {/* Connected Devices */}
-          {connectedPeers.length > 0 && (
-            <div className="glassmorphic rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Connected Devices ({connectedPeers.length})
-                </h3>
-              </div>
-
-              <div className="space-y-3">
-                {connectedPeers.map((peer) => (
-                  <div key={peer.id} className="flex items-center justify-between p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <div>
-                        <h4 className="font-medium text-gray-900 dark:text-white">
-                          {peer.name}
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Connected • {peer.deviceInfo?.platform || 'Unknown'} • {peer.capabilities.join(', ')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDisconnectPeer(peer.id)}
-                        className="px-3 py-1 text-sm bg-red-500/20 text-red-600 dark:text-red-400 rounded-md hover:bg-red-500/30 transition-colors"
-                      >
-                        Disconnect
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Discovered Devices */}
           {discoveredPeers.length > 0 && (
             <div className="glassmorphic rounded-xl p-6">
@@ -687,7 +663,7 @@ const ConnectivitySettings: React.FC = () => {
 
               <div className="space-y-3">
                 {discoveredPeers.map((peer) => {
-                  const DeviceIcon = getDeviceIcon(peer.deviceInfo.platform);
+                  const DeviceIcon = getDeviceIcon(peer.deviceInfo?.platform || 'unknown');
 
                   return (
                     <div
@@ -703,7 +679,7 @@ const ConnectivitySettings: React.FC = () => {
                           {peer.name}
                         </h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {peer.deviceInfo.platform} • Local Network
+                          {peer.deviceInfo?.platform || 'Unknown'} • Local Network
                         </p>
                         <span className="text-xs text-gray-500 dark:text-gray-500">
                           Last seen: {peer.lastSeen.toLocaleTimeString()}

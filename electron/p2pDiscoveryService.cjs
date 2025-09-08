@@ -19,6 +19,8 @@ class P2PDiscoveryService {
     this.localPeer = null;
     this.discoveryInterval = null;
     this.mainWindow = null;
+    this.connectivityTabOpen = false; // Track if connectivity tab is open
+    this.discoveryActive = false; // Track if discovery is actively running
     this.currentPairingCode = null; // Legacy: Still used for initial pairing
     this.deviceToken = null; // NEW: Permanent device authentication token
     this.connectedPeersFile = require('path').join(require('os').homedir(), '.clara', 'connected-peers.json');
@@ -97,6 +99,25 @@ class P2PDiscoveryService {
         isEnabled: this.isEnabled
       };
     });
+
+    // New handlers for smart discovery management
+    ipcMain.handle('p2p:connectivity-tab-opened', () => {
+      console.log('📱 Connectivity tab opened - enabling discovery');
+      this.connectivityTabOpen = true;
+      if (this.isEnabled) {
+        this.manageDiscovery();
+      }
+      return { success: true };
+    });
+
+    ipcMain.handle('p2p:connectivity-tab-closed', () => {
+      console.log('📱 Connectivity tab closed - checking if discovery needed');
+      this.connectivityTabOpen = false;
+      if (this.isEnabled) {
+        this.manageDiscovery();
+      }
+      return { success: true };
+    });
   }
 
   async start() {
@@ -117,8 +138,8 @@ class P2PDiscoveryService {
       // Start HTTP pairing server
       await this.startHTTPServer();
       
-      // Start periodic discovery broadcasts
-      this.startPeriodicDiscovery();
+      // Start intelligent discovery management
+      this.manageDiscovery();
       
       console.log('✅ P2P Discovery Service started successfully');
       console.log(`📡 Broadcasting on UDP port ${this.discoveryPort}`);
@@ -145,10 +166,7 @@ class P2PDiscoveryService {
       this.isEnabled = false;
       
       // Stop discovery interval
-      if (this.discoveryInterval) {
-        clearInterval(this.discoveryInterval);
-        this.discoveryInterval = null;
-      }
+      this.stopPeriodicDiscovery();
       
       // Close UDP socket
       if (this.udpSocket) {
@@ -291,7 +309,29 @@ class P2PDiscoveryService {
     });
   }
 
+  // Check if we have any connected peers
+  hasConnectedPeers() {
+    return Array.from(this.discoveredPeers.values()).some(peer => peer.connectionState === 'connected');
+  }
+
+  // Intelligent discovery management
+  manageDiscovery() {
+    const hasConnected = this.hasConnectedPeers();
+    const shouldRunDiscovery = this.connectivityTabOpen || !hasConnected;
+
+    if (shouldRunDiscovery && !this.discoveryActive) {
+      console.log(`🔍 Starting discovery - Tab open: ${this.connectivityTabOpen}, Connected peers: ${hasConnected ? 'Yes' : 'No'}`);
+      this.startPeriodicDiscovery();
+    } else if (!shouldRunDiscovery && this.discoveryActive) {
+      console.log(`⏹️ Stopping discovery - All peers connected and tab closed`);
+      this.stopPeriodicDiscovery();
+    }
+  }
+
   startPeriodicDiscovery() {
+    if (this.discoveryActive) return; // Already running
+    
+    this.discoveryActive = true;
     // Broadcast our presence every 5 seconds
     this.discoveryInterval = setInterval(() => {
       this.broadcastDiscovery();
@@ -299,6 +339,14 @@ class P2PDiscoveryService {
     
     // Send initial broadcast
     this.broadcastDiscovery();
+  }
+
+  stopPeriodicDiscovery() {
+    if (this.discoveryInterval) {
+      clearInterval(this.discoveryInterval);
+      this.discoveryInterval = null;
+    }
+    this.discoveryActive = false;
   }
 
   broadcastDiscovery() {
@@ -338,7 +386,11 @@ class P2PDiscoveryService {
       });
     });
     
-    console.log(`📡 Discovery broadcast sent to ${broadcastAddresses.length} networks`);
+    // Only log occasionally to avoid spam
+    if (this.broadcastCount % 12 === 0) { // Log every minute (12 * 5 seconds)
+      console.log(`📡 Discovery active - broadcasting to ${broadcastAddresses.length} networks`);
+    }
+    this.broadcastCount = (this.broadcastCount || 0) + 1;
   }
 
   handleDiscoveryMessage(msg, rinfo) {
@@ -361,15 +413,26 @@ class P2PDiscoveryService {
           sourceIP: rinfo.address,
           sourcePort: rinfo.port,
           // Use the pairing port from the peer data, not the UDP port
-          pairingPort: peer.pairingPort
+          pairingPort: peer.pairingPort,
+          // Ensure capabilities exists with defaults
+          capabilities: peer.capabilities || ['agent-execution', 'file-sharing', 'real-time-chat'],
+          // Ensure deviceInfo exists with defaults
+          deviceInfo: peer.deviceInfo || {
+            platform: 'unknown',
+            hostname: peer.name || 'Unknown Device',
+            userAgent: 'Clara/1.0.0'
+          }
         };
         
         this.discoveredPeers.set(peer.id, updatedPeer);
         
-        console.log(`🔍 Discovered Clara peer: ${peer.name} (${rinfo.address})`);
+        // Only log when we first discover a peer, not on every update
+        if (!existingPeer) {
+          console.log(`🔍 Discovered Clara peer: ${peer.name} (${rinfo.address})`);
+        }
         
-        // Auto-connect to previously connected peers
-        if (this.autoConnectEnabled) {
+        // Auto-connect to previously connected peers (only if not already connected)
+        if (this.autoConnectEnabled && updatedPeer.connectionState !== 'connected') {
           this.attemptAutoConnect(updatedPeer);
         }
         
@@ -413,6 +476,9 @@ class P2PDiscoveryService {
               
               // Save updated connection
               this.saveConnectedPeers();
+              
+              // Manage discovery after connection
+              this.manageDiscovery();
               
               // Notify frontend
               if (this.mainWindow) {
@@ -1137,6 +1203,14 @@ class P2PDiscoveryService {
         peers.forEach(peer => {
           peer.connectionState = 'disconnected'; // Reset state on startup
           peer.isAutoConnect = true;
+          // Ensure capabilities exists with defaults
+          peer.capabilities = peer.capabilities || ['agent-execution', 'file-sharing', 'real-time-chat'];
+          // Ensure deviceInfo exists with defaults
+          peer.deviceInfo = peer.deviceInfo || {
+            platform: 'unknown',
+            hostname: peer.name || 'Unknown Device',
+            userAgent: 'Clara/1.0.0'
+          };
           this.discoveredPeers.set(peer.id, peer);
         });
         
