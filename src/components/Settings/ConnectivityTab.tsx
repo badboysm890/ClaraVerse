@@ -57,17 +57,29 @@ const ConnectivitySettings: React.FC = () => {
     const handlePeerDiscovered = (peer: ClaraPeer) => {
       setPeers(prev => {
         const existing = prev.find(p => p.id === peer.id);
-        if (existing) return prev;
+        if (existing) {
+          // Update existing peer
+          return prev.map(p => p.id === peer.id ? peer : p);
+        }
         return [...prev, peer];
       });
     };
 
     const handlePeerConnected = (peer: ClaraPeer) => {
-      setPeers(prev => prev.map(p => p.id === peer.id ? peer : p));
+      setPeers(prev => {
+        const existing = prev.find(p => p.id === peer.id);
+        if (existing) {
+          // Update existing peer to connected state
+          return prev.map(p => p.id === peer.id ? { ...p, connectionState: 'connected' } : p);
+        }
+        // Add new connected peer
+        return [...prev, { ...peer, connectionState: 'connected' }];
+      });
+      console.log('🔗 Peer connected:', peer.name);
     };
 
     const handlePeerDisconnected = (peer: ClaraPeer) => {
-      setPeers(prev => prev.map(p => p.id === peer.id ? peer : p));
+      setPeers(prev => prev.map(p => p.id === peer.id ? { ...p, connectionState: 'disconnected' } : p));
     };
 
     const handlePairingCodeGenerated = (code: string) => {
@@ -100,10 +112,26 @@ const ConnectivitySettings: React.FC = () => {
       const initialCode = p2pService.refreshPairingCode();
       setPairingCode(initialCode);
     }
+    // Load initial state  
+    setPeers(p2pService.getPeers());
+    
+    // Listen for Electron IPC events (if in Electron)
+    if ((window as any).electronAPI) {
+      const handleElectronPeerConnected = (event: any, peer: ClaraPeer) => {
+        handlePeerConnected(peer);
+      };
+      
+      (window as any).electronAPI.on('p2p:peer-connected', handleElectronPeerConnected);
+    }
 
     // Cleanup
     return () => {
       p2pService.removeAllListeners();
+      
+      // Remove Electron listeners if they exist
+      if ((window as any).electronAPI) {
+        (window as any).electronAPI.removeAllListeners('p2p:peer-connected');
+      }
     };
   }, []);
 
@@ -505,6 +533,44 @@ const ConnectivitySettings: React.FC = () => {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Connected Devices */}
+          {connectedPeers.length > 0 && (
+            <div className="glassmorphic rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Connected Devices ({connectedPeers.length})
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {connectedPeers.map((peer) => (
+                  <div key={peer.id} className="flex items-center justify-between p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <div>
+                        <h4 className="font-medium text-gray-900 dark:text-white">
+                          {peer.name}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Connected • {peer.deviceInfo?.platform || 'Unknown'} • {peer.capabilities.join(', ')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleDisconnectPeer(peer.id)}
+                        className="px-3 py-1 text-sm bg-red-500/20 text-red-600 dark:text-red-400 rounded-md hover:bg-red-500/30 transition-colors"
+                      >
+                        Disconnect
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

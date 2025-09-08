@@ -20,6 +20,10 @@ class P2PDiscoveryService {
     this.discoveryInterval = null;
     this.mainWindow = null;
     this.currentPairingCode = null; // Store the current pairing code
+    this.connectedPeersFile = require('path').join(require('os').homedir(), '.clara', 'connected-peers.json');
+    
+    // Load previously connected peers
+    this.loadConnectedPeers();
     
     // Setup IPC handlers
     this.setupIPCHandlers();
@@ -329,14 +333,8 @@ class P2PDiscoveryService {
       console.log(`🔍 Checking pairing code: ${data.pairingCode} against ${this.currentPairingCode}`);
       
       if (data.pairingCode === this.currentPairingCode) {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: true,
-          peer: this.localPeer,
-          message: 'Pairing successful'
-        }));
-        
-        console.log(`✅ Successful pairing with: ${data.requesterId}`);
+        // Show confirmation dialog to user
+        this.showPairingConfirmation(data, res);
       } else {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -357,6 +355,76 @@ class P2PDiscoveryService {
     }
   }
 
+  async showPairingConfirmation(data, res) {
+    try {
+      if (this.mainWindow) {
+        // Show confirmation dialog in the main window
+        const { dialog } = require('electron');
+        
+        const result = await dialog.showMessageBox(this.mainWindow, {
+          type: 'question',
+          buttons: ['Accept', 'Deny'],
+          defaultId: 0,
+          title: 'Clara P2P Connection Request',
+          message: 'Another Clara device wants to connect',
+          detail: `Device ID: ${data.requesterId}\nWould you like to accept this connection?`,
+          icon: null
+        });
+        
+        if (result.response === 0) { // Accept
+          // Add to connected peers
+          const connectedPeer = {
+            id: data.requesterId,
+            name: data.requesterName || 'Unknown Device',
+            connectionState: 'connected',
+            connectedAt: new Date(),
+            isAutoConnect: true
+          };
+          
+          this.discoveredPeers.set(data.requesterId, connectedPeer);
+          this.saveConnectedPeers();
+          
+          // Send success response
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            peer: this.localPeer,
+            message: 'Connection accepted'
+          }));
+          
+          // Notify frontend
+          if (this.mainWindow) {
+            this.mainWindow.webContents.send('p2p:peer-connected', connectedPeer);
+          }
+          
+          console.log(`✅ Connection accepted for: ${data.requesterId}`);
+        } else { // Deny
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: false,
+            error: 'Connection denied by user'
+          }));
+          
+          console.log(`❌ Connection denied for: ${data.requesterId}`);
+        }
+      } else {
+        // Fallback: auto-accept if no UI available
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          peer: this.localPeer,
+          message: 'Connection auto-accepted'
+        }));
+        
+        console.log(`✅ Connection auto-accepted for: ${data.requesterId}`);
+      }
+    } catch (error) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Server error' }));
+      console.error('Confirmation dialog error:', error);
+    }
+  }
+
   async connectToPeer(pairingCode) {
     try {
       console.log(`🤝 Attempting to connect with pairing code: ${pairingCode}`);
@@ -374,9 +442,19 @@ class P2PDiscoveryService {
           if (response.success) {
             console.log(`✅ Successfully connected to ${peer.name}`);
             
-            // Update peer status
+            // Update peer status and save connection
             peer.connectionState = 'connected';
+            peer.isAutoConnect = true;
+            peer.connectedAt = new Date();
             this.discoveredPeers.set(peer.id, peer);
+            
+            // Save to persistent storage
+            this.saveConnectedPeers();
+            
+            // Notify frontend
+            if (this.mainWindow) {
+              this.mainWindow.webContents.send('p2p:peer-connected', peer);
+            }
             
             return {
               success: true,
@@ -417,7 +495,8 @@ class P2PDiscoveryService {
       const data = JSON.stringify({
         type: 'pairing-request',
         pairingCode: pairingCode,
-        requesterId: this.localPeer.id
+        requesterId: this.localPeer.id,
+        requesterName: this.localPeer.name
       });
       
       const options = {
@@ -544,7 +623,8 @@ class P2PDiscoveryService {
       const data = JSON.stringify({
         type: 'pairing-request',
         pairingCode: pairingCode,
-        requesterId: this.localPeer.id
+        requesterId: this.localPeer.id,
+        requesterName: this.localPeer.name
       });
       
       const options = {
@@ -593,6 +673,57 @@ class P2PDiscoveryService {
       req.write(data);
       req.end();
     });
+  }
+
+  loadConnectedPeers() {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Create directory if it doesn't exist
+      const dir = path.dirname(this.connectedPeersFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
+      // Load connected peers if file exists
+      if (fs.existsSync(this.connectedPeersFile)) {
+        const data = fs.readFileSync(this.connectedPeersFile, 'utf8');
+        const peers = JSON.parse(data);
+        
+        // Add to discovered peers with auto-connect flag
+        peers.forEach(peer => {
+          peer.connectionState = 'disconnected'; // Reset state on startup
+          peer.isAutoConnect = true;
+          this.discoveredPeers.set(peer.id, peer);
+        });
+        
+        console.log(`📚 Loaded ${peers.length} previously connected peers`);
+      }
+    } catch (error) {
+      console.warn('Failed to load connected peers:', error.message);
+    }
+  }
+
+  saveConnectedPeers() {
+    try {
+      const fs = require('fs');
+      
+      // Get only connected peers that should auto-reconnect
+      const connectedPeers = Array.from(this.discoveredPeers.values())
+        .filter(peer => peer.isAutoConnect && peer.connectionState === 'connected')
+        .map(peer => ({
+          id: peer.id,
+          name: peer.name,
+          lastConnected: new Date(),
+          isAutoConnect: true
+        }));
+      
+      fs.writeFileSync(this.connectedPeersFile, JSON.stringify(connectedPeers, null, 2));
+      console.log(`💾 Saved ${connectedPeers.length} connected peers`);
+    } catch (error) {
+      console.warn('Failed to save connected peers:', error.message);
+    }
   }
 
   setMainWindow(mainWindow) {
