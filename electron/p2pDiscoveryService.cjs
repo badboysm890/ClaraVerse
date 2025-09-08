@@ -706,7 +706,7 @@ class P2PDiscoveryService {
       }
       
       const knownPeer = connectedPeers.find(peer => 
-        peer.deviceToken === data.deviceToken && peer.id === data.requesterId
+        peer.deviceToken === data.deviceToken
       );
       
       if (knownPeer) {
@@ -723,6 +723,11 @@ class P2PDiscoveryService {
           isAutoConnect: true,
           lastConnected: new Date()
         };
+        
+        // Update the known peer record with new peer ID
+        knownPeer.id = data.requesterId;
+        knownPeer.name = data.requesterName || knownPeer.name;
+        knownPeer.lastConnected = new Date();
         
         this.discoveredPeers.set(data.requesterId, connectedPeer);
         this.saveConnectedPeers();
