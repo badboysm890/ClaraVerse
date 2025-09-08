@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Save, User, Globe, Server, Image, Settings as SettingsIcon, Trash2, HardDrive, Plus, Check, X, Edit3, Zap, Router, Bot, Download, RotateCcw, AlertCircle, ExternalLink, Brain, Puzzle, Power, Palette, Type, Search, Clock, ChevronRight, ChevronDown } from 'lucide-react';
+import { Save, User, Globe, Server, Image, Settings as SettingsIcon, Trash2, HardDrive, Plus, Check, X, Edit3, Zap, Router, Bot, Download, RotateCcw, AlertCircle, ExternalLink, Brain, Puzzle, Power, Palette, Type, Search, Clock, ChevronRight, ChevronDown, Wifi } from 'lucide-react';
 import { db, type PersonalInfo, type APIConfig, type Provider } from '../db';
 import { useTheme, ThemeMode } from '../hooks/useTheme';
 import { useProviders } from '../contexts/ProvidersContext';
@@ -8,6 +8,7 @@ import ModelManager from './ModelManager';
 import ToolBelt from './ToolBelt';
 import UnifiedServiceManager from './Settings/UnifiedServiceManager';
 import StartupTab from './Settings/StartupTab';
+import ConnectivityTab from './Settings/ConnectivityTab';
 import GPUDiagnostics from './GPUDiagnostics';
 import { 
   DEFAULT_UI_PREFERENCES, 
@@ -78,10 +79,10 @@ const Settings = () => {
   // Sub-tabs for each main category
   const [activeInterfaceTab, setActiveInterfaceTab] = useState<'appearance' | 'ui-preferences'>('appearance');
   const [activeAITab, setActiveAITab] = useState<'api' | 'models' | 'mcp'>('api');
-  const [activeSystemTab, setActiveSystemTab] = useState<'startup' | 'services' | 'toolbelt' | 'updates'>('startup');
+  const [activeSystemTab, setActiveSystemTab] = useState<'startup' | 'connectivity' | 'services' | 'toolbelt' | 'updates'>('startup');
   
   // Keep legacy activeTab for backward compatibility during transition
-  const [activeTab, setActiveTab] = useState<'personal' | 'api' | 'preferences' | 'models' | 'mcp' | 'toolbelt' | 'updates' | 'sdk-demo' | 'servers' | 'startup'>('api');
+  const [activeTab, setActiveTab] = useState<'personal' | 'api' | 'preferences' | 'models' | 'mcp' | 'toolbelt' | 'updates' | 'sdk-demo' | 'servers' | 'startup' | 'connectivity'>('api');
   const [activeModelTab, setActiveModelTab] = useState<'models' | 'gpu-diagnostics'>('models');
 
   // Ensure first sub-tab is selected when switching main tabs
@@ -112,6 +113,7 @@ const Settings = () => {
       // Default to first sub-tab when main tab is selected
       const selected = activeSystemTab || 'startup';
       if (selected === 'startup') return 'startup';
+      if (selected === 'connectivity') return 'connectivity';
       if (selected === 'services') return 'servers';
       return selected as 'toolbelt' | 'updates';
     }
@@ -1684,6 +1686,16 @@ const Settings = () => {
                     }`}
                   >
                     Startup
+                  </button>
+                  <button
+                    onClick={() => setActiveSystemTab('connectivity')}
+                    className={`flex items-center px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                      activeSystemTab === 'connectivity'
+                        ? 'text-sakura-600 dark:text-sakura-300 font-medium'
+                        : 'text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100'
+                    }`}
+                  >
+                    Connectivity
                   </button>
                   <button
                     onClick={() => setActiveSystemTab('services')}
@@ -3480,6 +3492,11 @@ const ProcessButton = () => {
           {/* Startup Tab */}
           {effectiveActiveTab === 'startup' && (
             <StartupTab />
+          )}
+
+          {/* Connectivity Tab */}
+          {effectiveActiveTab === 'connectivity' && (
+            <ConnectivityTab />
           )}
 
           {/* Updates Tab */}
