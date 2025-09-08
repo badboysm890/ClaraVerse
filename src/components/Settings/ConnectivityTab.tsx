@@ -40,6 +40,8 @@ const ConnectivitySettings: React.FC = () => {
   const [connectCode, setConnectCode] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [autoStartEnabled, setAutoStartEnabled] = useState(false);
+  const [autoConnectEnabled, setAutoConnectEnabled] = useState(true);
 
   // Effect to listen for P2P service events
   useEffect(() => {
@@ -114,6 +116,18 @@ const ConnectivitySettings: React.FC = () => {
     }
     // Load initial state  
     setPeers(p2pService.getPeers());
+    
+    // Load auto-connect settings (if in Electron)
+    if ((window as any).electronAPI) {
+      (window as any).electronAPI.invoke('p2p:get-settings').then((settings: any) => {
+        setAutoStartEnabled(settings.autoStartOnBoot || false);
+        setAutoConnectEnabled(settings.autoConnectEnabled !== false); // Default to true
+      }).catch(() => {
+        // Fallback if not available
+        setAutoStartEnabled(false);
+        setAutoConnectEnabled(true);
+      });
+    }
     
     // Listen for Electron IPC events (if in Electron)
     if ((window as any).electronAPI) {
@@ -198,6 +212,32 @@ const ConnectivitySettings: React.FC = () => {
   const refreshPairingCode = () => {
     const newCode = p2pService.refreshPairingCode();
     setPairingCode(newCode);
+  };
+
+  // Handle auto-start toggle
+  const handleAutoStartToggle = async (enabled: boolean) => {
+    try {
+      if ((window as any).electronAPI) {
+        await (window as any).electronAPI.invoke('p2p:set-auto-start', enabled);
+        setAutoStartEnabled(enabled);
+        console.log(`🔧 Auto-start ${enabled ? 'enabled' : 'disabled'}`);
+      }
+    } catch (error) {
+      console.error('Failed to update auto-start setting:', error);
+    }
+  };
+
+  // Handle auto-connect toggle
+  const handleAutoConnectToggle = async (enabled: boolean) => {
+    try {
+      if ((window as any).electronAPI) {
+        await (window as any).electronAPI.invoke('p2p:set-auto-connect', enabled);
+        setAutoConnectEnabled(enabled);
+        console.log(`🔗 Auto-connect ${enabled ? 'enabled' : 'disabled'}`);
+      }
+    } catch (error) {
+      console.error('Failed to update auto-connect setting:', error);
+    }
   };
 
   // Disconnect from peer
@@ -722,22 +762,45 @@ const ConnectivitySettings: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <label className="text-sm font-medium text-gray-900 dark:text-white">
-                    Auto-connect to Known Devices
+                    Auto-start P2P on Launch
                   </label>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
-                    Automatically reconnect to previously paired devices
+                    Automatically start P2P service when Clara opens
                   </p>
                 </div>
                 <button
-                  onClick={() => handleConfigChange({ autoConnect: !config.autoConnect })}
+                  onClick={() => handleAutoStartToggle(!autoStartEnabled)}
                   className={`relative w-12 h-6 rounded-full transition-all duration-300 ${
-                    config.autoConnect
+                    autoStartEnabled
+                      ? 'bg-gradient-to-r from-purple-400 to-purple-500'
+                      : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
+                    autoStartEnabled ? 'translate-x-6' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-sm font-medium text-gray-900 dark:text-white">
+                    Auto-connect to Known Devices
+                  </label>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Automatically reconnect to previously paired devices (like Bluetooth)
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleAutoConnectToggle(!autoConnectEnabled)}
+                  className={`relative w-12 h-6 rounded-full transition-all duration-300 ${
+                    autoConnectEnabled
                       ? 'bg-gradient-to-r from-blue-400 to-blue-500'
                       : 'bg-gray-200 dark:bg-gray-700'
                   }`}
                 >
                   <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
-                    config.autoConnect ? 'translate-x-6' : 'translate-x-0'
+                    autoConnectEnabled ? 'translate-x-6' : 'translate-x-0'
                   }`} />
                 </button>
               </div>

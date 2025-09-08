@@ -19,14 +19,31 @@ class P2PDiscoveryService {
     this.localPeer = null;
     this.discoveryInterval = null;
     this.mainWindow = null;
-    this.currentPairingCode = null; // Store the current pairing code
+    this.currentPairingCode = null; // Legacy: Still used for initial pairing
+    this.deviceToken = null; // NEW: Permanent device authentication token
     this.connectedPeersFile = require('path').join(require('os').homedir(), '.clara', 'connected-peers.json');
+    this.configFile = require('path').join(require('os').homedir(), '.clara', 'p2p-config.json');
     
-    // Load previously connected peers
+    // Load configuration and previously connected peers
+    this.loadConfiguration();
     this.loadConnectedPeers();
+    
+    // Generate or load permanent device token
+    this.initializeDeviceToken();
     
     // Setup IPC handlers
     this.setupIPCHandlers();
+    
+    // Auto-start P2P if enabled
+    if (this.autoStartOnBoot) {
+      setTimeout(() => {
+        this.start().then(() => {
+          console.log('🚀 P2P service auto-started on boot');
+        }).catch(error => {
+          console.error('Failed to auto-start P2P service:', error);
+        });
+      }, 2000); // Wait 2 seconds for app to fully initialize
+    }
   }
 
   setupIPCHandlers() {
@@ -60,6 +77,26 @@ class P2PDiscoveryService {
     ipcMain.handle('p2p:update-config', async (event, updates) => {
       return await this.updateConfig(updates);
     });
+    
+    ipcMain.handle('p2p:set-auto-start', async (event, enabled) => {
+      this.autoStartOnBoot = enabled;
+      this.saveConfiguration();
+      return { success: true };
+    });
+    
+    ipcMain.handle('p2p:set-auto-connect', async (event, enabled) => {
+      this.autoConnectEnabled = enabled;
+      this.saveConfiguration();
+      return { success: true };
+    });
+    
+    ipcMain.handle('p2p:get-settings', () => {
+      return {
+        autoStartOnBoot: this.autoStartOnBoot,
+        autoConnectEnabled: this.autoConnectEnabled,
+        isEnabled: this.isEnabled
+      };
+    });
   }
 
   async start() {
@@ -86,6 +123,13 @@ class P2PDiscoveryService {
       console.log('✅ P2P Discovery Service started successfully');
       console.log(`📡 Broadcasting on UDP port ${this.discoveryPort}`);
       console.log(`🔗 Pairing server on HTTP port ${this.localPeer.pairingPort}`);
+      
+      // Save auto-start preference when manually started
+      if (!this.autoStartOnBoot) {
+        this.autoStartOnBoot = true;
+        this.saveConfiguration();
+        console.log('💾 Auto-start enabled for next boot');
+      }
       
       return { success: true, localPeer: this.localPeer };
     } catch (error) {
@@ -150,6 +194,29 @@ class P2PDiscoveryService {
     return 'clara-' + crypto.randomBytes(8).toString('hex');
   }
 
+  initializeDeviceToken() {
+    try {
+      const config = this.loadConfiguration();
+      if (config && config.deviceToken) {
+        this.deviceToken = config.deviceToken;
+        console.log('📱 Loaded existing device token');
+      } else {
+        // Generate new permanent device token
+        this.deviceToken = this.generateDeviceToken();
+        this.saveConfiguration();
+        console.log('🔐 Generated new device token:', this.deviceToken.substring(0, 8) + '...');
+      }
+    } catch (error) {
+      console.error('Failed to initialize device token:', error);
+      this.deviceToken = this.generateDeviceToken();
+    }
+  }
+
+  generateDeviceToken() {
+    // Generate a permanent 32-byte token (256 bits) for strong security
+    return crypto.randomBytes(32).toString('hex');
+  }
+
   generatePairingCode() {
     const words = ['BRAIN', 'NOVA', 'STAR', 'CORE', 'DATA', 'SYNC', 'FLOW', 'LINK'];
     const word = words[Math.floor(Math.random() * words.length)];
@@ -172,11 +239,26 @@ class P2PDiscoveryService {
         reject(err);
       });
       
-      this.udpSocket.bind(this.discoveryPort, () => {
-        this.udpSocket.setBroadcast(true);
-        console.log(`📡 UDP Discovery server listening on port ${this.discoveryPort}`);
-        resolve();
-      });
+      // Try to bind to the preferred port, or find an available one
+      const tryBind = (port) => {
+        this.udpSocket.bind(port, (error) => {
+          if (error) {
+            if (error.code === 'EADDRINUSE' && port < 47300) {
+              // Try next port
+              tryBind(port + 1);
+            } else {
+              reject(error);
+            }
+          } else {
+            this.discoveryPort = port;
+            this.udpSocket.setBroadcast(true);
+            console.log(`📡 UDP Discovery server listening on port ${this.discoveryPort}`);
+            resolve();
+          }
+        });
+      };
+      
+      tryBind(this.discoveryPort);
     });
   }
 
@@ -189,8 +271,17 @@ class P2PDiscoveryService {
       });
       
       this.httpServer.on('error', (err) => {
-        console.error('HTTP Pairing Server Error:', err);
-        reject(err);
+        if (err.code === 'EADDRINUSE') {
+          // Try next port
+          this.localPeer.pairingPort++;
+          this.httpServer.listen(this.localPeer.pairingPort, () => {
+            console.log(`🔗 HTTP Pairing server listening on port ${this.localPeer.pairingPort}`);
+            resolve();
+          });
+        } else {
+          console.error('HTTP Pairing Server Error:', err);
+          reject(err);
+        }
       });
       
       this.httpServer.listen(this.localPeer.pairingPort, () => {
@@ -277,6 +368,11 @@ class P2PDiscoveryService {
         
         console.log(`🔍 Discovered Clara peer: ${peer.name} (${rinfo.address})`);
         
+        // Auto-connect to previously connected peers
+        if (this.autoConnectEnabled) {
+          this.attemptAutoConnect(updatedPeer);
+        }
+        
         // Notify renderer of new peer
         if (this.mainWindow) {
           this.mainWindow.webContents.send('p2p:peer-discovered', updatedPeer);
@@ -285,6 +381,120 @@ class P2PDiscoveryService {
     } catch (error) {
       console.warn('Invalid discovery message:', error.message);
     }
+  }
+
+  async attemptAutoConnect(discoveredPeer) {
+    try {
+      // Check if this peer was previously connected
+      const connectedPeers = this.loadConnectedPeers();
+      if (!connectedPeers || !Array.isArray(connectedPeers)) {
+        return; // No previous connections or invalid data
+      }
+      
+      const previousConnection = connectedPeers.find(p => p.id === discoveredPeer.id);
+      
+      if (previousConnection && discoveredPeer.connectionState !== 'connected') {
+        console.log(`🔄 Auto-connecting to previously paired device: ${discoveredPeer.name}`);
+        
+        // Try token authentication first (for known peers)
+        if (previousConnection.deviceToken) {
+          try {
+            console.log(`🔐 Attempting token authentication for: ${discoveredPeer.name}`);
+            const result = await this.testTokenAuthentication(discoveredPeer, previousConnection.deviceToken);
+            if (result.success) {
+              // Update peer status
+              discoveredPeer.connectionState = 'connected';
+              discoveredPeer.isAutoConnect = true;
+              discoveredPeer.connectedAt = new Date();
+              discoveredPeer.lastConnected = new Date();
+              discoveredPeer.deviceToken = previousConnection.deviceToken;
+              this.discoveredPeers.set(discoveredPeer.id, discoveredPeer);
+              
+              // Save updated connection
+              this.saveConnectedPeers();
+              
+              // Notify frontend
+              if (this.mainWindow) {
+                this.mainWindow.webContents.send('p2p:peer-connected', discoveredPeer);
+              }
+              
+              console.log(`✅ Auto-connected via token to ${discoveredPeer.name}`);
+              return; // Success, no need to try pairing code
+            }
+          } catch (error) {
+            console.log(`❌ Token authentication failed for ${discoveredPeer.name}: ${error.message}`);
+          }
+        }
+        
+        // Fallback to pairing code (legacy method)
+        try {
+          const pairingCode = await this.fetchPeerPairingCode(discoveredPeer);
+          if (pairingCode) {
+            // Attempt auto-connection
+            const result = await this.testPeerConnection(discoveredPeer, pairingCode);
+            if (result.success) {
+              // Update peer status
+              discoveredPeer.connectionState = 'connected';
+              discoveredPeer.isAutoConnect = true;
+              discoveredPeer.connectedAt = new Date();
+              this.discoveredPeers.set(discoveredPeer.id, discoveredPeer);
+              
+              // Save updated connection
+              this.saveConnectedPeers();
+              
+              // Notify frontend
+              if (this.mainWindow) {
+                this.mainWindow.webContents.send('p2p:peer-connected', discoveredPeer);
+              }
+              
+              console.log(`✅ Auto-connected via pairing code to ${discoveredPeer.name}`);
+            } else {
+              console.log(`❌ Auto-connect failed for ${discoveredPeer.name}: Pairing code mismatch`);
+            }
+          }
+        } catch (error) {
+          console.log(`❌ Pairing code auto-connect failed for ${discoveredPeer.name}: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      console.warn('Auto-connect attempt failed:', error.message);
+    }
+  }
+
+  async fetchPeerPairingCode(peer) {
+    return new Promise((resolve) => {
+      const http = require('http');
+      const timeout = 3000;
+      
+      const options = {
+        hostname: peer.sourceIP,
+        port: peer.pairingPort,
+        path: '/pairing-code',
+        method: 'GET',
+        timeout: timeout
+      };
+      
+      const req = http.request(options, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          try {
+            const response = JSON.parse(body);
+            resolve(response.pairingCode);
+          } catch (error) {
+            resolve(null);
+          }
+        });
+      });
+      
+      req.on('error', () => resolve(null));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(null);
+      });
+      
+      req.end();
+    });
   }
 
   handleHTTPRequest(req, res) {
@@ -304,13 +514,14 @@ class P2PDiscoveryService {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         peer: this.localPeer,
+        deviceToken: this.deviceToken, // Include device token for known peers
         timestamp: Date.now()
       }));
       return;
     }
     
     if (req.url === '/pairing-code' && req.method === 'GET') {
-      // Provide current pairing code
+      // Provide current pairing code (for new connections)
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         pairingCode: this.currentPairingCode,
@@ -324,6 +535,16 @@ class P2PDiscoveryService {
       req.on('data', chunk => body += chunk);
       req.on('end', () => {
         this.handlePairingRequest(body, res);
+      });
+      return;
+    }
+    
+    if (req.url === '/auth-token' && req.method === 'POST') {
+      // NEW: Token-based authentication for known peers
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        this.handleTokenAuthentication(body, res);
       });
       return;
     }
@@ -367,6 +588,77 @@ class P2PDiscoveryService {
     }
   }
 
+  handleTokenAuthentication(body, res) {
+    try {
+      const data = JSON.parse(body);
+      console.log(`🔐 Device token authentication attempt from: ${data.requesterId}`);
+      
+      // Check if this device token matches a known connected peer
+      const connectedPeers = this.loadConnectedPeers();
+      if (!connectedPeers || !Array.isArray(connectedPeers)) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: false,
+          error: 'No known devices found'
+        }));
+        return;
+      }
+      
+      const knownPeer = connectedPeers.find(peer => 
+        peer.deviceToken === data.deviceToken && peer.id === data.requesterId
+      );
+      
+      if (knownPeer) {
+        // Automatic authentication for known devices
+        console.log(`✅ Auto-authenticated known device: ${knownPeer.name} (${data.requesterId})`);
+        
+        // Update peer status
+        const connectedPeer = {
+          id: data.requesterId,
+          name: data.requesterName || knownPeer.name,
+          deviceToken: data.deviceToken,
+          connectionState: 'connected',
+          connectedAt: new Date(),
+          isAutoConnect: true,
+          lastConnected: new Date()
+        };
+        
+        this.discoveredPeers.set(data.requesterId, connectedPeer);
+        this.saveConnectedPeers();
+        
+        // Send success response with our device token
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: true,
+          message: 'Token authenticated successfully',
+          deviceToken: this.deviceToken // Send our token back
+        }));
+        
+        // Notify frontend
+        if (this.mainWindow) {
+          this.mainWindow.webContents.send('p2p:peer-connected', connectedPeer);
+        }
+      } else {
+        // Unknown device token
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Unknown device token'
+        }));
+        
+        console.log(`❌ Unknown device token from: ${data.requesterId}`);
+      }
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: false,
+        error: 'Invalid request'
+      }));
+      
+      console.log(`❌ Invalid token authentication request: ${error.message}`);
+    }
+  }
+
   async showPairingConfirmation(data, res) {
     try {
       if (this.mainWindow) {
@@ -384,10 +676,11 @@ class P2PDiscoveryService {
         });
         
         if (result.response === 0) { // Accept
-          // Add to connected peers
+          // Add to connected peers with device token for future auto-connect
           const connectedPeer = {
             id: data.requesterId,
             name: data.requesterName || 'Unknown Device',
+            deviceToken: data.deviceToken, // Save the requesting device's token
             connectionState: 'connected',
             connectedAt: new Date(),
             isAutoConnect: true
@@ -396,11 +689,12 @@ class P2PDiscoveryService {
           this.discoveredPeers.set(data.requesterId, connectedPeer);
           this.saveConnectedPeers();
           
-          // Send success response
+          // Send success response with our device token
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
             success: true,
             peer: this.localPeer,
+            deviceToken: this.deviceToken, // Send our token for mutual authentication
             message: 'Connection accepted'
           }));
           
@@ -454,10 +748,18 @@ class P2PDiscoveryService {
           if (response.success) {
             console.log(`✅ Successfully connected to ${peer.name}`);
             
-            // Update peer status and save connection
+            // Update peer status and save connection with device token
             peer.connectionState = 'connected';
             peer.isAutoConnect = true;
             peer.connectedAt = new Date();
+            peer.lastConnected = new Date();
+            
+            // Save device token if provided in response
+            if (response.deviceToken) {
+              peer.deviceToken = response.deviceToken;
+              console.log('🔐 Saved device token for future auto-connect');
+            }
+            
             this.discoveredPeers.set(peer.id, peer);
             
             // Save to persistent storage
@@ -508,7 +810,8 @@ class P2PDiscoveryService {
         type: 'pairing-request',
         pairingCode: pairingCode,
         requesterId: this.localPeer.id,
-        requesterName: this.localPeer.name
+        requesterName: this.localPeer.name,
+        deviceToken: this.deviceToken // Include our device token for saving
       });
       
       const options = {
@@ -539,6 +842,63 @@ class P2PDiscoveryService {
       req.on('error', reject);
       req.on('timeout', () => reject(new Error('Connection timeout')));
       req.write(data);
+      req.end();
+    });
+  }
+
+  async testTokenAuthentication(peer, deviceToken) {
+    return new Promise((resolve) => {
+      const http = require('http');
+      
+      const postData = JSON.stringify({
+        requesterId: this.localPeer.id,
+        requesterName: this.localPeer.name,
+        deviceToken: this.deviceToken // Send our device token
+      });
+      
+      const options = {
+        hostname: peer.sourceIP || peer.ipAddress,
+        port: peer.pairingPort,
+        path: '/auth-token',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        },
+        timeout: 3000
+      };
+      
+      const req = http.request(options, (res) => {
+        let responseData = '';
+        
+        res.on('data', (chunk) => {
+          responseData += chunk;
+        });
+        
+        res.on('end', () => {
+          try {
+            const response = JSON.parse(responseData);
+            resolve({
+              success: response.success,
+              deviceToken: response.deviceToken, // Store their token
+              response: response
+            });
+          } catch (error) {
+            resolve({ success: false, error: 'Invalid response format' });
+          }
+        });
+      });
+      
+      req.on('error', (error) => {
+        resolve({ success: false, error: error.message });
+      });
+      
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ success: false, error: 'Connection timeout' });
+      });
+      
+      req.write(postData);
       req.end();
     });
   }
@@ -687,6 +1047,67 @@ class P2PDiscoveryService {
     });
   }
 
+  loadConfiguration() {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Create directory if it doesn't exist
+      const dir = path.dirname(this.configFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
+      // Load P2P configuration if file exists
+      if (fs.existsSync(this.configFile)) {
+        const data = fs.readFileSync(this.configFile, 'utf8');
+        const config = JSON.parse(data);
+        
+        // Apply saved configuration
+        if (config.autoStartP2P === true) {
+          this.autoStartOnBoot = true;
+          console.log('🔧 P2P auto-start enabled from saved configuration');
+        }
+        
+        if (config.autoConnectToPeers === true) {
+          this.autoConnectEnabled = true;
+          console.log('🔗 Auto-connect to peers enabled from saved configuration');
+        }
+        
+        console.log('📋 Loaded P2P configuration');
+        return config; // Return loaded config for device token access
+      } else {
+        // Default configuration
+        this.autoStartOnBoot = false;
+        this.autoConnectEnabled = true; // Enable by default
+        return null;
+      }
+    } catch (error) {
+      console.warn('Failed to load P2P configuration:', error.message);
+      this.autoStartOnBoot = false;
+      this.autoConnectEnabled = true;
+      return null;
+    }
+  }
+
+  saveConfiguration() {
+    try {
+      const fs = require('fs');
+      
+      const config = {
+        autoStartP2P: this.autoStartOnBoot || false,
+        autoConnectToPeers: this.autoConnectEnabled || true,
+        deviceToken: this.deviceToken, // Save permanent device token
+        lastUpdated: new Date().toISOString()
+      };
+      
+      fs.writeFileSync(this.configFile, JSON.stringify(config, null, 2));
+      console.log('💾 Saved P2P configuration with device token');
+    } catch (error) {
+      console.warn('Failed to save P2P configuration:', error.message);
+    }
+  }
+
   loadConnectedPeers() {
     try {
       const fs = require('fs');
@@ -711,9 +1132,13 @@ class P2PDiscoveryService {
         });
         
         console.log(`📚 Loaded ${peers.length} previously connected peers`);
+        return peers; // Return the loaded peers array
       }
+      
+      return []; // Return empty array if no file
     } catch (error) {
       console.warn('Failed to load connected peers:', error.message);
+      return []; // Return empty array on error
     }
   }
 

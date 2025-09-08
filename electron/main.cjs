@@ -244,13 +244,16 @@ ipcMain.on = function(channel, handler) {
 };
 
 // Initialize IPC Logger after app is ready
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   ipcLogger = new IPCLogger();
   ipcLogger.logSystem('Application started');
   
   // Initialize Network Service Manager to prevent UI refreshes during crashes
   networkServiceManager = new NetworkServiceManager();
   log.info('🛡️ Network Service Manager initialized');
+  
+  // Initialize background P2P service early (independent of UI)
+  await initializeBackgroundP2PService();
 });
 
 // macOS Security Configuration - Prevent unnecessary firewall prompts
@@ -279,6 +282,7 @@ let comfyUIModelService;
 let widgetService;
 let schedulerService;
 let p2pDiscoveryService;
+let p2pServiceInitialized = false;
 let initializationInProgress = false;
 let initializationComplete = false;
 
@@ -307,6 +311,33 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// Initialize P2P service as background service (independent of UI)
+async function initializeBackgroundP2PService() {
+  if (p2pServiceInitialized) {
+    return;
+  }
+  
+  try {
+    log.info('🚀 Initializing background P2P service...');
+    p2pDiscoveryService = new P2PDiscoveryService();
+    p2pServiceInitialized = true;
+    log.info('✅ Background P2P service initialized successfully');
+    
+    // Auto-start if configured to do so
+    const config = p2pDiscoveryService.loadConfiguration();
+    if (config && config.autoStartOnBoot) {
+      try {
+        await p2pDiscoveryService.start();
+        log.info('🌐 P2P service auto-started in background');
+      } catch (error) {
+        log.error('❌ Failed to auto-start P2P service:', error);
+      }
+    }
+  } catch (error) {
+    log.error('❌ Failed to initialize background P2P service:', error);
+  }
 }
 
 // Register Docker container management IPC handlers
@@ -5478,16 +5509,23 @@ async function initializeInBackground(selectedFeatures) {
       // Continue without scheduler if it fails
     }
     
-    // Initialize P2P Discovery Service
-    sendStatusUpdate('initializing-p2p', { message: 'Initializing P2P connectivity...' });
+    // Connect P2P Discovery Service to main window
+    sendStatusUpdate('initializing-p2p', { message: 'Connecting P2P service to window...' });
     try {
-      if (!p2pDiscoveryService) {
-        p2pDiscoveryService = new P2PDiscoveryService();
+      if (p2pDiscoveryService && p2pServiceInitialized) {
         p2pDiscoveryService.setMainWindow(mainWindow);
-        log.info('✅ P2P Discovery Service initialized successfully');
+        log.info('✅ P2P Discovery Service connected to window');
+      } else {
+        // Fallback: Initialize if not already done
+        if (!p2pDiscoveryService) {
+          p2pDiscoveryService = new P2PDiscoveryService();
+          p2pDiscoveryService.setMainWindow(mainWindow);
+          p2pServiceInitialized = true;
+          log.info('✅ P2P Discovery Service initialized (fallback)');
+        }
       }
     } catch (error) {
-      log.error('❌ Failed to initialize P2P Discovery Service:', error);
+      log.error('❌ Failed to connect P2P Discovery Service to window:', error);
       // Continue without P2P if it fails
     }
     
@@ -6208,6 +6246,17 @@ app.on('window-all-closed', async () => {
     
     // Unregister global shortcuts when app is quitting
     globalShortcut.unregisterAll();
+    
+    // Stop background P2P service only when actually quitting
+    if (p2pDiscoveryService) {
+      try {
+        log.info('Stopping background P2P service...');
+        await p2pDiscoveryService.stop();
+        p2pServiceInitialized = false;
+      } catch (error) {
+        log.error('Error stopping P2P service:', error);
+      }
+    }
     
     // Stop watchdog service first
     if (watchdogService) {
@@ -8037,10 +8086,34 @@ function createTray() {
     // Create the tray
     tray = new Tray(trayIcon);
     
-    // Set tooltip
-    tray.setToolTip('ClaraVerse');
+    // Set tooltip with P2P status
+    const getTooltipText = () => {
+      let tooltip = 'ClaraVerse';
+      if (p2pDiscoveryService) {
+        if (p2pDiscoveryService.isEnabled) {
+          const peerCount = p2pDiscoveryService.discoveredPeers ? p2pDiscoveryService.discoveredPeers.size : 0;
+          tooltip += `\nP2P: Active (${peerCount} peers discovered)`;
+        } else {
+          tooltip += '\nP2P: Stopped';
+        }
+      } else {
+        tooltip += '\nP2P: Not initialized';
+      }
+      return tooltip;
+    };
     
-    // Create context menu
+    tray.setToolTip(getTooltipText());
+    
+    // Create context menu with P2P status
+    const getP2PStatus = () => {
+      if (!p2pDiscoveryService) return 'P2P: Not initialized';
+      if (p2pDiscoveryService.isEnabled) {
+        const peerCount = p2pDiscoveryService.discoveredPeers ? p2pDiscoveryService.discoveredPeers.size : 0;
+        return `P2P: Active (${peerCount} peers)`;
+      }
+      return 'P2P: Stopped';
+    };
+    
     const contextMenu = Menu.buildFromTemplate([
       {
         label: 'Show ClaraVerse',
@@ -8061,6 +8134,31 @@ function createTray() {
         click: () => {
           if (mainWindow) {
             mainWindow.hide();
+          }
+        }
+      },
+      { type: 'separator' },
+      {
+        label: getP2PStatus(),
+        enabled: false // Display only
+      },
+      {
+        label: p2pDiscoveryService && p2pDiscoveryService.isEnabled ? 'Stop P2P Service' : 'Start P2P Service',
+        click: async () => {
+          if (p2pDiscoveryService) {
+            try {
+              if (p2pDiscoveryService.isEnabled) {
+                await p2pDiscoveryService.stop();
+                log.info('P2P service stopped from tray');
+              } else {
+                await p2pDiscoveryService.start();
+                log.info('P2P service started from tray');
+              }
+              // Refresh tray menu
+              setTimeout(createTray, 100);
+            } catch (error) {
+              log.error('Error toggling P2P service from tray:', error);
+            }
           }
         }
       },
