@@ -187,6 +187,69 @@ class P2PDiscoveryService {
         return { success: false, error: error.message };
       }
     });
+
+    // Handler for clearing all connection data (comprehensive reset)
+    ipcMain.handle('p2p:clear-all-connections', async () => {
+      try {
+        console.log('🧹 Clearing all connection data...');
+        
+        // 1. Disconnect all current peers
+        const currentPeers = this.peers;
+        for (const peer of currentPeers) {
+          try {
+            await this.disconnectFromPeer(peer.id);
+          } catch (error) {
+            console.warn(`Failed to disconnect from peer ${peer.id}:`, error.message);
+          }
+        }
+        
+        // 2. Revoke all authentication tokens
+        await this.revokeAllTokens();
+        
+        // 3. Clear connection history
+        const historyPath = path.join(this.dataDirectory, 'connection-history.json');
+        if (fs.existsSync(historyPath)) {
+          fs.unlinkSync(historyPath);
+        }
+        
+        // 4. Clear stored peer data
+        const peersPath = path.join(this.dataDirectory, 'known-peers.json');
+        if (fs.existsSync(peersPath)) {
+          fs.unlinkSync(peersPath);
+        }
+        
+        // 5. Clear any cached tokens
+        const tokensPath = path.join(this.dataDirectory, 'auth-tokens.json');
+        if (fs.existsSync(tokensPath)) {
+          fs.unlinkSync(tokensPath);
+        }
+        
+        // 6. Reset in-memory peer list
+        this.peers = [];
+        this.knownPeers = new Map();
+        
+        // 7. Generate new device fingerprint to force fresh identity
+        this.deviceFingerprint = this.generateDeviceFingerprint();
+        
+        console.log('✅ All connection data cleared successfully');
+        
+        // Notify UI of the reset
+        if (this.mainWindow) {
+          this.mainWindow.webContents.send('p2p:all-connections-cleared');
+        }
+        
+        return { 
+          success: true, 
+          message: 'All connection data cleared. Devices will need to be re-paired.' 
+        };
+      } catch (error) {
+        console.error('❌ Failed to clear all connection data:', error);
+        return { 
+          success: false, 
+          error: error.message 
+        };
+      }
+    });
   }
 
   // Periodic security maintenance

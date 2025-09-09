@@ -14,7 +14,6 @@ import {
   Key, 
   Play, 
   Pause, 
-  X, 
   Globe,
   Settings as SettingsIcon,
   AlertCircle,
@@ -150,10 +149,17 @@ const ConnectivitySettings: React.FC = () => {
       const handleElectronPeerDisconnected = (_: any, peer: ClaraPeer) => {
         handlePeerDisconnected(peer);
       };
+
+      const handleElectronConnectionsCleared = () => {
+        setPeers([]);
+        setConnectionHistory([]);
+        console.log('🧹 UI updated after connections cleared');
+      };
       
       (window as any).electronAPI.on('p2p:peer-connected', handleElectronPeerConnected);
       (window as any).electronAPI.on('p2p:peer-discovered', handleElectronPeerDiscovered);
       (window as any).electronAPI.on('p2p:peer-disconnected', handleElectronPeerDisconnected);
+      (window as any).electronAPI.on('p2p:all-connections-cleared', handleElectronConnectionsCleared);
     }
 
     // Cleanup
@@ -165,6 +171,7 @@ const ConnectivitySettings: React.FC = () => {
         (window as any).electronAPI.removeAllListeners('p2p:peer-connected');
         (window as any).electronAPI.removeAllListeners('p2p:peer-discovered');
         (window as any).electronAPI.removeAllListeners('p2p:peer-disconnected');
+        (window as any).electronAPI.removeAllListeners('p2p:all-connections-cleared');
       }
     };
   }, []);
@@ -240,6 +247,38 @@ const ConnectivitySettings: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to update auto-connect setting:', error);
+    }
+  };
+
+  // Clear all connections for debugging
+  const handleClearAllConnections = async () => {
+    const confirmed = window.confirm(
+      'This will:\n' +
+      '• Disconnect all current peers\n' +
+      '• Clear all stored authentication tokens\n' +
+      '• Remove connection history\n' +
+      '• Reset device identity\n\n' +
+      'All devices will need to be re-paired. Continue?'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      if ((window as any).electronAPI) {
+        const result = await (window as any).electronAPI.invoke('p2p:clear-all-connections');
+        if (result.success) {
+          // Reset local state
+          setPeers([]);
+          setConnectionHistory([]);
+          
+          alert('✅ All connections cleared successfully!\n\nDevices will need to be re-paired to connect again.');
+        } else {
+          throw new Error(result.error || 'Unknown error occurred');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to clear all connections:', error);
+      alert('❌ Failed to clear connections: ' + (error as Error).message);
     }
   };
 
@@ -724,6 +763,35 @@ const ConnectivitySettings: React.FC = () => {
                     config.discoveryEnabled ? 'translate-x-6' : 'translate-x-0'
                   }`} />
                 </button>
+              </div>
+
+              {/* Clear All Connections Button */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-medium text-gray-900 dark:text-white">
+                      Reset Connections
+                    </label>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      Clear all stored connections and tokens for fresh start
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleClearAllConnections}
+                    className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm font-medium border border-red-200 dark:border-red-800"
+                  >
+                    Clear All Connections
+                  </button>
+                </div>
+                <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                    <div className="text-xs text-amber-700 dark:text-amber-300">
+                      <p className="font-medium">Debug Tool:</p>
+                      <p>Use this if experiencing connection issues between devices. All devices will need to be re-paired after clearing.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
