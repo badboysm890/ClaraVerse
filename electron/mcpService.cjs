@@ -30,20 +30,24 @@ class MCPService {
         this.config.lastRunningServers = [];
       }
       
-      // Always ensure Clara's MCP server exists after loading config
-      this.ensureClaraMCPExists();
+      // Schedule Clara's MCP server check for next tick to avoid sync/async issues
+      setImmediate(() => {
+        this.ensureClaraMCPExists().catch(error => {
+          log.error('Failed to ensure Clara MCP server exists during config load:', error);
+        });
+      });
     } catch (error) {
       log.error('Error loading MCP config:', error);
       this.config = {
         mcpServers: {},
         lastRunningServers: []
       };
-      // Try to ensure Clara's MCP server exists even after an error
-      try {
-        this.ensureClaraMCPExists();
-      } catch (ensureError) {
-        log.error('Failed to ensure Clara MCP server exists after config load error:', ensureError);
-      }
+      // Schedule Clara's MCP server check even after an error
+      setImmediate(() => {
+        this.ensureClaraMCPExists().catch(ensureError => {
+          log.error('Failed to ensure Clara MCP server exists after config load error:', ensureError);
+        });
+      });
     }
   }
 
@@ -62,21 +66,37 @@ class MCPService {
       if (!this.config.mcpServers['python-mcp']) {
         log.info('Clara\'s Python MCP server missing, restoring it...');
         
-        // Get the resolved executable path
-        const executablePath = this.resolveBundledExecutablePath('python-mcp-server');
-        
-        this.config.mcpServers['python-mcp'] = {
-          type: 'stdio',
-          command: executablePath,
-          args: [],
-          env: {},
-          description: 'Bundled Python MCP Server (Clara Native) - Always Available',
-          enabled: true,
-          createdAt: new Date().toISOString()
-        };
-        
-        this.saveConfig();
-        log.info('Clara\'s Python MCP server restored successfully');
+        try {
+          // Get the resolved executable path
+          const executablePath = this.resolveBundledExecutablePath('python-mcp-server');
+          
+          this.config.mcpServers['python-mcp'] = {
+            type: 'stdio',
+            command: executablePath,
+            args: [],
+            env: {},
+            description: 'Bundled Python MCP Server (Clara Native) - Always Available',
+            enabled: true,
+            createdAt: new Date().toISOString()
+          };
+          
+          this.saveConfig();
+          log.info('Clara\'s Python MCP server restored successfully');
+        } catch (pathError) {
+          log.warn('Failed to resolve bundled executable path, Clara MCP server may not work:', pathError);
+          // Still create the entry so the system knows it should exist
+          this.config.mcpServers['python-mcp'] = {
+            type: 'stdio',
+            command: 'python-mcp-server', // Fallback to the command name
+            args: [],
+            env: {},
+            description: 'Bundled Python MCP Server (Clara Native) - Always Available (Path Unresolved)',
+            enabled: false, // Disable since path couldn't be resolved
+            createdAt: new Date().toISOString()
+          };
+          this.saveConfig();
+          log.info('Clara\'s Python MCP server entry created but disabled due to path resolution failure');
+        }
       }
     } catch (error) {
       log.error('Error ensuring Clara\'s MCP server exists:', error);
@@ -195,26 +215,35 @@ class MCPService {
           throw new Error(`Unsupported platform: ${os.platform()}`);
       }
       
-      // Try electron app resources first (production)
-      let resolvedPath;
-      const resourcesPath = process.resourcesPath 
-        ? path.join(process.resourcesPath, 'electron', 'services', executableName)
-        : null;
+      // Multiple paths to try (in order of preference)
+      const pathsToTry = [];
       
-      // Try local development path
-      const devPath = path.join(__dirname, 'services', executableName);
-      
-      // Check which path exists
-      if (resourcesPath && fs.existsSync(resourcesPath)) {
-        resolvedPath = resourcesPath;
-      } else if (fs.existsSync(devPath)) {
-        resolvedPath = devPath;
-      } else {
-        throw new Error(`MCP server binary not found. Tried paths: ${resourcesPath || 'N/A'}, ${devPath}`);
+      // 1. Production: electron app resources
+      if (process.resourcesPath) {
+        pathsToTry.push(path.join(process.resourcesPath, 'electron', 'services', executableName));
+        pathsToTry.push(path.join(process.resourcesPath, 'clara-mcp', executableName));
       }
       
-      log.info(`Resolved bundled executable path: ${command} -> ${resolvedPath}`);
-      return resolvedPath;
+      // 2. Development: relative to electron directory
+      pathsToTry.push(path.join(__dirname, 'services', executableName));
+      pathsToTry.push(path.join(__dirname, '..', 'clara-mcp', executableName));
+      
+      // 3. Development: relative to project root
+      const projectRoot = path.resolve(__dirname, '..');
+      pathsToTry.push(path.join(projectRoot, 'clara-mcp', executableName));
+      pathsToTry.push(path.join(projectRoot, 'electron', 'services', executableName));
+      
+      // Check which path exists
+      for (const tryPath of pathsToTry) {
+        if (fs.existsSync(tryPath)) {
+          log.info(`Resolved bundled executable path: ${command} -> ${tryPath}`);
+          return tryPath;
+        }
+      }
+      
+      // If none found, log all tried paths for debugging
+      log.error(`MCP server binary not found. Tried paths: ${pathsToTry.join(', ')}`);
+      throw new Error(`MCP server binary not found. Tried ${pathsToTry.length} paths.`);
     }
     
     // Return original command for non-bundled executables
@@ -529,8 +558,10 @@ class MCPService {
   }
 
   getAllServers() {
-    // Ensure Clara's MCP server exists before returning server list
-    this.ensureClaraMCPExists();
+    // Ensure Clara's MCP server exists before returning server list (async, non-blocking)
+    this.ensureClaraMCPExists().catch(error => {
+      log.error('Failed to ensure Clara MCP server exists in getAllServers:', error);
+    });
     
     const servers = [];
     

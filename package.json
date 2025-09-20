@@ -282,6 +282,20 @@
           "!*.log",
           "!config.yaml"
         ]
+      },
+      {
+        "from": "clara-mcp",
+        "to": "clara-mcp",
+        "filter": [
+          "**/*",
+          "!*.log",
+          "!*.json",
+          "!go.mod",
+          "!go.sum",
+          "!*.go",
+          "!build-all.*",
+          "!mcp_workspace/**"
+        ]
       }
     ],
     "directories": {
@@ -342,6 +356,20 @@
           "to": "electron/services",
           "filter": [
             "**/*"
+          ]
+        },
+        {
+          "from": "clara-mcp",
+          "to": "clara-mcp",
+          "filter": [
+            "**/*",
+            "!*.log",
+            "!*.json",
+            "!go.mod",
+            "!go.sum",
+            "!*.go",
+            "!build-all.*",
+            "!mcp_workspace/**"
           ]
         }
       ],
