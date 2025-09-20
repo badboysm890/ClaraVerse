@@ -1,0 +1,129 @@
+services:
+  # ComfyUI - AI Image Generation
+  clara_comfyui:
+    image: clara17verse/clara-comfyui:with-custom-nodes
+    container_name: clara_comfyui
+    ports:
+      - "8188:8188"
+    environment:
+      # GPU Environment (will be enabled if NVIDIA GPU detected)
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:2048,expandable_segments:True
+      - CUDA_LAUNCH_BLOCKING=0
+      - TORCH_CUDNN_V8_API_ENABLED=1
+      - CUDA_MODULE_LOADING=LAZY
+      - XFORMERS_MORE_DETAILS=0
+      - COMFYUI_FORCE_FP16=1
+      - COMFYUI_DISABLE_XFORMERS_WARNING=1
+      - COMFYUI_HIGHVRAM=1
+      - COMFYUI_DISABLE_MODEL_OFFLOAD=1
+      - COMFYUI_VRAM_USAGE=gpu-only
+    volumes:
+      - comfyui_models:/app/ComfyUI/models
+      - comfyui_output:/app/ComfyUI/output
+      - comfyui_input:/app/ComfyUI/input
+      - comfyui_custom_nodes:/app/ComfyUI/custom_nodes
+      - comfyui_temp:/app/ComfyUI/temp
+      - comfyui_user:/app/ComfyUI/user
+    networks:
+      - clara_network
+    runtime: nvidia  # Will be removed if no GPU detected
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8188/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Python Backend - Core AI Processing
+  clara_python:
+    image: clara17verse/clara-backend:latest
+    container_name: clara_python
+    ports:
+      - "5001:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TOKENIZERS_PARALLELISM=false
+      - OMP_NUM_THREADS=1
+      # GPU Environment (will be enabled if NVIDIA GPU detected)
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512,expandable_segments:True
+      - CUDA_LAUNCH_BLOCKING=0
+      - TORCH_CUDNN_V8_API_ENABLED=1
+      - CUDA_MODULE_LOADING=LAZY
+      - CUDA_CACHE_DISABLE=0
+      - WHISPER_CUDA=1
+      - FASTER_WHISPER_DEVICE=cuda
+    volumes:
+      - python_data:/home/clara
+      - python_models:/app/models
+    networks:
+      - clara_network
+    runtime: nvidia  # Will be removed if no GPU detected
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # n8n - Workflow Automation
+  clara_n8n:
+    image: n8nio/n8n:latest
+    container_name: clara_n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=clara123  # Change this!
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - clara_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Docker Networks
+networks:
+  clara_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+# Docker Volumes for Data Persistence
+volumes:
+  # ComfyUI Data
+  comfyui_models:
+    driver: local
+  comfyui_output:
+    driver: local
+  comfyui_input:
+    driver: local
+  comfyui_custom_nodes:
+    driver: local
+  comfyui_temp:
+    driver: local
+  comfyui_user:
+    driver: local
+  
+  # Python Backend Data
+  python_data:
+    driver: local
+  python_models:
+    driver: local
+  
+  # n8n Data
+  n8n_data:
+    driver: local

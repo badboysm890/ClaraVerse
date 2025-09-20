@@ -29,12 +29,21 @@ class MCPService {
       if (!this.config.lastRunningServers) {
         this.config.lastRunningServers = [];
       }
+      
+      // Always ensure Clara's MCP server exists after loading config
+      this.ensureClaraMCPExists();
     } catch (error) {
       log.error('Error loading MCP config:', error);
       this.config = {
         mcpServers: {},
         lastRunningServers: []
       };
+      // Try to ensure Clara's MCP server exists even after an error
+      try {
+        this.ensureClaraMCPExists();
+      } catch (ensureError) {
+        log.error('Failed to ensure Clara MCP server exists after config load error:', ensureError);
+      }
     }
   }
 
@@ -43,6 +52,34 @@ class MCPService {
       fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
     } catch (error) {
       log.error('Error saving MCP config:', error);
+    }
+  }
+
+  // Ensure Clara's Python MCP server always exists
+  async ensureClaraMCPExists() {
+    try {
+      // Check if Clara's Python MCP server exists
+      if (!this.config.mcpServers['python-mcp']) {
+        log.info('Clara\'s Python MCP server missing, restoring it...');
+        
+        // Get the resolved executable path
+        const executablePath = this.resolveBundledExecutablePath('python-mcp-server');
+        
+        this.config.mcpServers['python-mcp'] = {
+          type: 'stdio',
+          command: executablePath,
+          args: [],
+          env: {},
+          description: 'Bundled Python MCP Server (Clara Native) - Always Available',
+          enabled: true,
+          createdAt: new Date().toISOString()
+        };
+        
+        this.saveConfig();
+        log.info('Clara\'s Python MCP server restored successfully');
+      }
+    } catch (error) {
+      log.error('Error ensuring Clara\'s MCP server exists:', error);
     }
   }
 
@@ -86,6 +123,12 @@ class MCPService {
   async removeServer(name) {
     if (!this.config.mcpServers[name]) {
       throw new Error(`MCP server '${name}' not found`);
+    }
+
+    // Prevent deletion of Clara's core MCP server (python-mcp)
+    if (name === 'python-mcp') {
+      log.warn(`Attempted to delete Clara's core MCP server (${name}) - operation blocked`);
+      throw new Error("Clara's Python MCP server cannot be deleted as it is a system-required component.");
     }
 
     // Stop the server if it's running
@@ -486,6 +529,9 @@ class MCPService {
   }
 
   getAllServers() {
+    // Ensure Clara's MCP server exists before returning server list
+    this.ensureClaraMCPExists();
+    
     const servers = [];
     
     for (const [name, config] of Object.entries(this.config.mcpServers)) {

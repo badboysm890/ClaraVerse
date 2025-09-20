@@ -227,7 +227,14 @@ const MCPSettings: React.FC = () => {
       setShowDeleteMcpConfirm(null);
     } catch (error) {
       console.error('Error deleting MCP server:', error);
-      alert('Failed to delete MCP server. Please try again.');
+      setShowDeleteMcpConfirm(null);
+      
+      // Show user-friendly error message
+      if (error instanceof Error && error.message.includes("Clara's Python MCP server cannot be deleted")) {
+        alert("❌ Clara's Python MCP server cannot be deleted as it is a system-required component that ensures the application functions properly.");
+      } else {
+        alert('Failed to delete MCP server. Please try again.');
+      }
     }
   };
 
@@ -793,13 +800,16 @@ const MCPSettings: React.FC = () => {
                           <Edit3 className="w-4 h-4" />
                         </button>
                         
-                        <button
-                          onClick={() => setShowDeleteMcpConfirm(server.name)}
-                          className="p-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                          title="Delete server"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {/* Hide delete button for Clara's core python-mcp server */}
+                        {server.name !== 'python-mcp' && (
+                          <button
+                            onClick={() => setShowDeleteMcpConfirm(server.name)}
+                            className="p-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                            title="Delete server"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
 

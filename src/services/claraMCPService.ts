@@ -61,6 +61,15 @@ export class ClaraMCPService {
       }
 
       const servers = await window.mcpService.getServers();
+      
+      // Always ensure Clara's Python MCP server exists
+      const hasPythonMCP = servers.some((server: any) => server.name === 'python-mcp');
+      if (!hasPythonMCP) {
+        console.log('🔧 Clara Python MCP server missing, restoring it...');
+        await this.setupBundledPythonMCPServer();
+        return; // setupBundledPythonMCPServer calls refreshServers internally
+      }
+      
       this.servers.clear();
       
       console.log(`📡 Retrieved ${servers.length} servers from backend:`, servers.map(s => ({ 
