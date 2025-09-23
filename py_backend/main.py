@@ -849,6 +849,12 @@ if LIGHTRAG_AVAILABLE:
                 embedding_dim = 768
             elif 'bge-m3' in embedding_model_name:
                 embedding_dim = 1024
+            elif "qwen3-embedding-0.6b" in embedding_model_name.lower():
+                embedding_dim = 1024
+            elif "qwen3-embedding-4b" in embedding_model_name.lower():
+                embedding_dim = 2560
+            elif "qwen3-embedding-8b" in embedding_model_name.lower():
+                embedding_dim = 4096
             
             logger.info(f"Using embedding dimension: {embedding_dim}")
             
