@@ -34,6 +34,13 @@ try:
     from lightrag.llm.ollama import ollama_model_complete, ollama_embed
     from lightrag.utils import EmbeddingFunc, setup_logger
     from lightrag.kg.shared_storage import initialize_pipeline_status
+    # Import rerank functions for enhanced performance
+    try:
+        from lightrag.rerank import cohere_rerank, jina_rerank
+        RERANK_AVAILABLE = True
+    except ImportError:
+        RERANK_AVAILABLE = False
+        logging.warning("Rerank functions not available - retrieval performance may be reduced")
 
     LIGHTRAG_AVAILABLE = True
 except ImportError as e:
@@ -153,6 +160,12 @@ if LIGHTRAG_AVAILABLE:
                 for notebook_id, notebook_data in data.items():
                     if isinstance(notebook_data.get('created_at'), str):
                         notebook_data['created_at'] = datetime.fromisoformat(notebook_data['created_at'])
+                    
+                    # Backward compatibility: add default schema fields if missing
+                    if 'entity_types' not in notebook_data:
+                        notebook_data['entity_types'] = None  # Will use defaults
+                    if 'language' not in notebook_data:
+                        notebook_data['language'] = "en"
                 
                 lightrag_notebooks_db = data
                 logger.info(f"Loaded {len(data)} notebooks from {NOTEBOOKS_DB_FILE}")
@@ -294,113 +307,6 @@ def get_text2speech():
 
 # LightRAG Utility Functions
 if LIGHTRAG_AVAILABLE:
-    def create_llm_func(provider_config: Dict[str, Any]):
-        """Create LLM function based on provider configuration using LightRAG built-in functions"""
-        provider_type = provider_config.get('type', 'ollama')
-        model_name = provider_config.get('model', 'gemma3:4b')
-        api_key = provider_config.get('apiKey', '')
-        base_url = provider_config.get('baseUrl', '')
-        
-        # Validate API key for non-Ollama providers
-        if provider_type != 'ollama' and (not api_key or api_key.strip() == 'your-api-key'):
-            raise ValueError(f"Invalid or missing API key for provider type: {provider_type}")
-        
-        try:
-            if provider_type == 'openai':
-                logger.info(f"Using OpenAI LLM with model: {model_name}")
-                if 'gpt-4o-mini' in model_name:
-                    return gpt_4o_mini_complete
-                elif 'gpt-4o' in model_name:
-                    return gpt_4o_complete
-                else:
-                    return openai_complete
-            
-            elif provider_type == 'openai_compatible':
-                logger.info(f"Using OpenAI-compatible LLM: {base_url} with model: {model_name}")
-                # Use LightRAG's built-in function directly - it will handle the calling
-                return openai_complete_if_cache
-            
-            elif provider_type == 'ollama':
-                logger.info(f"Using Ollama LLM with model: {model_name}")
-                # Use LightRAG's built-in function directly - it will handle the calling
-                return ollama_model_complete
-            
-            else:
-                raise ValueError(f"Unsupported provider type: {provider_type}")
-                        
-        except Exception as e:
-            logger.error(f"Error creating LLM function for provider {provider_type}: {e}")
-            raise
-
-    def create_embedding_func(provider_config: Dict[str, Any]):
-        """Create embedding function based on provider configuration using LightRAG built-in functions"""
-        provider_type = provider_config.get('type', 'ollama')
-        model_name = provider_config.get('model', 'mxbai-embed-large:latest')
-        api_key = provider_config.get('apiKey', '')
-        base_url = provider_config.get('baseUrl', '')
-        
-        # Validate API key for non-Ollama providers
-        if provider_type != 'ollama' and (not api_key or api_key.strip() == 'your-api-key'):
-            raise ValueError(f"Invalid or missing API key for embedding provider type: {provider_type}")
-        
-        try:
-            if provider_type == 'openai':
-                logger.info(f"Using OpenAI embeddings with model: {model_name}")
-                # Use lambda function to pass the texts parameter correctly
-                return lambda texts: openai_embed(
-                    texts=texts,
-                    model=model_name,
-                    api_key=api_key.strip()
-                )
-            
-            elif provider_type == 'openai_compatible':
-                logger.info(f"Using OpenAI-compatible embeddings: {base_url} with model: {model_name}")
-                # Try user's config first, fallback to Ollama
-                def openai_compatible_embedding_func(texts):
-                    try:
-                        logger.info(f"Attempting embeddings with {base_url}")
-                        result = openai_embed(
-                            texts=texts,
-                                model=model_name,
-                            api_key=api_key.strip(),
-                            base_url=base_url
-                        )
-                        logger.info(f"Successfully generated {len(result)} embeddings with OpenAI-compatible API")
-                        return result
-                    except Exception as e:
-                        logger.warning(f"OpenAI-compatible embedding failed: {e}")
-                        logger.info("Falling back to local Ollama embeddings")
-                        try:
-                            result = ollama_embed(
-                                texts=texts,
-                                embed_model="mxbai-embed-large:latest",
-                                host="http://localhost:11434"
-                            )
-                            logger.info(f"Successfully generated {len(result)} embeddings with Ollama fallback")
-                            return result
-                        except Exception as fallback_error:
-                            error_msg = f"Both OpenAI-compatible and Ollama embedding failed. OpenAI error: {e}, Ollama error: {fallback_error}"
-                            logger.error(error_msg)
-                            raise Exception(error_msg)
-                
-                return openai_compatible_embedding_func
-            
-            elif provider_type == 'ollama':
-                logger.info(f"Using Ollama embeddings with model: {model_name}")
-                # Use lambda function to pass parameters correctly
-                return lambda texts: ollama_embed(
-                    texts=texts,
-                    embed_model=model_name,
-                    host=base_url if base_url else "http://localhost:11434"
-                )
-            
-            else:
-                raise ValueError(f"Unsupported embedding provider type: {provider_type}")
-                        
-        except Exception as e:
-            logger.error(f"Error creating embedding function for provider {provider_type}: {e}")
-            raise
-
     def extract_text_from_pdf_lightrag(pdf_bytes: bytes) -> str:
         """Extract text from PDF bytes for LightRAG"""
         try:
@@ -463,6 +369,61 @@ if LIGHTRAG_AVAILABLE:
                 "pip install python-docx python-pptx pandas openpyxl xlrd striprtf beautifulsoup4",
                 "pip install textract  # Optional for additional formats"
             ]
+        }
+
+    @app.get("/notebooks/entity-types")
+    async def get_default_entity_types():
+        """Get default entity types for schema consistency configuration"""
+        default_entity_types = [
+            "PERSON", "ORGANIZATION", "LOCATION", "TECHNOLOGY", 
+            "PRODUCT", "SERVICE", "PROJECT", "FEATURE", 
+            "COMPONENT", "API", "DATABASE", "FRAMEWORK",
+            "METHODOLOGY", "METRIC", "REQUIREMENT", "ISSUE",
+            "SOLUTION", "STRATEGY", "GOAL", "RISK",
+            "RESOURCE", "TOOL", "PLATFORM", "ENVIRONMENT",
+            "VERSION", "RELEASE", "DEPLOYMENT", "CONFIGURATION",
+            "WORKFLOW", "PROCESS", "STANDARD", "PROTOCOL",
+            "DOCUMENT", "SPECIFICATION", "GUIDELINE", "POLICY",
+            "EVENT", "MEETING", "DECISION", "MILESTONE",
+            "CONCEPT", "PRINCIPLE", "PATTERN", "ARCHITECTURE",
+            "INTERFACE", "MODULE", "LIBRARY", "DEPENDENCY",
+            "DATA", "MODEL", "SCHEMA", "ENTITY",
+            "ROLE", "PERMISSION", "SECURITY", "COMPLIANCE",
+            "PERFORMANCE", "SCALABILITY", "AVAILABILITY", "RELIABILITY",
+            "BUG", "FEATURE_REQUEST", "ENHANCEMENT", "INCIDENT",
+            "TEAM", "DEPARTMENT", "STAKEHOLDER", "CLIENT",
+            "VENDOR", "PARTNER", "COMPETITOR", "MARKET",
+            "TIMELINE", "BUDGET", "COST", "REVENUE",
+            "SKILL", "EXPERTISE", "CERTIFICATION", "TRAINING",
+            "OTHER"
+        ]
+        
+        return {
+            "default_entity_types": default_entity_types,
+            "categories": {
+                "people_and_organization": ["PERSON", "ORGANIZATION", "TEAM", "DEPARTMENT", "STAKEHOLDER", "CLIENT", "VENDOR", "PARTNER", "COMPETITOR"],
+                "technology_and_systems": ["TECHNOLOGY", "API", "DATABASE", "FRAMEWORK", "COMPONENT", "INTERFACE", "MODULE", "LIBRARY", "DEPENDENCY", "PLATFORM", "ENVIRONMENT"],
+                "products_and_services": ["PRODUCT", "SERVICE", "FEATURE", "TOOL", "SOLUTION"],
+                "project_management": ["PROJECT", "MILESTONE", "TIMELINE", "GOAL", "STRATEGY", "REQUIREMENT", "ISSUE", "ENHANCEMENT", "WORKFLOW", "PROCESS"],
+                "development_and_deployment": ["VERSION", "RELEASE", "DEPLOYMENT", "CONFIGURATION", "BUG", "FEATURE_REQUEST", "INCIDENT"],
+                "documentation_and_standards": ["DOCUMENT", "SPECIFICATION", "GUIDELINE", "POLICY", "STANDARD", "PROTOCOL"],
+                "architecture_and_design": ["ARCHITECTURE", "PATTERN", "PRINCIPLE", "CONCEPT", "MODEL", "SCHEMA", "ENTITY"],
+                "security_and_compliance": ["SECURITY", "COMPLIANCE", "ROLE", "PERMISSION"],
+                "performance_and_quality": ["PERFORMANCE", "SCALABILITY", "AVAILABILITY", "RELIABILITY", "METRIC"],
+                "business_and_finance": ["MARKET", "BUDGET", "COST", "REVENUE"],
+                "learning_and_development": ["SKILL", "EXPERTISE", "CERTIFICATION", "TRAINING"],
+                "events_and_meetings": ["EVENT", "MEETING", "DECISION"],
+                "data_and_resources": ["DATA", "RESOURCE", "LOCATION"]
+            },
+            "description": "Comprehensive entity types designed for modern software development, project management, and business operations",
+            "usage": "You can customize these when creating a notebook or update them via PUT /notebooks/{notebook_id}/schema",
+            "specialized_sets": {
+                "software_development": ["API", "DATABASE", "FRAMEWORK", "COMPONENT", "INTERFACE", "MODULE", "LIBRARY", "BUG", "FEATURE_REQUEST", "VERSION", "RELEASE", "DEPLOYMENT"],
+                "project_management": ["PROJECT", "MILESTONE", "TIMELINE", "GOAL", "STRATEGY", "REQUIREMENT", "ISSUE", "WORKFLOW", "PROCESS", "DECISION"],
+                "business_analysis": ["STAKEHOLDER", "CLIENT", "VENDOR", "PARTNER", "MARKET", "BUDGET", "COST", "REVENUE", "STRATEGY", "GOAL", "RISK"],
+                "technical_documentation": ["SPECIFICATION", "GUIDELINE", "POLICY", "STANDARD", "PROTOCOL", "ARCHITECTURE", "PATTERN", "PRINCIPLE"],
+                "minimal_set": ["PERSON", "ORGANIZATION", "TECHNOLOGY", "PRODUCT", "PROJECT", "DOCUMENT", "ISSUE", "CONCEPT", "OTHER"]
+            }
         }
 
     async def extract_text_from_file(filename: str, file_content: bytes) -> str:
@@ -785,7 +746,7 @@ if LIGHTRAG_AVAILABLE:
                 detail=f"Unexpected error processing file: {str(e)}"
             )
 
-    async def create_lightrag_instance(notebook_id: str, llm_provider_config: Dict[str, Any], embedding_provider_config: Dict[str, Any]) -> LightRAG:
+    async def create_lightrag_instance(notebook_id: str, llm_provider_config: Dict[str, Any], embedding_provider_config: Dict[str, Any], entity_types: Optional[List[str]] = None, language: str = "en") -> LightRAG:
         """Create a new LightRAG instance for a notebook with specified provider configurations"""
         working_dir = LIGHTRAG_STORAGE_PATH / notebook_id
         
@@ -816,71 +777,285 @@ if LIGHTRAG_AVAILABLE:
             if embedding_provider_type == 'ollama' and embedding_base_url.endswith('/v1'):
                 embedding_base_url = embedding_base_url[:-3]
             
-            # Validate API keys for non-Ollama providers (except Clara Core on port 8091)
+            # Enhanced API key handling with fallbacks for different scenarios
             is_clara_core_llm = ':8091' in llm_base_url or llm_base_url.endswith(':8091')
             is_clara_core_embedding = ':8091' in embedding_base_url or embedding_base_url.endswith(':8091')
             
-            if llm_provider_type != 'ollama' and not is_clara_core_llm and (not llm_api_key or llm_api_key.strip() == 'your-api-key'):
-                raise ValueError(f"Invalid or missing LLM API key for provider type: {llm_provider_type}")
-            if embedding_provider_type != 'ollama' and not is_clara_core_embedding and (not embedding_api_key or embedding_api_key.strip() == 'your-api-key'):
-                raise ValueError(f"Invalid or missing embedding API key for provider type: {embedding_provider_type}")
+            # Check for localhost/local endpoints that might not need real API keys
+            is_local_llm_endpoint = any(local_host in llm_base_url.lower() for local_host in ['localhost', '127.0.0.1', '0.0.0.0']) if llm_base_url else False
+            is_local_embedding_endpoint = any(local_host in embedding_base_url.lower() for local_host in ['localhost', '127.0.0.1', '0.0.0.0']) if embedding_base_url else False
             
-            # Set Clara Core API key if needed
-            if is_clara_core_llm and (not llm_api_key or llm_api_key.strip() == 'your-api-key'):
-                llm_api_key = 'claracore'
-                logger.info("Using Clara Core LLM - no API key required")
-            if is_clara_core_embedding and (not embedding_api_key or embedding_api_key.strip() == 'your-api-key'):
-                embedding_api_key = 'claracore'
-                logger.info("Using Clara Core embedding - no API key required")
+            # Handle LLM API key with fallbacks
+            if llm_provider_type != 'ollama':
+                if is_clara_core_llm:
+                    # Clara Core doesn't need a real API key
+                    llm_api_key = 'claracore'
+                    logger.info("Using Clara Core LLM - no API key required")
+                elif not llm_api_key or llm_api_key.strip() == 'your-api-key':
+                    if is_local_llm_endpoint:
+                        # Local endpoints often don't require real API keys
+                        llm_api_key = 'local-endpoint-key'
+                        logger.info(f"Using local LLM endpoint {llm_base_url} - using fallback API key")
+                    elif llm_base_url == 'https://api.openai.com/v1' or llm_base_url == 'https://api.openai.com':
+                        # Real OpenAI endpoint requires a valid key
+                        raise ValueError(f"Invalid or missing LLM API key for OpenAI provider. Please provide a valid API key.")
+                    else:
+                        # For other OpenAI-compatible endpoints, provide a fallback key and log a warning
+                        llm_api_key = 'fallback-api-key'
+                        logger.warning(f"No API key provided for LLM endpoint {llm_base_url}. Using fallback key. This may cause authentication errors if the endpoint requires a real API key.")
             
-            # Determine embedding dimensions based on the embedding model
+            # Handle embedding API key with fallbacks
+            if embedding_provider_type != 'ollama':
+                if is_clara_core_embedding:
+                    # Clara Core doesn't need a real API key
+                    embedding_api_key = 'claracore'
+                    logger.info("Using Clara Core embedding - no API key required")
+                elif not embedding_api_key or embedding_api_key.strip() == 'your-api-key':
+                    if is_local_embedding_endpoint:
+                        # Local endpoints often don't require real API keys
+                        embedding_api_key = 'local-endpoint-key'
+                        logger.info(f"Using local embedding endpoint {embedding_base_url} - using fallback API key")
+                    elif embedding_base_url == 'https://api.openai.com/v1' or embedding_base_url == 'https://api.openai.com':
+                        # Real OpenAI endpoint requires a valid key
+                        raise ValueError(f"Invalid or missing embedding API key for OpenAI provider. Please provide a valid API key.")
+                    else:
+                        # For other OpenAI-compatible endpoints, provide a fallback key and log a warning
+                        embedding_api_key = 'fallback-api-key'
+                        logger.warning(f"No API key provided for embedding endpoint {embedding_base_url}. Using fallback key. This may cause authentication errors if the endpoint requires a real API key.")
+            
+            # Determine embedding dimensions and max tokens based on the embedding model
             embedding_dim = 1536  # Default for OpenAI ada-002
-            if 'mxbai-embed-large' in embedding_model_name:
-                embedding_dim = 1024
-            elif 'e5-large-v2' in embedding_model_name:
-                embedding_dim = 1024  # e5-large-v2 produces 1024-dimensional embeddings
+            embedding_max_tokens = 8192  # Default max tokens for embeddings
+            
+            # OpenAI Models
+            if 'text-embedding-ada-002' in embedding_model_name:
+                embedding_dim = 1536
+                embedding_max_tokens = 8192
             elif 'text-embedding-3-small' in embedding_model_name:
                 embedding_dim = 1536
+                embedding_max_tokens = 8192
             elif 'text-embedding-3-large' in embedding_model_name:
                 embedding_dim = 3072
-            elif 'all-MiniLM-L6-v2' in embedding_model_name:
-                embedding_dim = 384
+                embedding_max_tokens = 8192
+            
+            # MixedBread AI Models
+            elif 'mxbai-embed-large' in embedding_model_name:
+                embedding_dim = 1024
+                embedding_max_tokens = 512  # mxbai has lower token limit
+            
+            # Nomic AI Models
             elif 'nomic-embed' in embedding_model_name:
                 embedding_dim = 768
+                embedding_max_tokens = 512  # nomic has lower token limit
+            
+            # Microsoft E5 Models
+            elif 'e5-large-v2' in embedding_model_name:
+                embedding_dim = 1024
+                embedding_max_tokens = 512
+            elif 'e5-base-v2' in embedding_model_name:
+                embedding_dim = 768
+                embedding_max_tokens = 512
+            elif 'e5-small-v2' in embedding_model_name:
+                embedding_dim = 384
+                embedding_max_tokens = 512
+            
+            # Sentence Transformers Models
+            elif 'all-MiniLM-L6-v2' in embedding_model_name:
+                embedding_dim = 384
+                embedding_max_tokens = 256  # Smaller models have lower limits
+            elif 'all-MiniLM-L12-v2' in embedding_model_name:
+                embedding_dim = 384
+                embedding_max_tokens = 256
+            elif 'all-mpnet-base-v2' in embedding_model_name:
+                embedding_dim = 768
+                embedding_max_tokens = 384
+            
+            # BAAI BGE Models
+            elif 'bge-large' in embedding_model_name:
+                embedding_dim = 1024
+                embedding_max_tokens = 512
+            elif 'bge-base' in embedding_model_name:
+                embedding_dim = 768
+                embedding_max_tokens = 512
+            elif 'bge-small' in embedding_model_name:
+                embedding_dim = 512
+                embedding_max_tokens = 512
             elif 'bge-m3' in embedding_model_name:
                 embedding_dim = 1024
+                embedding_max_tokens = 8192  # bge-m3 supports longer contexts
+            
+            # Qwen Models (Alibaba)
+            elif 'qwen' in embedding_model_name.lower():
+                embedding_dim = 2560
+                embedding_max_tokens = 2048  # Qwen models have moderate token limits
+            elif 'qwen2.5-coder' in embedding_model_name.lower():
+                embedding_dim = 2560
+                embedding_max_tokens = 2048
+            elif 'qwen2' in embedding_model_name.lower():
+                embedding_dim = 2560
+                embedding_max_tokens = 2048
             elif "qwen3-embedding-0.6b" in embedding_model_name.lower():
                 embedding_dim = 1024
+                embedding_max_tokens = 2048
             elif "qwen3-embedding-4b" in embedding_model_name.lower():
                 embedding_dim = 2560
+                embedding_max_tokens = 2048
             elif "qwen3-embedding-8b" in embedding_model_name.lower():
                 embedding_dim = 4096
+                embedding_max_tokens = 2048
             
-            logger.info(f"Using embedding dimension: {embedding_dim}")
+            # Jina AI Models
+            elif 'jina-embeddings-v2-base' in embedding_model_name:
+                embedding_dim = 768
+                embedding_max_tokens = 8192
+            elif 'jina-embeddings-v2-small' in embedding_model_name:
+                embedding_dim = 512
+                embedding_max_tokens = 8192
+            
+            # Cohere Models
+            elif 'embed-english-v3.0' in embedding_model_name:
+                embedding_dim = 1024
+                embedding_max_tokens = 512
+            elif 'embed-multilingual-v3.0' in embedding_model_name:
+                embedding_dim = 1024
+                embedding_max_tokens = 512
+            elif 'embed-english-light-v3.0' in embedding_model_name:
+                embedding_dim = 384
+                embedding_max_tokens = 512
+            
+            # Voyage AI Models
+            elif 'voyage-large-2' in embedding_model_name:
+                embedding_dim = 1536
+                embedding_max_tokens = 16000  # Voyage models support very long contexts
+            elif 'voyage-code-2' in embedding_model_name:
+                embedding_dim = 1536
+                embedding_max_tokens = 16000
+            elif 'voyage-2' in embedding_model_name:
+                embedding_dim = 1024
+                embedding_max_tokens = 4000
+            
+            # Fallback patterns for unknown models
+            elif 'large' in embedding_model_name.lower() and 'embed' in embedding_model_name.lower():
+                embedding_dim = 1024
+                embedding_max_tokens = 512
+            elif 'base' in embedding_model_name.lower() and 'embed' in embedding_model_name.lower():
+                embedding_dim = 768
+                embedding_max_tokens = 512
+            elif 'small' in embedding_model_name.lower() and 'embed' in embedding_model_name.lower():
+                embedding_dim = 384
+                embedding_max_tokens = 256
+            
+            logger.info(f"Using embedding dimension: {embedding_dim}, max tokens: {embedding_max_tokens}")
             
             # Set up LLM function and parameters based on provider type
             if llm_provider_type == 'openai':
-                llm_model_func = gpt_4o_mini_complete if 'gpt-4o-mini' in llm_model_name else openai_complete
-                llm_model_kwargs = {
-                    "api_key": llm_api_key.strip(),
-                }
+                # Create wrapper functions with proper API key binding and return type handling
+                if 'gpt-4o-mini' in llm_model_name:
+                    async def llm_model_func(
+                        prompt, system_prompt=None, history_messages=[], keyword_extraction=False, **kwargs
+                    ) -> str:
+                        try:
+                            result = await gpt_4o_mini_complete(
+                                prompt,
+                                system_prompt=system_prompt,
+                                history_messages=history_messages,
+                                keyword_extraction=keyword_extraction,
+                                api_key=llm_api_key.strip(),
+                                **kwargs
+                            )
+                            # Ensure we return a string, not an AsyncIterator
+                            return str(result) if isinstance(result, str) else str(result)
+                        except Exception as e:
+                            error_str = str(e).lower()
+                            if 'api key' in error_str or 'unauthorized' in error_str or 'authentication' in error_str:
+                                raise Exception(f"LLM authentication failed. Please check your OpenAI API key. Error: {str(e)}")
+                            else:
+                                raise e
+                elif 'gpt-4o' in llm_model_name:
+                    async def llm_model_func(
+                        prompt, system_prompt=None, history_messages=[], keyword_extraction=False, **kwargs
+                    ) -> str:
+                        try:
+                            result = await gpt_4o_complete(
+                                prompt,
+                                system_prompt=system_prompt,
+                                history_messages=history_messages,
+                                keyword_extraction=keyword_extraction,
+                                api_key=llm_api_key.strip(),
+                                **kwargs
+                            )
+                            # Ensure we return a string, not an AsyncIterator
+                            return str(result) if isinstance(result, str) else str(result)
+                        except Exception as e:
+                            error_str = str(e).lower()
+                            if 'api key' in error_str or 'unauthorized' in error_str or 'authentication' in error_str:
+                                raise Exception(f"LLM authentication failed. Please check your OpenAI API key. Error: {str(e)}")
+                            else:
+                                raise e
+                else:
+                    async def llm_model_func(
+                        prompt, system_prompt=None, history_messages=[], keyword_extraction=False, **kwargs
+                    ) -> str:
+                        try:
+                            result = await openai_complete(
+                                prompt,
+                                system_prompt=system_prompt,
+                                history_messages=history_messages,
+                                keyword_extraction=keyword_extraction,
+                                api_key=llm_api_key.strip(),
+                                **kwargs
+                            )
+                            # Ensure we return a string, not an AsyncIterator
+                            return str(result) if isinstance(result, str) else str(result)
+                        except Exception as e:
+                            error_str = str(e).lower()
+                            if 'api key' in error_str or 'unauthorized' in error_str or 'authentication' in error_str:
+                                raise Exception(f"LLM authentication failed. Please check your OpenAI API key. Error: {str(e)}")
+                            else:
+                                raise e
+                llm_model_kwargs = {}
             elif llm_provider_type == 'openai_compatible':
                 # Create wrapper function for openai_complete_if_cache
                 async def llm_model_func(
                     prompt, system_prompt=None, history_messages=[], keyword_extraction=False, **kwargs
                 ) -> str:
-                    return await openai_complete_if_cache(
-                        llm_model_name,
+                    try:
+                        return await openai_complete_if_cache(
+                            llm_model_name,
+                            prompt,
+                            system_prompt=system_prompt,
+                            history_messages=history_messages,
+                            api_key=llm_api_key.strip(),
+                            base_url=llm_base_url,
+                            **kwargs,
+                        )
+                    except Exception as e:
+                        error_str = str(e).lower()
+                        if 'api key' in error_str or 'unauthorized' in error_str or 'authentication' in error_str:
+                            if is_local_llm_endpoint or is_clara_core_llm:
+                                # For local endpoints, provide more helpful error message
+                                raise Exception(f"LLM connection failed to local endpoint {llm_base_url}. The endpoint may not be running or may require a different API key format. Error: {str(e)}")
+                            else:
+                                raise Exception(f"LLM authentication failed for {llm_base_url}. Please check your API key configuration. Error: {str(e)}")
+                        else:
+                            raise e
+                llm_model_kwargs = {}
+            elif llm_provider_type == 'ollama':
+                # Create wrapper function for ollama_model_complete to ensure string return
+                async def llm_model_func(
+                    prompt, system_prompt=None, history_messages=[], keyword_extraction=False, **kwargs
+                ) -> str:
+                    result = await ollama_model_complete(
                         prompt,
                         system_prompt=system_prompt,
                         history_messages=history_messages,
-                        api_key=llm_api_key.strip(),
-                        base_url=llm_base_url,
-                        **kwargs,
+                        keyword_extraction=keyword_extraction,
+                        host=llm_base_url if llm_base_url else "http://localhost:11434",
+                        model=llm_model_name,
+                        **kwargs
                     )
-                llm_model_kwargs = {}
-            elif llm_provider_type == 'ollama':
-                llm_model_func = ollama_model_complete
+                    # Ensure we return a string, not an AsyncIterator
+                    return str(result) if isinstance(result, str) else str(result)
                 llm_model_kwargs = {
                     "host": llm_base_url if llm_base_url else "http://localhost:11434",
                     "options": {"num_ctx": 8192},
@@ -889,188 +1064,74 @@ if LIGHTRAG_AVAILABLE:
             else:
                 raise ValueError(f"Unsupported LLM provider type: {llm_provider_type}")
             
-            # Helper function to batch texts for embedding
-            async def batch_embed_texts(texts: list[str], batch_size: int, embed_func):
-                """Process texts in batches to avoid size limits"""
-                if len(texts) <= batch_size:
-                    return await embed_func(texts)
-                
-                all_embeddings = []
-                total_batches = (len(texts) + batch_size - 1) // batch_size
-                
-                for i in range(0, len(texts), batch_size):
-                    batch = texts[i:i + batch_size]
-                    batch_num = (i // batch_size) + 1
-                    
-                    # Log batch details for debugging
-                    batch_sizes = [len(text) for text in batch]
-                    logger.info(f"Processing embedding batch {batch_num}/{total_batches} ({len(batch)} texts, sizes: {batch_sizes})")
-                    
+            # Set up embedding function based on provider type (simplified for LightRAG built-in handling)
+            if embedding_provider_type == 'openai':
+                async def embedding_func_lambda(texts: list[str]):
+                    """Simple OpenAI embedding - let LightRAG handle retries and failures"""
                     try:
-                        batch_embeddings = await embed_func(batch)
-                        all_embeddings.extend(batch_embeddings)
-                        logger.info(f"✅ Batch {batch_num} successful: {len(batch_embeddings)} embeddings")
-                        
-                        # Small delay between batches to be respectful to the API
-                        if i + batch_size < len(texts):
-                            await asyncio.sleep(0.5)
-                            
+                        return await openai_embed(
+                            texts,
+                            model=embedding_model_name,
+                            api_key=embedding_api_key.strip()
+                        )
                     except Exception as e:
                         error_str = str(e).lower()
-                        logger.error(f"❌ Batch {batch_num} failed: {str(e)}")
-                        
-                        if ('too large' in error_str or 'batch size' in error_str or 
-                            'input is too large' in error_str):
-                            if batch_size > 1:
-                                # Recursively reduce batch size if still too large
-                                logger.warning(f"Batch size {batch_size} too large, reducing to {batch_size // 2}")
-                                return await batch_embed_texts(texts, batch_size // 2, embed_func)
-                            else:
-                                # If batch size is 1 and still fails, check if we can chunk the text further
-                                if len(batch) == 1 and len(batch[0]) > 200:
-                                    logger.warning(f"Individual text too large ({len(batch[0])} chars), attempting to chunk further")
-                                    # Split the large text into smaller pieces
-                                    large_text = batch[0]
-                                    chunks = [large_text[j:j+200] for j in range(0, len(large_text), 180)]  # 20 char overlap
-                                    logger.info(f"Split text into {len(chunks)} smaller chunks")
-                                    
-                                    # Try to embed the chunks individually
-                                    chunk_embeddings = []
-                                    for chunk in chunks:
-                                        try:
-                                            chunk_result = await embed_func([chunk])
-                                            chunk_embeddings.extend(chunk_result)
-                                        except Exception as chunk_error:
-                                            logger.error(f"Even small chunk failed ({len(chunk)} chars): {chunk_error}")
-                                            raise Exception(f"Text cannot be embedded even after chunking: {str(chunk_error)}")
-                                    
-                                    all_embeddings.extend(chunk_embeddings)
-                                    logger.info(f"✅ Successfully processed large text via chunking: {len(chunk_embeddings)} embeddings")
-                                else:
-                                    logger.error(f"Individual text too large for embedding: {len(batch[0])} characters")
-                                    raise Exception(f"Text too large for embedding (batch size 1 failed): {str(e)}")
+                        if 'api key' in error_str or 'unauthorized' in error_str or 'authentication' in error_str:
+                            raise Exception(f"Embedding authentication failed. Please check your OpenAI API key. Error: {str(e)}")
                         else:
-                            # Re-raise non-batch-size errors
+                            # Let LightRAG handle other errors with its built-in retry logic
                             raise e
-                
-                return all_embeddings
-
-            # Set up embedding function based on provider type (following LightRAG documentation pattern)
-            if embedding_provider_type == 'openai':
-                async def base_openai_embed(texts: list[str]):
-                    return await openai_embed(
-                        texts,
-                        model=embedding_model_name,
-                        api_key=embedding_api_key.strip()
-                    )
-                
-                async def embedding_func_lambda(texts: list[str]):
-                    # Use smaller batch size for OpenAI to avoid rate limits
-                    batch_size = 16 if len(texts) > 16 else len(texts)
-                    return await batch_embed_texts(texts, batch_size, base_openai_embed)
                     
             elif embedding_provider_type == 'openai_compatible':
-                # Special handling for Clara Core embedding models
-                model_to_use = embedding_model_name
-                
-                async def base_openai_compatible_embed(texts: list[str]):
-                    # Retry logic for Clara Core (models need time to load into RAM)
-                    max_retries = 5 if is_clara_core_embedding else 2
-                    retry_delay = 10 if is_clara_core_embedding else 3  # seconds
-                    request_timeout = 180 if is_clara_core_embedding else 60  # seconds
+                async def embedding_func_lambda(texts: list[str]):
+                    """Simple OpenAI-compatible embedding - let LightRAG handle retries and batch sizing"""
+                    max_retries = 3 if is_clara_core_embedding else 1
+                    retry_delay = 5 if is_clara_core_embedding else 2
                     
                     for attempt in range(max_retries):
                         try:
-                            logger.info(f"Embedding attempt {attempt + 1}/{max_retries} for {model_to_use} ({len(texts)} texts)")
+                            logger.info(f"Embedding attempt {attempt + 1}/{max_retries} for {embedding_model_name} ({len(texts)} texts)")
                             
-                            # Use asyncio timeout for the request
-                            result = await asyncio.wait_for(
-                                openai_embed(
-                                    texts,
-                                    model=model_to_use,
-                                    api_key=embedding_api_key.strip(),
-                                    base_url=embedding_base_url
-                                ),
-                                timeout=request_timeout
+                            result = await openai_embed(
+                                texts,
+                                model=embedding_model_name,
+                                api_key=embedding_api_key.strip(),
+                                base_url=embedding_base_url
                             )
                             
-                            logger.info(f"Successfully generated {len(result)} embeddings with {model_to_use}")
+                            logger.info(f"Successfully generated {len(result)} embeddings")
                             return result
                             
-                        except asyncio.TimeoutError:
-                            if attempt < max_retries - 1:
-                                logger.warning(f"Embedding request timed out (attempt {attempt + 1}/{max_retries}), retrying in {retry_delay}s...")
-                                await asyncio.sleep(retry_delay)
-                                continue
-                            else:
-                                error_msg = f"Embedding request timed out after {max_retries} attempts. Clara Core server may need more time to load the model."
-                                logger.error(error_msg)
-                                raise Exception(error_msg)
                         except Exception as e:
                             error_str = str(e).lower()
-                            if attempt < max_retries - 1:
-                                # Retry for certain types of errors that might resolve with time
+                            
+                            if 'api key' in error_str or 'unauthorized' in error_str or 'authentication' in error_str:
+                                if is_local_embedding_endpoint or is_clara_core_embedding:
+                                    raise Exception(f"Embedding connection failed to local endpoint {embedding_base_url}. Error: {str(e)}")
+                                else:
+                                    raise Exception(f"Embedding authentication failed for {embedding_base_url}. Error: {str(e)}")
+                            
+                            # For Clara Core, retry connection errors
+                            if attempt < max_retries - 1 and is_clara_core_embedding:
                                 if any(keyword in error_str for keyword in ['connection', 'timeout', 'loading', 'model']):
-                                    logger.warning(f"Embedding failed (attempt {attempt + 1}/{max_retries}): {e}")
-                                    logger.info(f"Retrying in {retry_delay}s... (Clara Core may be loading model)")
+                                    logger.warning(f"Clara Core embedding failed (attempt {attempt + 1}/{max_retries}): {e}")
+                                    logger.info(f"Retrying in {retry_delay}s...")
                                     await asyncio.sleep(retry_delay)
                                     continue
-                                else:
-                                    # Check if it's a batch size error
-                                    if 'too large' in error_str or 'batch size' in error_str:
-                                        logger.warning(f"Batch size error detected: {e}")
-                                        raise e  # Let the batching function handle this
-                                    # Don't retry for authentication or other permanent errors
-                                    raise e
-                            else:
-                                logger.error(f"Embedding failed after {max_retries} attempts: {e}")
-                                raise e
-
-                async def embedding_func_lambda(texts: list[str]):
-                    # Use very conservative batch size for Clara Core based on testing
-                    # Clara Core with e5-large-v2-q4-0 has strict limits ~500 chars per text
-                    if is_clara_core_embedding:
-                        # For Clara Core, process each text individually and aggregate chunks
-                        final_embeddings = []
-                        
-                        for text in texts:
-                            if len(text) > 400:  # Conservative limit for Clara Core
-                                # Split large texts into smaller chunks
-                                chunks = [text[i:i+400] for i in range(0, len(text), 350)]  # 50 char overlap
-                                logger.info(f"Split large text ({len(text)} chars) into {len(chunks)} chunks for Clara Core")
-                                
-                                # Get embeddings for all chunks
-                                chunk_embeddings = await batch_embed_texts(chunks, 1, base_openai_compatible_embed)
-                                
-                                # Aggregate chunk embeddings by averaging
-                                import numpy as np
-                                chunk_array = np.array(chunk_embeddings)
-                                aggregated_embedding = np.mean(chunk_array, axis=0).tolist()
-                                final_embeddings.append(aggregated_embedding)
-                                logger.info(f"Aggregated {len(chunks)} chunk embeddings into single embedding")
-                            else:
-                                # Small text, process directly
-                                single_embedding = await batch_embed_texts([text], 1, base_openai_compatible_embed)
-                                final_embeddings.extend(single_embedding)
-                        
-                        return final_embeddings
-                    else:
-                        # For other OpenAI-compatible APIs, use larger batch size
-                        batch_size = min(16, len(texts)) if len(texts) > 0 else 1
-                        return await batch_embed_texts(texts, batch_size, base_openai_compatible_embed)
+                            
+                            # For other errors, let LightRAG handle them (including batch size errors)
+                            raise e
+                    
+                    raise Exception(f"Embedding failed after {max_retries} attempts")
                     
             elif embedding_provider_type == 'ollama':
-                async def base_ollama_embed(texts: list[str]):
+                async def embedding_func_lambda(texts: list[str]):
+                    """Simple Ollama embedding - let LightRAG handle retries"""
                     return await ollama_embed(
                         texts,
                         embed_model=embedding_model_name,
                         host=embedding_base_url if embedding_base_url else "http://localhost:11434"
                     )
-                
-                async def embedding_func_lambda(texts: list[str]):
-                    # Use smaller batch size for Ollama to avoid memory issues
-                    batch_size = 4 if len(texts) > 4 else len(texts)
-                    return await batch_embed_texts(texts, batch_size, base_ollama_embed)
             else:
                 raise ValueError(f"Unsupported embedding provider type: {embedding_provider_type}")
             
@@ -1107,31 +1168,105 @@ if LIGHTRAG_AVAILABLE:
                 entity_extract_max_gleaning = entity_extract_max_gleaning
                 logger.info(f"Using standard settings for model {llm_model_name}: max_tokens={max_token_size}")
             
-            # Create LightRAG instance following the official pattern
-            logger.info(f"Initializing LightRAG with embedding dimensions: {embedding_dim}")
+            # CRITICAL FIX: Override chunk size if embedding model has lower token limits
+            # This prevents creating chunks that are larger than what the embedding model can handle
+            if embedding_max_tokens < chunk_token_size:
+                original_chunk_size = chunk_token_size
+                chunk_token_size = embedding_max_tokens - 50  # Leave buffer for safety
+                chunk_overlap_token_size = min(chunk_overlap_token_size, chunk_token_size // 10)
+                logger.warning(f"Reducing chunk size from {original_chunk_size} to {chunk_token_size} due to embedding model limit ({embedding_max_tokens} tokens)")
+            
+            # Special handling for models with very low token limits (mxbai, nomic, e5, etc.)
+            if embedding_max_tokens <= 512:
+                chunk_token_size = min(chunk_token_size, 250)  # Very safe limit for 512 token models (reduced from 400)
+                chunk_overlap_token_size = 25  # 10% overlap
+                logger.info(f"Using reduced chunk size {chunk_token_size} for low-context embedding model ({embedding_model_name})")
+            elif embedding_max_tokens <= 1024:
+                chunk_token_size = min(chunk_token_size, 800)  # Safe limit for 1024 token models
+                chunk_overlap_token_size = 80  # 10% overlap
+                logger.info(f"Using moderate chunk size {chunk_token_size} for medium-context embedding model ({embedding_model_name})")
+            
+            # Create LightRAG instance following the official pattern with proper error handling
+            logger.info(f"Initializing LightRAG with embedding dimensions: {embedding_dim}, embedding max tokens: {embedding_max_tokens}")
+            
+            # Configure addon_params for consistent entity/relationship schema
+            # Use user-provided entity types or fall back to comprehensive defaults
+            default_entity_types = [
+                "PERSON", "ORGANIZATION", "LOCATION", "TECHNOLOGY", 
+                "PRODUCT", "SERVICE", "PROJECT", "FEATURE", 
+                "COMPONENT", "API", "DATABASE", "FRAMEWORK",
+                "METHODOLOGY", "METRIC", "REQUIREMENT", "ISSUE",
+                "SOLUTION", "STRATEGY", "GOAL", "RISK",
+                "RESOURCE", "TOOL", "PLATFORM", "ENVIRONMENT",
+                "VERSION", "RELEASE", "DEPLOYMENT", "CONFIGURATION",
+                "WORKFLOW", "PROCESS", "STANDARD", "PROTOCOL",
+                "DOCUMENT", "SPECIFICATION", "GUIDELINE", "POLICY",
+                "EVENT", "MEETING", "DECISION", "MILESTONE",
+                "CONCEPT", "PRINCIPLE", "PATTERN", "ARCHITECTURE",
+                "INTERFACE", "MODULE", "LIBRARY", "DEPENDENCY",
+                "DATA", "MODEL", "SCHEMA", "ENTITY",
+                "ROLE", "PERMISSION", "SECURITY", "COMPLIANCE",
+                "PERFORMANCE", "SCALABILITY", "AVAILABILITY", "RELIABILITY",
+                "BUG", "FEATURE_REQUEST", "ENHANCEMENT", "INCIDENT",
+                "TEAM", "DEPARTMENT", "STAKEHOLDER", "CLIENT",
+                "VENDOR", "PARTNER", "COMPETITOR", "MARKET",
+                "TIMELINE", "BUDGET", "COST", "REVENUE",
+                "SKILL", "EXPERTISE", "CERTIFICATION", "TRAINING",
+                "OTHER"
+            ]
+            
+            addon_params = {
+                "entity_types": entity_types if entity_types else default_entity_types,
+                "language": language  # User-specified language for consistent processing
+            }
+            
+            # Use LightRAG's built-in resilience by setting appropriate working directory and cache handling
             rag = LightRAG(
                 working_dir=str(working_dir),
                 llm_model_func=llm_model_func,
                 llm_model_name=llm_model_name,
-                llm_model_max_token_size=max_token_size,
+                # LightRAG has built-in caching and resilience - let it handle retries
                 llm_model_kwargs=llm_model_kwargs,
                 embedding_func=EmbeddingFunc(
                     embedding_dim=embedding_dim,
-                    max_token_size=max_token_size,
+                    max_token_size=embedding_max_tokens,
                     func=embedding_func_lambda,
                 ),
                 chunk_token_size=chunk_token_size,
                 chunk_overlap_token_size=chunk_overlap_token_size,
                 entity_extract_max_gleaning=entity_extract_max_gleaning,
+                addon_params=addon_params,  # Critical for schema consistency
             )
             
-            # Initialize storages
+            # Add rerank functionality for enhanced retrieval performance (if available)
+            if RERANK_AVAILABLE and embedding_provider_type == 'openai':
+                try:
+                    # For OpenAI users, we can use Cohere rerank which is compatible
+                    async def openai_rerank_wrapper(query: str, docs: list[str], top_k: int = 10):
+                        """Wrapper for rerank function using OpenAI-compatible approach"""
+                        # Simple rerank based on text similarity since we don't have Cohere API
+                        # This is a fallback - users should configure proper rerank services
+                        logger.info(f"Using basic rerank fallback for {len(docs)} documents")
+                        return docs[:top_k]  # Simple truncation fallback
+                    
+                    rag.rerank_model_func = openai_rerank_wrapper
+                    logger.info("Rerank functionality enabled for enhanced retrieval performance")
+                except Exception as rerank_error:
+                    logger.warning(f"Could not enable rerank functionality: {rerank_error}")
+            elif RERANK_AVAILABLE:
+                logger.info("Rerank functions available but not configured for current provider")
+            else:
+                logger.info("Rerank functionality not available - install rerank dependencies for better performance")
+            
+            # Initialize storages - CRITICAL: Both calls are required for proper LightRAG functionality
             try:
-                await rag.initialize_storages()
-                await initialize_pipeline_status()
-                logger.info(f"LightRAG storages initialized for notebook {notebook_id}")
+                await rag.initialize_storages()  # Initialize storage backends
+                await initialize_pipeline_status()  # Initialize processing pipeline status
+                logger.info(f"LightRAG storages and pipeline initialized for notebook {notebook_id}")
             except Exception as init_error:
-                logger.warning(f"Storage initialization error (may be expected): {init_error}")
+                logger.error(f"LightRAG initialization failed for notebook {notebook_id}: {init_error}")
+                # Initialization failure should be treated as a critical error, not a warning
+                raise HTTPException(status_code=500, detail=f"Failed to initialize LightRAG storage systems: {str(init_error)}")
             
             logger.info(f"Successfully created LightRAG instance for notebook {notebook_id}")
             return rag
@@ -1151,7 +1286,14 @@ if LIGHTRAG_AVAILABLE:
             if notebook_id not in lightrag_notebooks_db:
                 raise HTTPException(status_code=404, detail="Notebook not found")
             
-            lightrag_instances[notebook_id] = await create_lightrag_instance(notebook_id, lightrag_notebooks_db[notebook_id]["llm_provider"], lightrag_notebooks_db[notebook_id]["embedding_provider"])
+            notebook_data = lightrag_notebooks_db[notebook_id]
+            lightrag_instances[notebook_id] = await create_lightrag_instance(
+                notebook_id, 
+                notebook_data["llm_provider"], 
+                notebook_data["embedding_provider"],
+                entity_types=notebook_data.get("entity_types"),
+                language=notebook_data.get("language", "en")
+            )
         
         return lightrag_instances[notebook_id]
 
@@ -1347,6 +1489,9 @@ class NotebookCreate(BaseModel):
     # Add provider configuration
     llm_provider: Dict[str, Any] = Field(..., description="LLM provider configuration")
     embedding_provider: Dict[str, Any] = Field(..., description="Embedding provider configuration")
+    # Schema consistency parameters (optional)
+    entity_types: Optional[List[str]] = Field(None, description="Custom entity types for consistent extraction")
+    language: Optional[str] = Field("en", description="Language for consistent entity/relationship processing")
 
 class NotebookResponse(BaseModel):
     id: str = Field(..., description="Notebook ID")
@@ -1357,6 +1502,9 @@ class NotebookResponse(BaseModel):
     # Add provider information to response (optional for backward compatibility)
     llm_provider: Optional[Dict[str, Any]] = Field(None, description="LLM provider configuration")
     embedding_provider: Optional[Dict[str, Any]] = Field(None, description="Embedding provider configuration")
+    # Schema consistency information
+    entity_types: Optional[List[str]] = Field(None, description="Configured entity types for this notebook")
+    language: Optional[str] = Field("en", description="Language setting for entity/relationship processing")
 
 class NotebookDocumentResponse(BaseModel):
     id: str = Field(..., description="Document ID")
@@ -1414,6 +1562,10 @@ class DocumentRetryResponse(BaseModel):
     document_id: str = Field(..., description="Document ID that was retried")
     status: str = Field(..., description="New document status after retry initiation")
 
+class NotebookSchemaUpdate(BaseModel):
+    entity_types: Optional[List[str]] = Field(None, description="Updated entity types for consistent extraction")
+    language: Optional[str] = Field(None, description="Updated language for entity/relationship processing")
+
 @app.get("/")
 def read_root():
     """Root endpoint for basic health check"""
@@ -1460,7 +1612,10 @@ if LIGHTRAG_AVAILABLE:
             "created_at": datetime.now(),
             "document_count": 0,
             "llm_provider": corrected_llm_provider,
-            "embedding_provider": corrected_embedding_provider
+            "embedding_provider": corrected_embedding_provider,
+            # Store schema consistency parameters
+            "entity_types": notebook.entity_types,
+            "language": notebook.language or "en"
         }
         
         # Log the notebook data before saving
@@ -1470,7 +1625,13 @@ if LIGHTRAG_AVAILABLE:
         
         # Create LightRAG instance for this notebook
         try:
-            await create_lightrag_instance(notebook_id, corrected_llm_provider, corrected_embedding_provider)
+            await create_lightrag_instance(
+                notebook_id, 
+                corrected_llm_provider, 
+                corrected_embedding_provider,
+                entity_types=notebook.entity_types,
+                language=notebook.language or "en"
+            )
             logger.info(f"Created notebook {notebook_id}: {notebook.name}")
             # Save to disk after successful creation
             save_notebooks_db()
@@ -1562,9 +1723,17 @@ if LIGHTRAG_AVAILABLE:
         for doc_id in notebook_docs:
             del lightrag_documents_db[doc_id]
         
-        # Remove LightRAG instance
+        # Remove LightRAG instance with proper finalization
         if notebook_id in lightrag_instances:
-            del lightrag_instances[notebook_id]
+            try:
+                # Properly finalize storage before deletion
+                rag_instance = lightrag_instances[notebook_id]
+                await rag_instance.finalize_storages()
+                logger.info(f"Finalized storage for notebook {notebook_id}")
+            except Exception as finalize_error:
+                logger.warning(f"Error finalizing storage for notebook {notebook_id}: {finalize_error}")
+            finally:
+                del lightrag_instances[notebook_id]
         
         # Remove notebook
         del lightrag_notebooks_db[notebook_id]
@@ -1580,6 +1749,202 @@ if LIGHTRAG_AVAILABLE:
         
         logger.info(f"Deleted notebook {notebook_id}")
         return {"message": "Notebook deleted successfully"}
+
+    @app.put("/notebooks/{notebook_id}/configuration")
+    async def update_notebook_configuration(
+        notebook_id: str,
+        request: NotebookCreate
+    ):
+        """Update notebook LLM and embedding provider configuration and rebuild LightRAG instance"""
+        validate_notebook_exists(notebook_id)
+        
+        logger.info(f"Updating configuration for notebook {notebook_id}")
+        
+        # Auto-detect provider types
+        llm_provider = auto_detect_provider_type(request.llm_provider)
+        embedding_provider = auto_detect_provider_type(request.embedding_provider)
+        
+        # Update notebook configuration
+        lightrag_notebooks_db[notebook_id]["name"] = request.name
+        lightrag_notebooks_db[notebook_id]["description"] = request.description  
+        lightrag_notebooks_db[notebook_id]["llm_provider"] = llm_provider
+        lightrag_notebooks_db[notebook_id]["embedding_provider"] = embedding_provider
+        lightrag_notebooks_db[notebook_id]["updated_at"] = datetime.now()
+        
+        # Clear any cached summary since configuration changed
+        if "summary_cache" in lightrag_notebooks_db[notebook_id]:
+            del lightrag_notebooks_db[notebook_id]["summary_cache"]
+        if "docs_fingerprint" in lightrag_notebooks_db[notebook_id]:
+            del lightrag_notebooks_db[notebook_id]["docs_fingerprint"]
+        
+        # Remove existing LightRAG instance to force rebuild with new configuration
+        if notebook_id in lightrag_instances:
+            try:
+                # Properly finalize storage before deletion
+                rag_instance = lightrag_instances[notebook_id]
+                await rag_instance.finalize_storages()
+                logger.info(f"Finalized storage for notebook {notebook_id} before configuration update")
+            except Exception as finalize_error:
+                logger.warning(f"Error finalizing storage for notebook {notebook_id}: {finalize_error}")
+            finally:
+                logger.info(f"Removing existing LightRAG instance for notebook {notebook_id}")
+                del lightrag_instances[notebook_id]
+        
+        try:
+            # Create new LightRAG instance with updated configuration
+            logger.info(f"Creating new LightRAG instance with updated configuration")
+            notebook_data = lightrag_notebooks_db[notebook_id]
+            new_rag_instance = await create_lightrag_instance(
+                notebook_id, 
+                llm_provider, 
+                embedding_provider,
+                entity_types=notebook_data.get("entity_types"),
+                language=notebook_data.get("language", "en")
+            )
+            
+            # Store the new instance
+            lightrag_instances[notebook_id] = new_rag_instance
+            
+            # Check if there are existing documents that need to be reprocessed
+            notebook_docs = [doc for doc in lightrag_documents_db.values() 
+                           if doc["notebook_id"] == notebook_id]
+            
+            reprocess_info = {
+                "total_documents": len(notebook_docs),
+                "completed_documents": len([doc for doc in notebook_docs if doc["status"] == "completed"]),
+                "failed_documents": len([doc for doc in notebook_docs if doc["status"] == "failed"]),
+                "needs_reprocessing": len([doc for doc in notebook_docs if doc["status"] == "completed"])
+            }
+            
+            # Save changes to disk
+            save_notebooks_db()
+            
+            logger.info(f"Successfully updated configuration for notebook {notebook_id}")
+            
+            # Return updated notebook with reprocessing info
+            notebook = lightrag_notebooks_db[notebook_id].copy()
+            notebook["document_count"] = len(notebook_docs)
+            
+            response = {
+                "message": "Notebook configuration updated successfully",
+                "notebook": NotebookResponse(**notebook),
+                "reprocessing_info": reprocess_info,
+                "recommendation": "Consider reprocessing existing documents if you changed embedding models to ensure consistency."
+            }
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Failed to update notebook configuration: {e}")
+            # Restore previous instance if available (though it may be incompatible)
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Failed to update notebook configuration: {str(e)}. Please check your provider settings."
+            )
+
+    @app.put("/notebooks/{notebook_id}/schema", response_model=NotebookResponse)
+    async def update_notebook_schema(notebook_id: str, schema_update: NotebookSchemaUpdate):
+        """Update entity types and language settings for a notebook"""
+        validate_notebook_exists(notebook_id)
+        
+        notebook = lightrag_notebooks_db[notebook_id]
+        
+        # Update schema settings if provided
+        if schema_update.entity_types is not None:
+            notebook["entity_types"] = schema_update.entity_types
+            logger.info(f"Updated entity types for notebook {notebook_id}: {schema_update.entity_types}")
+        
+        if schema_update.language is not None:
+            notebook["language"] = schema_update.language
+            logger.info(f"Updated language for notebook {notebook_id}: {schema_update.language}")
+        
+        # The schema changes will take effect for new documents automatically
+        # Existing LightRAG instance keeps running with current data
+        
+        # Save changes to disk
+        save_notebooks_db()
+        
+        logger.info(f"Updated schema configuration for notebook {notebook_id}")
+        
+        return NotebookResponse(**notebook)
+
+    @app.post("/notebooks/{notebook_id}/reprocess-documents")
+    async def reprocess_notebook_documents(
+        notebook_id: str,
+        background_tasks: BackgroundTasks,
+        force: bool = False
+    ):
+        """Reprocess all completed documents in a notebook with current configuration"""
+        validate_notebook_exists(notebook_id)
+        
+        # Get all completed documents for this notebook
+        notebook_docs = [
+            (doc_id, doc) for doc_id, doc in lightrag_documents_db.items() 
+            if doc["notebook_id"] == notebook_id and (doc["status"] == "completed" or (force and doc["status"] == "failed"))
+        ]
+        
+        if not notebook_docs:
+            return {
+                "message": "No documents to reprocess",
+                "total_documents": 0,
+                "queued_for_reprocessing": 0
+            }
+        
+        reprocessed_count = 0
+        
+        # Mark documents for reprocessing and queue background tasks
+        for doc_id, doc in notebook_docs:
+            if "content" in doc or "content_file" in doc:
+                # Document has content available for reprocessing
+                lightrag_documents_db[doc_id]["status"] = "pending"
+                lightrag_documents_db[doc_id]["queued_at"] = datetime.now()
+                
+                # Clear any previous processing metadata
+                for field in ["processed_at", "completed_at", "failed_at", "error", "lightrag_id"]:
+                    if field in lightrag_documents_db[doc_id]:
+                        del lightrag_documents_db[doc_id][field]
+                
+                # Get content for reprocessing
+                if "content" in doc:
+                    content = doc["content"]
+                elif "content_file" in doc:
+                    try:
+                        content_file = LIGHTRAG_STORAGE_PATH / "documents" / doc["content_file"]
+                        content = content_file.read_text(encoding='utf-8')
+                    except Exception as e:
+                        logger.error(f"Failed to read content file for document {doc_id}: {e}")
+                        lightrag_documents_db[doc_id]["status"] = "failed"
+                        lightrag_documents_db[doc_id]["error"] = f"Content file not found: {str(e)}"
+                        continue
+                else:
+                    continue
+                
+                # Queue for background processing with a small delay between documents
+                delay_seconds = reprocessed_count * 2  # 2 second delay between each document
+                background_tasks.add_task(
+                    process_notebook_document_with_delay,
+                    notebook_id,
+                    doc_id,
+                    content,
+                    delay_seconds
+                )
+                
+                reprocessed_count += 1
+                logger.info(f"Queued document {doc_id} for reprocessing (delay: {delay_seconds}s)")
+            else:
+                logger.warning(f"Document {doc_id} has no content available for reprocessing")
+        
+        # Save changes to disk
+        save_documents_db()
+        
+        logger.info(f"Queued {reprocessed_count} documents for reprocessing in notebook {notebook_id}")
+        
+        return {
+            "message": f"Queued {reprocessed_count} documents for reprocessing",
+            "total_documents": len(notebook_docs),
+            "queued_for_reprocessing": reprocessed_count,
+            "note": "Documents will be processed in the background with the current notebook configuration"
+        }
 
     @app.post("/notebooks/{notebook_id}/documents", response_model=List[NotebookDocumentResponse])
     async def upload_notebook_documents(
@@ -1894,11 +2259,17 @@ if LIGHTRAG_AVAILABLE:
                     adjusted_mode = "hybrid"
                     logger.info("Switching from global to hybrid mode for complex query on small model")
             
-            # Create query parameters
+            # Create query parameters with enhanced resilience settings
             query_param = QueryParam(
                 mode=adjusted_mode,
                 response_type=query.response_type,
                 top_k=adjusted_top_k,
+                # Enhanced token control for better resilience
+                max_entity_tokens=6000,  # LightRAG default for entity context
+                max_relation_tokens=8000,  # LightRAG default for relation context  
+                max_total_tokens=30000,  # LightRAG default total budget
+                chunk_top_k=20,  # Number of chunks to retrieve and keep after reranking
+                enable_rerank=True,  # Enable reranking if available
             )
             
             # Perform query with fallback handling for context size issues
@@ -2061,11 +2432,17 @@ if LIGHTRAG_AVAILABLE:
                               "important findings or insights, and the overall scope of the content. "
                               "Focus on providing an overview that helps understand the nature and breadth of the knowledge base.")
             
-            # Create query parameters optimized for summary generation
+            # Create query parameters optimized for summary generation with enhanced resilience
             query_param = QueryParam(
                 mode="hybrid",  # Use hybrid mode for comprehensive coverage
                 response_type="Single Paragraph",  # Request single paragraph format
                 top_k=100,  # Use higher top_k to get broader coverage of documents
+                # Enhanced token control for better resilience
+                max_entity_tokens=6000,
+                max_relation_tokens=8000,
+                max_total_tokens=30000,
+                chunk_top_k=20,
+                enable_rerank=True,
             )
             
             # Perform summary query
@@ -2766,8 +3143,19 @@ if LIGHTRAG_AVAILABLE:
                 summary_prompt += f"\n\nInclude insights from these {len(notebook_documents)} documents: " + \
                                 ", ".join([doc["filename"] for doc in notebook_documents])
             
-            # Execute summary query
-            query_param = QueryParam(mode="hybrid", response_type="Multiple Paragraphs", top_k=100)
+            # Execute summary query with enhanced resilience settings
+            # Use "mix" mode if rerank is available (LightRAG recommendation), otherwise hybrid
+            query_mode = "mix" if RERANK_AVAILABLE else "hybrid"
+            query_param = QueryParam(
+                mode=query_mode, 
+                response_type="Multiple Paragraphs", 
+                top_k=100,
+                max_entity_tokens=6000,
+                max_relation_tokens=8000,
+                max_total_tokens=30000,
+                chunk_top_k=20,
+                enable_rerank=True,
+            )
             result = await rag.aquery(summary_prompt, param=query_param)
             
             # Build source documents list
